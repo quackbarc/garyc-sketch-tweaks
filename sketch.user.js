@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /* TODO:
-    - db support
+    - fix show(0) from hash change not hiding the holder
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
     - refresh():
@@ -38,7 +38,11 @@ let lastCurrent = null;
 let lastAlertPromise = null;
 
 function currentURL() {
-    return `https://garyc.me/sketch/gallery.php#${window.current}`
+    if(window.db != 0) {
+        return `https://garyc.me/sketch/gallery.php?db=${window.db}#${window.current}`;
+    } else {
+        return `https://garyc.me/sketch/gallery.php#${window.current}`;
+    }
 }
 
 function updateDetails(msg=null) {
@@ -97,6 +101,7 @@ function show(id) {
     // html building
     // TODO: don't rebuild this everytime this function's called
 
+    var downloadFn = window.db == 0 ? `${id}` : `${window.db}#${id}`;
     var top = `<a href="#0" onclick="hide()" class="top"><img src="top.png"></a>`;
     var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left"><img src="left.png"></a>`;
     var leftMax = `<div class="left"></div>`;
@@ -104,8 +109,8 @@ function show(id) {
     var right = `<a href="#${id-1}" onclick="show(${id-1})" class="right"><img src="right.png"></a>`;
     var save = [
         `<a`,
-            ` href="getIMG.php?format=png&db=&id=${id}"`,
-            ` download="${id}.png"`,
+            ` href="getIMG.php?format=png&db=${window.db}&id=${id}"`,
+            ` download="${downloadFn}.png"`,
             ` class="save"`,
         `>`,
         `<img src="save.png" style="width: 25px; height: 25px; position: relative;">`,
@@ -158,7 +163,7 @@ async function get(id) {
 
     let resp;
     try {
-        resp = await fetch(`/sketch/get.php?db=&id=${id}`);
+        resp = await fetch(`/sketch/get.php?db=${window.db}&id=${id}`);
     } catch(e) {
         // network error
         if(e instanceof TypeError) {
@@ -181,7 +186,7 @@ function addMore(n=100) {
     for(let id = last; id > target; id--) {
         newtiles.push([
             `<a href="#${id}" onclick="show(${id});">`,
-            `<img src="getIMG.php?format=png&db=&id=${id}&size=20" style="`,
+            `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=20" style="`,
                 `padding: 5px;`,
                 `width: 160px;`,
                 `height: 120px;`,
@@ -286,6 +291,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
     window.show = show;
     window.hide = hide;
     window.addMore = addMore;
+
+    let db = new URLSearchParams(window.location.search).get("db");
+    window.db = db != null ? parseInt(db) : 0;
 
     switch(settings.theme) {
         case "auto": {
