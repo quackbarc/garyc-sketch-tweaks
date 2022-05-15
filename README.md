@@ -8,6 +8,7 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 
 ## Features
 
+* Dark theme, automatically detected or manually set.
 * Gallery sketch caching to a configurable limit.
 * Additional details on gallery sketches, like ink used.
 

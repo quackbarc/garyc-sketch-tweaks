@@ -13,16 +13,18 @@
 // ==/UserScript==
 
 /* TODO:
-    - dark theme
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
     - take changeHashOnNav into account for addMore() and refresh()
+    - refresh():
+        - auto adding left arrow?
     - add preferences menu
 */
 
 var settings = {
     changeHashOnNav: true,
     cacheSize: 100,
+    theme: "auto",
 }
 
 /* /sketch/gallery.php */
@@ -46,6 +48,10 @@ function updateDetails() {
 
     $("#details").empty();
     $("#details").append(elems.join("<br>"));
+}
+
+function updateTheme() {
+
 }
 
 // overrides
@@ -160,6 +166,25 @@ function addMore(n=100) {
 
 if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
+        /* dark theme */
+        :root[theme="dark"] body {
+            background-color: #111;
+            color: #ccc;
+        }
+        :root[theme="dark"] #holder {
+            background-color: #191919;
+        }
+        :root[theme="dark"] #holder img:not([src^=save]) {
+            filter: invert(90%);
+        }
+        :root[theme="dark"] input[type="submit" i]:disabled button:disabled {
+            background-color: #fff3;
+            color: #fff8
+        }
+        :root[theme="dark"] h1 {
+            color: #eee;
+        }
+
         canvas {
             /* prevent canvas from showing up for a split second on page boot */
             display: none;
@@ -234,6 +259,25 @@ if(window.location.pathname == "/sketch/gallery.php") {
     window.show = show;
     window.hide = hide;
     window.addMore = addMore;
+
+    switch(settings.theme) {
+        case "auto": {
+            let prefersDark = (
+                window.matchMedia
+                && window.matchMedia("(prefers-color-scheme: dark)")
+            );
+            $("html").attr({"theme": prefersDark ? "dark" : "light"});
+            break;
+        }
+        case "dark":
+        case "light": {
+            $("html").attr({"theme": settings.theme});
+            break;
+        }
+        default: {
+            $("html").attr({"theme": "light"});
+        }
+    }
 
     window.addEventListener("hashchange", function(e) {
         let id = parseInt(window.location.hash.slice(1));
