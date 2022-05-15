@@ -13,9 +13,9 @@
 // ==/UserScript==
 
 /* TODO:
+    - db support
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
-    - take changeHashOnNav into account for addMore() and refresh()
     - refresh():
         - auto adding left arrow?
     - add preferences menu
@@ -27,15 +27,26 @@ var settings = {
     theme: "auto",
 }
 
+async function _sleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
+}
+
 /* /sketch/gallery.php */
 
 const cache = {};
 let lastCurrent = null;
+let lastAlertPromise = null;
 
-function updateDetails() {
+function currentURL() {
+    return `https://garyc.me/sketch/gallery.php#${window.current}`
+}
+
+function updateDetails(msg=null) {
     let elems = [];
 
-    if(window.dat != "wait") {
+    if(msg != null) {
+        elems.push(msg);
+    } else if(window.dat != "wait") {
         let ink = Math.floor(window.dat.length / 65535 * 100);
         let inkText = `${ink}% ink used`;
         elems.push(inkText);
@@ -43,15 +54,20 @@ function updateDetails() {
         elems.push("(unavailable)");
     }
 
-    let url = `https://garyc.me/sketch/gallery.php#${window.current}`;
+    let url = currentURL();
     elems.push(url);
 
     $("#details").empty();
     $("#details").append(elems.join("<br>"));
 }
 
-function updateTheme() {
-
+async function detailsAlert(msg) {
+    updateDetails(msg);
+    let alertPromise = lastAlertPromise = _sleep(3000);
+    await alertPromise;
+    if(alertPromise === lastAlertPromise) {
+        updateDetails();
+    }
 }
 
 // overrides
@@ -95,7 +111,7 @@ function show(id) {
         `<img src="save.png" style="width: 25px; height: 25px; position: relative;">`,
         `</a>`,
     ].join("");
-    var bottom = `<div id="details"></div>`;
+    var bottom = `<div id="details">...</div>`;
 
     $("#holder").addClass("active");
     $("#holder").empty();
@@ -140,7 +156,18 @@ async function get(id) {
         return success(cache["#" + id]);
     }
 
-    let dat = await fetch(`/sketch/get.php?db=&id=${id}`).then(r => r.text());
+    let resp;
+    try {
+        resp = await fetch(`/sketch/get.php?db=&id=${id}`);
+    } catch(e) {
+        // network error
+        if(e instanceof TypeError) {
+            $("#details").html("network error.");
+            return;
+        } else throw e;
+    }
+
+    dat = await resp.text();
     addToCache(id, dat);
     if(window.current == id) {
         success(dat);
@@ -278,6 +305,31 @@ if(window.location.pathname == "/sketch/gallery.php") {
             $("html").attr({"theme": "light"});
         }
     }
+
+    // these are keybinds i personally use to speed up sketch posting.
+    // feel free to remove em or use em.
+    document.addEventListener("keydown", async function(e) {
+        // don't fire if the holder is open
+        if(window.current == null) return;
+
+        if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
+            e.preventDefault();
+            setData(window.dat);
+        }
+        if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
+            e.preventDefault();
+            await navigator.clipboard.writeText(currentURL());
+            await detailsAlert("copied url");
+        }
+        if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey)) {
+            if(!window.ClipboardItem) return false;
+            e.preventDefault();
+            $("#sketch")[0].toBlob(async (blob) => {
+                await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
+                await detailsAlert("copied canvas");
+            });
+        }
+    });
 
     window.addEventListener("hashchange", function(e) {
         let id = parseInt(window.location.hash.slice(1));

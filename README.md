@@ -15,9 +15,9 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 ### Bug fixes
 
 * Fixed drawing client and gallery sketches being spiky.
-* Fixed canvas showing up for a split second on load.
+* Fixed canvas showing up for a split second on page load.
 * Fixed canvas being 798x598 instead of 800x600.
-* Fixed arrow-key navigation starting at the wrong places.
+* Fixed arrow-key navigation always starting at the latest sketch.
 * Fixed a race condition with loading sketches.
 * Fixed out-of-bounds sketches causing constant errors on console.
 * Fixed URL changes not navigating to that sketch.
@@ -38,7 +38,11 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 * Pressing left/right in the gallery without the viewer sketch open will show the latest sketch.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer buttons also dim out when hovered. The close and save buttons now have a pointer too.
-* DOM manipulation with JQuery is done with arrays.
+* DOM manipulation with jQuery is done with arrays.
+* Some personal keybinds for the gallery viewer:
+    * `space` to skip animation;
+    * `ctrl`-`C` to copy the sketch URL; and
+    * `ctrl`-`shift`-`C` to copy the sketch canvas.
 
 <!-- todo: add license.txt, AGPL? -->
 <!-- todo? add installation section -->
