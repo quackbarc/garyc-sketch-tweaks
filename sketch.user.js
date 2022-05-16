@@ -165,14 +165,13 @@ async function get(id) {
     try {
         resp = await fetch(`/sketch/get.php?db=${window.db}&id=${id}`);
     } catch(e) {
-        // network error
         if(e instanceof TypeError) {
             $("#details").html("network error.");
             return;
         } else throw e;
     }
 
-    dat = await resp.text();
+    let dat = await resp.text();
     addToCache(id, dat);
     if(window.current == id) {
         success(dat);
@@ -336,6 +335,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
                 await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
                 await detailsAlert("copied canvas");
             });
+        }
+        if(e.ctrlKey && e.key.toLowerCase() == "s" && !(e.altKey || e.metaKey || e.shiftKey)) {
+            e.preventDefault();
+            $(".save").click();
         }
     });
 

@@ -41,6 +41,7 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 * DOM manipulation with jQuery is done with arrays.
 * Some personal keybinds for the gallery viewer:
     * `space` to skip animation;
+    * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
 
