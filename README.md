@@ -1,10 +1,9 @@
 
 # garyc.me sketch tweaks
 
-A personal userscript for garyc.me/sketch, consisting of QoL tweaks and bug fixes.
+A personal userscript for garyc.me/sketch. Nothing too game-changing, like extra tools on the drawing client. Just a handful of visual tweaks and a plethora of bug fixes.
 
-This might not work for IE since this utilizes template strings, `let`/`const`, and the CSS grid layout for gallery and viewer alignment, both of which IE has very weak support of.
-<!-- just say ES6 -->
+This script is currently not compatible with older browsers that don't support `async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
 
 ## Features
 
@@ -20,17 +19,16 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 * Fixed arrow-key navigation always starting at the latest sketch.
 * Fixed a race condition with loading sketches.
 * Fixed out-of-bounds sketches causing constant errors on console.
-* Fixed URL changes not navigating to that sketch.
 * Fixed duplicate sketches from scrolling down.
-* Fixed sketches being saved as `.jpg` despite being PNGs.
+* Fixed sketches being saved with a `.jpg` extension despite being PNGs.
+* URL changes now navigate sketches.
 * Loading the same sketch twice won't redraw the sketch.
 
 ### Other technical tweaks
 
 * Gallery canvas is focusable by tabbing.
-* Gallery uses CSS grid to fix the padding error with new sketches.
 * Viewer uses CSS grid for better alignment.
-* Viewer doesn't regenerate its HTML everytime.
+* Viewer gets hidden by `display: none` instead of purging its HTML.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
 
 ### Personal tweaks
@@ -38,12 +36,16 @@ This might not work for IE since this utilizes template strings, `let`/`const`, 
 * Pressing left/right in the gallery without the viewer sketch open will show the latest sketch.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer buttons also dim out when hovered. The close and save buttons now have a pointer too.
-* DOM manipulation with jQuery is done with arrays.
 * Some personal keybinds for the gallery viewer:
     * `space` to skip animation;
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
 
-<!-- todo: add license.txt, AGPL? -->
-<!-- todo? add installation section -->
+## Installation
+
+1. Install Violentmonkey or Tampermonkey onto your browser.
+2. Simply open up the raw version of `sketch.user.js` ([shortcut](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js)).
+3. The extension should automatically install the userscript.
+
+<!-- todo: add license.txt, MIT? -->
