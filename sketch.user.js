@@ -13,12 +13,12 @@
 // ==/UserScript==
 
 /* TODO:
-    - fix show(0) from hash change not hiding the holder
+    - globally apply dark theme thruout website
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
     - refresh():
         - auto adding left arrow?
-    - add preferences menu
+    - add preferences menu + setting persistence
 */
 
 var settings = {
@@ -344,7 +344,13 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     window.addEventListener("hashchange", function(e) {
         let id = parseInt(window.location.hash.slice(1));
-        show(id);
+        // prevent show() from firing again
+        if(id == window.current) return;
+        if(id == 0) {
+            hide();
+        } else {
+            show(id);
+        }
     });
 
     document.addEventListener("DOMContentLoaded", function() {
