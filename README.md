@@ -14,6 +14,12 @@ This script is currently not compatible with older browsers that don't support `
 ### Bug fixes
 
 * Fixed drawing client and gallery sketches being spiky.
+* Fixed swap button getting locked on undo.
+* Fixed swap button alternating its text during swaps.
+* Corrected button locking after swaps/peeks.
+
+#### Gallery
+
 * Fixed canvas showing up for a split second on page load.
 * Fixed canvas being 798x598 instead of 800x600.
 * Fixed arrow-key navigation always starting at the latest sketch.
@@ -26,6 +32,10 @@ This script is currently not compatible with older browsers that don't support `
 
 ### Other technical tweaks
 
+* Sketch stats are fetched every 30 seconds instead of 60.
+* Swapping and peeking are properly mutex locked.
+* Swapping and peeking now handle request errors.
+* Swapping and peeking wouldn't send extra `getStats` requests.
 * Gallery canvas is focusable by tabbing.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of purging its HTML.
@@ -41,6 +51,7 @@ This script is currently not compatible with older browsers that don't support `
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
+* Drawing client has buttons padded to match Flash UI.
 
 ## Installation
 

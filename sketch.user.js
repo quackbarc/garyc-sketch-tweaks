@@ -13,7 +13,6 @@
 // ==/UserScript==
 
 /* TODO:
-    - globally apply dark theme thruout website
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
     - refresh():
@@ -29,6 +28,57 @@ var settings = {
 
 async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
+}
+
+/* / */
+
+function main() {
+    GM_addStyle(`
+        /* dark theme */
+        :root[theme="dark"] body {
+            background-color: #111;
+            color: #ccc;
+        }
+        :root[theme="dark"] #holder {
+            background-color: #191919;
+        }
+        :root[theme="dark"] #holder img:not([src^=save]) {
+            filter: invert(90%);
+        }
+        :root[theme="dark"] input[type="submit" i]:disabled button:disabled {
+            background-color: #fff3;
+            color: #fff8
+        }
+        :root[theme="dark"] h1 {
+            color: #eee;
+        }
+    `);
+
+    switch(settings.theme) {
+        case "auto": {
+            let prefersDark = (
+                window.matchMedia
+                && window.matchMedia("(prefers-color-scheme: dark)")
+            );
+            $("html").attr({"theme": prefersDark ? "dark" : "light"});
+            break;
+        }
+        case "dark":
+        case "light": {
+            $("html").attr({"theme": settings.theme});
+            break;
+        }
+        default: {
+            $("html").attr({"theme": "light"});
+        }
+    }
+}
+
+main();
+
+if(window.location.pathname.startsWith("/sketch")) {
+    let db = new URLSearchParams(window.location.search).get("db");
+    window.db = db != null ? parseInt(db) : 0;
 }
 
 /* /sketch/gallery.php */
@@ -197,25 +247,6 @@ function addMore(n=100) {
 
 if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
-        /* dark theme */
-        :root[theme="dark"] body {
-            background-color: #111;
-            color: #ccc;
-        }
-        :root[theme="dark"] #holder {
-            background-color: #191919;
-        }
-        :root[theme="dark"] #holder img:not([src^=save]) {
-            filter: invert(90%);
-        }
-        :root[theme="dark"] input[type="submit" i]:disabled button:disabled {
-            background-color: #fff3;
-            color: #fff8
-        }
-        :root[theme="dark"] h1 {
-            color: #eee;
-        }
-
         canvas {
             /* prevent canvas from showing up for a split second on page boot */
             display: none;
@@ -291,28 +322,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
     window.hide = hide;
     window.addMore = addMore;
 
-    let db = new URLSearchParams(window.location.search).get("db");
-    window.db = db != null ? parseInt(db) : 0;
-
-    switch(settings.theme) {
-        case "auto": {
-            let prefersDark = (
-                window.matchMedia
-                && window.matchMedia("(prefers-color-scheme: dark)")
-            );
-            $("html").attr({"theme": prefersDark ? "dark" : "light"});
-            break;
-        }
-        case "dark":
-        case "light": {
-            $("html").attr({"theme": settings.theme});
-            break;
-        }
-        default: {
-            $("html").attr({"theme": "light"});
-        }
-    }
-
     // these are keybinds i personally use to speed up sketch posting.
     // feel free to remove em or use em.
     document.addEventListener("keydown", async function(e) {
@@ -353,11 +362,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
     });
 
-    document.addEventListener("DOMContentLoaded", function() {
-        // clear the script tag and the extra newline that causes
-        // misalignment of new sketches
-        $("#tiles").html("");
-    })
+    // clear the script tag and the extra newline that causes
+    // misalignment of new sketches
+    document.querySelector("#tiles").innerHTML = "";
 
     $(document).ready(function() {
         $("#holder").css({
@@ -379,3 +386,185 @@ if(window.location.pathname == "/sketch/gallery.php") {
 }
 
 /* /sketch/ */
+
+// overrides
+
+function resetCanvas() {
+    graphics.clear();
+    graphics.beginFill(0xFFFFFF);
+    graphics.drawRect(0,0,800,600);
+    graphics.endFill();
+    graphics.lineStyle(3, 0x000000);
+}
+
+function setData(data) {
+    window.dat = `${data.trim()} `;
+
+    // using normal reset() would've left the wrong buttons enabled
+    // every time as if ink really was 0%.
+    resetCanvas();
+    let ink = Math.floor(window.dat.length / window.limit * 100);
+    $("#ink").html(`Ink used: ${ink}%`);
+    $("#swap").prop("disabled", ink < 1);
+    $("#peek").prop("disabled", ink >= 1);
+
+    const parts = data.split(" ");
+    for(var i = 0; i < parts.length; i++) {
+        let part = parts[i];
+        for(var j = 0; j < part.length; j += 4){
+            var x = dec(part.substr(j, 2));
+            var y = dec(part.substr(j+2, 2));
+            if(j == 0) {
+                graphics.moveTo(x, y);
+            } else {
+                graphics.lineTo(x, y);
+            }
+        }
+    }
+}
+
+function swap() {
+    // lock the client *before* the swap request, gary
+    $("#reset").prop("disabled", true);
+    $("#undo").prop("disabled", true);
+    $("#swap").prop("disabled", true);
+    $("#swap").val("swapping...");
+    window.locked = true;
+
+    function rollback() {
+        $("#reset").prop("disabled", false);
+        $("#undo").prop("disabled", false);
+        $("#swap").prop("disabled", false);
+        $("#swap").val("swap");
+        window.locked = false;
+    }
+
+    $.ajax({
+        url: `swap.php?db=${db}&v=32`,
+        method: "POST",
+        data: window.dat,
+
+        error: function() {
+            alert("There was an error swapping.");
+            rollback();
+        },
+
+        success: function(n) {
+            n = parseInt(n);
+            if(n < 0) {
+                alert(`On cooldown; please wait ${n} more seconds before swapping again.`);
+                rollback();
+                return;
+            }
+            window.swapID = n;
+            attemptSwap();
+        },
+    });
+}
+
+function attemptSwap() {
+    $.ajax({
+        url: `get.php?id=${swapID}&db=${db}`,
+        method: "GET",
+
+        error: function() {
+            setTimeout(attemptSwap, 2000);
+        },
+
+        success: function(result) {
+            if(result == "wait") {
+                $("#swap").val("waiting for other sketch to be drawn...");
+                setTimeout(attemptSwap, 2000);
+            } else {
+                drawData(result);
+                $("#swap").val("done");
+                $("#peek").prop("disabled", true); // thanks reset()
+                $("#reset").prop("disabled", false);
+                getStats();
+            }
+        }
+    });
+}
+
+function getLatest() {
+    let undoWasDisabled = $("#undo").prop("disabled");
+    $("#peek").prop("disabled", true);
+    $("#undo").prop("disabled", true);
+    $("#reset").prop("disabled", true);
+    window.locked = true;
+
+    $.ajax({
+        url: `get.php?db=${db}`,
+        method: "GET",
+
+        error: function() {
+            alert("There was an error getting the latest sketch.");
+            $("#peek").prop("disabled", false);
+            $("#undo").prop("disabled", undoWasDisabled);
+            window.locked = false;
+        },
+
+        success: function(result) {
+            drawData(result);
+            $("#peek").prop("disabled", true); // thanks reset()
+            $("#reset").prop("disabled", false);
+            getStats();
+        }
+    });
+}
+
+if(window.location.pathname == "/sketch/") {
+    GM_addStyle(`
+        /* save button */
+        img[src="save.png"] {
+            /* shift 5px to the right.
+               i don't feel like making this button statically positioned
+               because there's whitespace text preceding it, and leaving or
+               relying on that might result in inconsistent positioning from,
+               say, font size changes...
+               doesn't seem easy to take out either in a userscript context,
+               unless i maybe go with regex, which i'm not insane enough to
+               tackle right now. */
+            left: 815px;
+        }
+
+        /* flash UI mimicking */
+        td input {
+            width: 100%;
+            height: 30px;
+        }
+        img[src="save.png"] {
+            opacity: .8;
+        }
+        img[src="save.png"]:hover {
+            opacity: 1;
+        }
+
+        /* personal tweaks */
+        td {
+            padding: 3px;
+        }
+    `);
+
+    window.setData = setData;
+    window.swap = swap;
+    window.attemptSwap = attemptSwap;
+    window.getLatest = getLatest;
+
+    // this script fires immediately after the body, and
+    // the old getStats interval is the last interval in it,
+    // so as long as those are true, this should be fine.
+    let newInterval = setInterval(window.getStats, 30000);
+    clearInterval(newInterval - 1);
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // fix miter spikes on the canvas
+        window.app.view.getContext("2d").lineJoin = "round";
+    })
+
+    $(document).ready(function() {
+        $("img[src='save.png']").css({
+            left: "",
+        });
+    });
+}
