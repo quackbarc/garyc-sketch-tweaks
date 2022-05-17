@@ -15,6 +15,7 @@
 /* TODO:
     - SVG saving..?
     - stop doing addMore past sketch threshold..?
+    - correct gallery thumbnail resolutions?
     - refresh():
         - auto adding left arrow?
 */
@@ -474,7 +475,7 @@ function resetCanvas() {
     graphics.lineStyle(3, 0x000000);
 }
 
-function setData(data) {
+function sketch_setData(data) {
     window.dat = `${data.trim()} `;
 
     // using normal reset() would've left the wrong buttons enabled
@@ -500,7 +501,7 @@ function setData(data) {
     }
 }
 
-function reset() {
+function sketch_reset() {
     $("#swap").prop("disabled", true);
     $("#peek").prop("disabled", false);
     $("#swap").val("swap");
@@ -668,8 +669,8 @@ if(window.location.pathname == "/sketch/") {
         }
     `);
 
-    window.reset = reset;
-    window.setData = setData;
+    window.reset = sketch_reset;
+    window.setData = sketch_setData;
     window.swap = swap;
     window.attemptSwap = attemptSwap;
     window.getLatest = getLatest;
