@@ -51,7 +51,7 @@ This script is currently not compatible with older browsers that don't support `
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
-* Drawing client has buttons padded to match Flash UI.
+* Drawing client has padded buttons and a progress bar to imitate the old Flash UI.
 
 ## Installation
 

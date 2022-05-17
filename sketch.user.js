@@ -387,6 +387,13 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
 /* /sketch/ */
 
+function _setProgress(n) {
+    n = Math.min(Math.max(n, 0), 3);
+    let width = Math.round(n / 3 * 100);
+    $("#progress").attr({"aria-valuenow": n});
+    $("#progressBar").width(`${width}%`);
+}
+
 // overrides
 
 function resetCanvas() {
@@ -423,12 +430,26 @@ function setData(data) {
     }
 }
 
+function reset() {
+    $("#swap").prop("disabled", true);
+    $("#peek").prop("disabled", false);
+    $("#swap").val("swap");
+    $("#ink").html("Ink used: 0%");
+    _setProgress(0);
+    resetCanvas();
+    window.dat = "";
+    window.locked = false;
+    window.lines = [];
+    window.autodrawpos = -1;
+}
+
 function swap() {
     // lock the client *before* the swap request, gary
     $("#reset").prop("disabled", true);
     $("#undo").prop("disabled", true);
     $("#swap").prop("disabled", true);
     $("#swap").val("swapping...");
+    _setProgress(1);
     window.locked = true;
 
     function rollback() {
@@ -436,6 +457,7 @@ function swap() {
         $("#undo").prop("disabled", false);
         $("#swap").prop("disabled", false);
         $("#swap").val("swap");
+        _setProgress(0);
         window.locked = false;
     }
 
@@ -463,6 +485,8 @@ function swap() {
 }
 
 function attemptSwap() {
+    _setProgress(2);
+
     $.ajax({
         url: `get.php?id=${swapID}&db=${db}`,
         method: "GET",
@@ -480,6 +504,7 @@ function attemptSwap() {
                 $("#swap").val("done");
                 $("#peek").prop("disabled", true); // thanks reset()
                 $("#reset").prop("disabled", false);
+                _setProgress(3);
                 getStats();
             }
         }
@@ -491,6 +516,7 @@ function getLatest() {
     $("#peek").prop("disabled", true);
     $("#undo").prop("disabled", true);
     $("#reset").prop("disabled", true);
+    _setProgress(2);
     window.locked = true;
 
     $.ajax({
@@ -508,6 +534,7 @@ function getLatest() {
             drawData(result);
             $("#peek").prop("disabled", true); // thanks reset()
             $("#reset").prop("disabled", false);
+            _setProgress(3);
             getStats();
         }
     });
@@ -540,12 +567,38 @@ if(window.location.pathname == "/sketch/") {
             opacity: 1;
         }
 
+        /* progress bar */
+        td.swapContainer {
+            display: flex;
+            align-items: center;
+        }
+        td.swapContainer #swap {
+            flex: 2;
+            min-width: min-content;
+        }
+        td.swapContainer #progress {
+            flex: 3;
+            background-color: #f9f9f9;
+            border: 1px solid #767676;
+            border-radius: 4px;
+            height: 16px;
+            margin-top: 4px;
+            margin-left: 10px;
+        }
+        #progressBar {
+            height: 100%;
+            background-color: #a1ef55;
+            border-radius: 3px;
+            transition: width 0.15s ease;
+        }
+
         /* personal tweaks */
         td {
             padding: 3px;
         }
     `);
 
+    window.reset = reset;
     window.setData = setData;
     window.swap = swap;
     window.attemptSwap = attemptSwap;
@@ -558,6 +611,22 @@ if(window.location.pathname == "/sketch/") {
     clearInterval(newInterval - 1);
 
     document.addEventListener("DOMContentLoaded", function() {
+        // mark parent of swap button and add progress bar
+        // don't wanna use native <progress> due to lack of its styling
+        // support on firefox
+        const container = $("#swap").parent();
+        container.addClass("swapContainer");
+        container.append(`
+            <div id="progress"
+                 role="progressbar"
+                 aria-label="swap progress"
+                 aria-valuenow="0"
+                 aria-valuemin="0"
+                 aria-valuemax="3">
+                <div id="progressBar" style="width: 0%"></div>
+            </div>
+        `);
+
         // fix miter spikes on the canvas
         window.app.view.getContext("2d").lineJoin = "round";
     })
