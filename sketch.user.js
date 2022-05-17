@@ -282,6 +282,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             display: none;
             z-index: 1;
             background-color: white;
+            box-shadow: 0px 0px 10px #00000077;
             position: fixed;
 
             /* fixes original centering management */

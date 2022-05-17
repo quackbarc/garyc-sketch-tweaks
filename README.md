@@ -46,6 +46,7 @@ This script is currently not compatible with older browsers that don't support `
 * There's a nice little interface for userscript preferences (found in the gallery).
 * Pressing left/right in the gallery without the viewer sketch open will show the latest sketch.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
+* Gallery viewer has a box shadow so it really pops out.
 * Gallery viewer buttons also dim out when hovered. The close and save buttons now have a pointer too.
 * Some personal keybinds for the gallery viewer:
     * `space` to skip animation;
