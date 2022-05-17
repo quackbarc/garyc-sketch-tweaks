@@ -17,14 +17,9 @@
     - stop doing addMore past sketch threshold..?
     - refresh():
         - auto adding left arrow?
-    - add preferences menu + setting persistence
 */
 
-var settings = {
-    changeHashOnNav: true,
-    cacheSize: 100,
-    theme: "auto",
-}
+var settings = {};
 
 async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
@@ -32,7 +27,44 @@ async function _sleep(ms) {
 
 /* / */
 
+function _getSettings() {
+    const defaultSettings = {
+        changeHashOnNav: true,
+        cacheSize: 100,
+        theme: "auto",
+    };
+    let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
+    return {...defaultSettings, ...storedSettings};
+}
+
+function _saveSettings() {
+    localStorage.setItem("settings_sketch", JSON.stringify(settings));
+}
+
+function _updateTheme() {
+    switch(settings.theme) {
+        case "auto": {
+            let prefersDark = (
+                window.matchMedia
+                && window.matchMedia("(prefers-color-scheme: dark)")
+            );
+            $("html").attr({"theme": prefersDark ? "dark" : "light"});
+            break;
+        }
+        case "dark":
+        case "light": {
+            $("html").attr({"theme": settings.theme});
+            break;
+        }
+        default: {
+            $("html").attr({"theme": "light"});
+        }
+    }
+}
+
 function main() {
+    settings = _getSettings();
+
     GM_addStyle(`
         /* dark theme */
         :root[theme="dark"] body {
@@ -53,25 +85,7 @@ function main() {
             color: #eee;
         }
     `);
-
-    switch(settings.theme) {
-        case "auto": {
-            let prefersDark = (
-                window.matchMedia
-                && window.matchMedia("(prefers-color-scheme: dark)")
-            );
-            $("html").attr({"theme": prefersDark ? "dark" : "light"});
-            break;
-        }
-        case "dark":
-        case "light": {
-            $("html").attr({"theme": settings.theme});
-            break;
-        }
-        default: {
-            $("html").attr({"theme": "light"});
-        }
-    }
+    _updateTheme();
 }
 
 main();
@@ -276,6 +290,16 @@ if(window.location.pathname == "/sketch/gallery.php") {
             left: calc((100vw - 1008px) / 2);
         }
 
+        /* preferences */
+        #preferences {
+            width: 350px;
+            margin: 5px; /* match that of #tiles */
+            font-family: monospace;
+        }
+        #preferences .preference {
+            padding: 4px;
+        }
+
         /* grid styles for holder */
         #holder.active {
             display: grid;
@@ -316,6 +340,50 @@ if(window.location.pathname == "/sketch/gallery.php") {
             opacity: 80%;
         }
     `);
+
+    // add preferences menu in gallery
+    const button = $("<button>preferences</button>");
+    const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
+    preferences.html(`
+        <legend>Preferences</legend>
+        <div class="preference">
+            <label for="theme">Theme:</label>
+            <select id="theme" name="theme">
+                <option value="auto" selected>System default</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+        <div class="preference">
+            <label for="cachesize">Cache size:</label>
+            <input type="number" id="cachesize" min="0">
+        </div>
+        <div class="preference">
+            <label for="hashnav">Update URL from arrow key navigation:</label>
+            <input type="checkbox" id="hashnav">
+            <br>
+            <i>(useful to turn off to reduce browser history clutter)</i>
+        </div>
+    `);
+    button.click(() => preferences.toggle());
+    $("#holder").before([button, preferences]);
+    $("#theme").val(settings.theme);
+    $("#cachesize").val(settings.cacheSize);
+    $("#hashnav").prop("checked", settings.changeHashOnNav);
+
+    $("#cachesize").change(function(e) {
+        settings.cacheSize = e.target.value;
+        _saveSettings();
+    });
+    $("#hashnav").change(function(e) {
+        settings.changeHashOnNav = e.target.checked;
+        _saveSettings();
+    });
+    $("#theme").change(function(e) {
+        settings.theme = e.target.value;
+        _updateTheme();
+        _saveSettings();
+    });
 
     window.current = null;
     window.show = show;
@@ -362,9 +430,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
     });
 
-    // clear the script tag and the extra newline that causes
-    // misalignment of new sketches
-    document.querySelector("#tiles").innerHTML = "";
+    document.addEventListener("DOMContentLoaded", function() {
+        // clear the script tag and the extra newline that causes
+        // misalignment of new sketches
+        document.getElementById("tiles").innerHTML = "";
+    });
 
     $(document).ready(function() {
         $("#holder").css({
