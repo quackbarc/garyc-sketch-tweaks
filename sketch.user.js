@@ -387,7 +387,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
         _saveSettings();
     });
 
-    window.current = null;
     window.show = show;
     window.hide = hide;
     window.addMore = addMore;
@@ -433,6 +432,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
 
     document.addEventListener("DOMContentLoaded", function() {
+        window.current = null;
+        // prematurely refresh cached max and thumbnails
+        refresh();
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
