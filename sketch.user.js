@@ -141,7 +141,7 @@ async function detailsAlert(msg) {
 
 // overrides
 
-function show(id) {
+function show(id, force=false) {
     // show() via page init passes the ID as a string (from URL hash).
     // can't change that since it's fired from an event listener.
     id = parseInt(id);
@@ -153,7 +153,7 @@ function show(id) {
     if(id == lastCurrent) return;
 
     // eh, why not.
-    if(id == -1 || id == 1) {
+    if(!force && (id == -1 || id == 1)) {
         id = window.max;
     }
 
@@ -421,7 +421,8 @@ if(window.location.pathname == "/sketch/gallery.php") {
         if(id == 0) {
             hide();
         } else {
-            show(id);
+            // force special cases like 1 and -1
+            show(id, true);
         }
     });
 
