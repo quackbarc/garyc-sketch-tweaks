@@ -226,21 +226,15 @@ async function get(id) {
         return success(cache["#" + id]);
     }
 
-    let resp;
-    try {
-        resp = await fetch(`/sketch/get.php?db=${window.db}&id=${id}`);
-    } catch(e) {
-        if(e instanceof TypeError) {
-            $("#details").html("network error.");
-            return;
-        } else throw e;
-    }
-
-    let dat = await resp.text();
-    addToCache(id, dat);
-    if(window.current == id) {
-        success(dat);
-    }
+    await fetch(`/sketch/get.php?db=${db}&id=${id}`)
+      .then(r => r.text())
+      .catch(e => $("#details").html("network error."))
+      .then(function(dat) {
+        addToCache(id, dat);
+        if(window.current == id) {
+            success(dat);
+        }
+      });
 }
 
 function addMore(n=100) {
