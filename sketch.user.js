@@ -487,7 +487,7 @@ function sketch_setData(data) {
     const parts = data.split(" ");
     for(var i = 0; i < parts.length; i++) {
         let part = parts[i];
-        for(var j = 0; j < part.length; j += 4){
+        for(var j = 0; j < part.length; j += 4) {
             var x = dec(part.substr(j, 2));
             var y = dec(part.substr(j+2, 2));
             if(j == 0) {
