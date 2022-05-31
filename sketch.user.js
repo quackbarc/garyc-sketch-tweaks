@@ -5,7 +5,7 @@
 // @description QoL tweaks and personal mods for garyc.me/sketch
 // @homepage    https://github.com/quackbarc/garyc-sketch-tweaks
 // @author      quac
-// @version     1.0.0
+// @version     1.0.1
 // @match       https://garyc.me/sketch*
 // @icon        https://raw.githubusercontent.com/quackbarc/garyc-sketch-tweaks/master/crunge.png
 // @downloadURL https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
@@ -231,13 +231,13 @@ async function get(id) {
 
     await fetch(`/sketch/get.php?db=${db}&id=${id}`)
       .then(r => r.text())
-      .catch(e => $("#details").html("network error."))
       .then(function(dat) {
         addToCache(id, dat);
         if(window.current == id) {
             success(dat);
         }
-      });
+      })
+      .catch(e => $("#details").html("network error."));
 }
 
 function addMore(n=100) {
