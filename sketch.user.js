@@ -409,7 +409,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
-            drawData(window.dat);
+            if(settings.noAnimation) {
+                drawData(window.dat);
+	    } else {
+                setData(window.dat);
+	    }
         }
         if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
