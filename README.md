@@ -32,6 +32,7 @@ A complete list of changes by the script is listed below.
 * Fixed sketches being saved with a `.jpg` extension despite being PNGs.
 * URL changes now navigate sketches.
 * Loading the same sketch twice won't redraw the sketch.
+* Added option to skip sketch animation
 
 ### Other technical tweaks
 

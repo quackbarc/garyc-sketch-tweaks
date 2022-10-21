@@ -221,7 +221,11 @@ async function get(id) {
 
         if(dat == "wait") return;
         if(window.autodrawpos == -1) {
-            drawData(dat);
+            if(settings.noAnimation) {
+                setData(dat);
+            } else {
+                drawData(dat);
+            }
         }
     }
 
@@ -358,6 +362,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <input type="number" id="cachesize" min="0">
         </div>
         <div class="preference">
+            <label for="skipanimation">Skip sketch animation:</label>
+            <input type="checkbox" id="skipanimation">
+        </div>
+        <div class="preference">
             <label for="hashnav">Update URL from arrow key navigation:</label>
             <input type="checkbox" id="hashnav">
             <br>
@@ -368,6 +376,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#holder").before([button, preferences]);
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
+    $("#skipanimation").prop("checked", settings.noAnimation);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
 
     $("#cachesize").change(function(e) {
@@ -376,6 +385,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
     $("#hashnav").change(function(e) {
         settings.changeHashOnNav = e.target.checked;
+        _saveSettings();
+    });
+    $("#skipanimation").change(function(e) {
+        settings.noAnimation = e.target.checked;
         _saveSettings();
     });
     $("#theme").change(function(e) {
@@ -396,7 +409,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
-            setData(window.dat);
+            drawData(window.dat);
         }
         if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
