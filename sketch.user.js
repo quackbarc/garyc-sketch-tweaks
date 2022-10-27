@@ -423,7 +423,13 @@ if(window.location.pathname == "/sketch/gallery.php") {
     // these are keybinds i personally use to speed up sketch posting.
     // feel free to remove em or use em.
     document.addEventListener("keydown", async function(e) {
-        // don't fire if the holder is open
+        // prevent abortion of resource loading when closing the viewer
+        // while the page is still loading
+        if(e.key == "Escape" && document.readyState != "complete") {
+            e.preventDefault();
+        }
+
+        // shortcuts from here on only apply when the viewer's open
         if(window.current == null) return;
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
