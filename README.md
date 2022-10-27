@@ -13,6 +13,7 @@ A complete list of changes by the script is listed below.
 * Drawing client redesigned to imitate the old Flash UI.
 * Gallery sketch caching to a configurable limit.
 * Additional details on gallery sketches, like ink used.
+* Togglable auto-skipping of sketch animation
 
 ### Bug fixes
 
@@ -32,7 +33,6 @@ A complete list of changes by the script is listed below.
 * Fixed sketches being saved with a `.jpg` extension despite being PNGs.
 * URL changes now navigate sketches.
 * Loading the same sketch twice won't redraw the sketch.
-* Added option to skip sketch animation
 
 ### Other technical tweaks
 

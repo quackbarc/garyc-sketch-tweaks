@@ -36,6 +36,7 @@ function _getSettings() {
         changeHashOnNav: true,
         cacheSize: 100,
         theme: "auto",
+        noAnimation: false,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -192,7 +193,13 @@ function show(id, force=false) {
     $("#tiles").css({opacity: "75%"});
 
     sketch.show();
-    sketch.on("click", () => setData(dat));
+    sketch.on("click", () => {
+            if(autodrawpos == -1) {
+                drawData(window.dat);
+	    } else {
+                setData(window.dat);
+	    }
+    });
     reset();
     get(id);
 }
@@ -362,7 +369,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <input type="number" id="cachesize" min="0">
         </div>
         <div class="preference">
-            <label for="skipanimation">Skip sketch animation:</label>
+            <label for="skipanimation">Auto-skip sketch animation:</label>
             <input type="checkbox" id="skipanimation">
         </div>
         <div class="preference">
@@ -409,7 +416,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
-            if(settings.noAnimation) {
+            if(autodrawpos == -1) {
                 drawData(window.dat);
 	    } else {
                 setData(window.dat);
