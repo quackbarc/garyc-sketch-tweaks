@@ -17,9 +17,23 @@
 
 /* TODO:
     - SVG saving..?
-    - correct gallery thumbnail resolutions?
+    - correct gallery thumbnail resolutions? requires refresh() to be monkeypatched too
     - refresh():
-        - auto adding left arrow?
+        - auto adding left arrow
+    - update():
+        - fix segmented lines
+        - fix constant TypeErrors from malformed data
+        - #7198742: fix early termination of update() that causes last line to not be drawn
+          - the reset back to -1 happens before the `graphics` line drawing commands, and
+            autodrawpos gets incremented right BEFORE the reset. if autodrawpos is incremented
+            to be equal to lines.length, the reset happens one line too early.
+
+    - debug:
+      - why copyCanvas() is so slow, maybe cache the resulting blob too
+      - why "0% ink used" pops up when a sketch is still loading
+
+    - race conditions for fetching the same sketch and drawing it still happen.
+    - add animation speed setting
 */
 
 var settings = {};
