@@ -17,7 +17,6 @@
 
 /* TODO:
     - SVG saving..?
-    - stop doing addMore past sketch threshold..?
     - correct gallery thumbnail resolutions?
     - refresh():
         - auto adding left arrow?
@@ -106,6 +105,7 @@ if(window.location.pathname.startsWith("/sketch")) {
 const cache = {};
 let lastCurrent = null;
 let lastAlertPromise = null;
+window.surpassPossible = false;
 
 function currentURL() {
     if(window.db != 0) {
@@ -253,10 +253,14 @@ async function get(id) {
 }
 
 function addMore(n=100) {
-    let last = window.max - ($("#tiles").children().length);
-    let target = last - n;
+    const hardLimit = 1;
+    const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
+    const limit = surpassPossible ? hardLimit : lastPossible;
+
+    let last = window.max - ($("#tiles").children().length) + 1;
+    let target = Math.max(last - n, limit);
     let newtiles = [];
-    for(let id = last; id > target; id--) {
+    for(let id = last - 1; id >= target; id--) {
         newtiles.push([
             `<a href="#${id}" onclick="show(${id});">`,
             `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=20" style="`,
@@ -266,6 +270,24 @@ function addMore(n=100) {
             `"></a>`,
         ].join(""));
     }
+
+    if(target == limit && last != limit) {
+        $("#tiles").after(`<div id="tilesEnd">reached the end of the gallery.</div>`);
+
+        // note: we don't show the button if we're at the hard limit
+        if(!window.surpassPossible && limit > hardLimit) {
+            $("#tilesEnd").append([
+                `<br>`,
+                `<button id="surpassPossible">load more anyway</button>`,
+            ].join(""));
+
+            $("button#surpassPossible").click(() => {
+                window.surpassPossible = true;
+                $("#tilesEnd").remove();
+            });
+        }
+    }
+
     $("#tiles").append(newtiles);
 }
 
@@ -299,6 +321,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
             top: calc((100vh - 800px) / 2) !important;
             /* sure have this computed too i guess */
             left: calc((100vw - 1008px) / 2);
+        }
+
+        #tilesEnd {
+            padding: 10px;
+            text-align: center;
         }
 
         /* preferences */
