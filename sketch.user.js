@@ -37,6 +37,7 @@ function _getSettings() {
         cacheSize: 100,
         theme: "auto",
         noAnimation: false,
+        doReplay: false,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -194,11 +195,11 @@ function show(id, force=false) {
 
     sketch.show();
     sketch.on("click", () => {
-            if(autodrawpos == -1) {
-                drawData(window.dat);
-	    } else {
-                setData(window.dat);
-	    }
+        if(autodrawpos == -1 && settings.doReplay) {
+            drawData(window.dat);
+        } else {
+            setData(window.dat);
+        }
     });
     reset();
     get(id);
@@ -373,6 +374,12 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <input type="checkbox" id="skipanimation">
         </div>
         <div class="preference">
+            <label for="doreplay">Enable sketch animation replay:</label>
+            <input type="checkbox" id="doreplay">
+            <br>
+            <i>(with LMB click or space keypress)</i>
+        </div>
+        <div class="preference">
             <label for="hashnav">Update URL from arrow key navigation:</label>
             <input type="checkbox" id="hashnav">
             <br>
@@ -384,6 +391,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
     $("#skipanimation").prop("checked", settings.noAnimation);
+    $("#doreplay").prop("checked", settings.noAnimation);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
 
     $("#cachesize").change(function(e) {
@@ -396,6 +404,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
     $("#skipanimation").change(function(e) {
         settings.noAnimation = e.target.checked;
+        _saveSettings();
+    });
+    $("#doreplay").change(function(e) {
+        settings.doReplay = e.target.checked;
         _saveSettings();
     });
     $("#theme").change(function(e) {
@@ -416,11 +428,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
-            if(autodrawpos == -1) {
+            if(autodrawpos == -1 && settings.doReplay) {
                 drawData(window.dat);
-	    } else {
+            } else {
                 setData(window.dat);
-	    }
+            }
         }
         if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
