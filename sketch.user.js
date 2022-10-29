@@ -36,6 +36,8 @@ function _getSettings() {
         changeHashOnNav: true,
         cacheSize: 100,
         theme: "auto",
+        noAnimation: false,
+        doReplay: false,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -192,7 +194,13 @@ function show(id, force=false) {
     $("#tiles").css({opacity: "75%"});
 
     sketch.show();
-    sketch.on("click", () => setData(dat));
+    sketch.on("click", () => {
+        if(autodrawpos == -1 && settings.doReplay) {
+            drawData(window.dat);
+        } else {
+            setData(window.dat);
+        }
+    });
     reset();
     get(id);
 }
@@ -221,7 +229,11 @@ async function get(id) {
 
         if(dat == "wait") return;
         if(window.autodrawpos == -1) {
-            drawData(dat);
+            if(settings.noAnimation) {
+                setData(dat);
+            } else {
+                drawData(dat);
+            }
         }
     }
 
@@ -358,6 +370,16 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <input type="number" id="cachesize" min="0">
         </div>
         <div class="preference">
+            <label for="skipanimation">Auto-skip sketch animation:</label>
+            <input type="checkbox" id="skipanimation">
+        </div>
+        <div class="preference">
+            <label for="doreplay">Enable sketch animation replay:</label>
+            <input type="checkbox" id="doreplay">
+            <br>
+            <i>(with LMB click or space keypress)</i>
+        </div>
+        <div class="preference">
             <label for="hashnav">Update URL from arrow key navigation:</label>
             <input type="checkbox" id="hashnav">
             <br>
@@ -368,6 +390,8 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#holder").before([button, preferences]);
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
+    $("#skipanimation").prop("checked", settings.noAnimation);
+    $("#doreplay").prop("checked", settings.doReplay);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
 
     $("#cachesize").change(function(e) {
@@ -376,6 +400,14 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
     $("#hashnav").change(function(e) {
         settings.changeHashOnNav = e.target.checked;
+        _saveSettings();
+    });
+    $("#skipanimation").change(function(e) {
+        settings.noAnimation = e.target.checked;
+        _saveSettings();
+    });
+    $("#doreplay").change(function(e) {
+        settings.doReplay = e.target.checked;
         _saveSettings();
     });
     $("#theme").change(function(e) {
@@ -396,7 +428,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
-            setData(window.dat);
+            if(autodrawpos == -1 && settings.doReplay) {
+                drawData(window.dat);
+            } else {
+                setData(window.dat);
+            }
         }
         if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();

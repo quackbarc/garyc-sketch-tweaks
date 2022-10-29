@@ -13,6 +13,7 @@ A complete list of changes by the script is listed below.
 * Drawing client redesigned to imitate the old Flash UI.
 * Gallery sketch caching to a configurable limit.
 * Additional details on gallery sketches, like ink used.
+* Optional auto-skipping and optional replay of sketch animations.
 
 ### Bug fixes
 
