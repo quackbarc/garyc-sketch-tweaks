@@ -5,6 +5,14 @@ A personal userscript for garyc.me/sketch. Nothing too game-changing, like extra
 
 This script is currently not compatible with older browsers that don't support `async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
 
+## Installation
+
+1. Install Violentmonkey or Tampermonkey onto your browser.
+2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js) onto the browser.
+3. The extension should automatically prompt to install the userscript.
+
+-----
+
 A complete list of changes by the script is listed below.
 
 ## Features
@@ -13,9 +21,11 @@ A complete list of changes by the script is listed below.
 * Drawing client redesigned to imitate the old Flash UI.
 * Gallery sketch caching to a configurable limit.
 * Additional details on gallery sketches, like ink used.
-* Optional auto-skipping and optional replay of sketch animations.
+* Optional auto-skipping and replay of sketch animations in the gallery.
 
 ### Bug fixes
+
+#### Drawing client
 
 * Fixed drawing client and gallery sketches being spiky.
 * Fixed swap button getting locked on undo.
@@ -28,23 +38,31 @@ A complete list of changes by the script is listed below.
 * Fixed canvas being 798x598 instead of 800x600.
 * Fixed arrow-key navigation always starting at the latest sketch.
 * Fixed a race condition with loading sketches.
-* Fixed out-of-bounds sketches causing constant errors on console.
+* Fixed sketch animations ending one line too early.
 * Fixed duplicate sketches from scrolling down.
 * Fixed sketches being saved with a `.jpg` extension despite being PNGs.
+* Handled malformed sketch data that would've caused constant errors on the console.
 * URL changes now navigate sketches.
 * Loading the same sketch twice won't redraw the sketch.
+* Pressing `escape` on the gallery while images are still loading will keep them loading.
+* The left button on the sketch viewer automatically appears when the gallery gets updated.
+* Gallery wouldn't load old sketches that are unreachable (sketches that would show up as X's), by default at least.
 
-### Other technical tweaks
+### Other technical tweaks 🤓
 
 * Sketch stats are fetched every 30 seconds instead of 60.
 * Swapping and peeking are properly mutex locked.
 * Swapping and peeking now handle request errors.
 * Swapping and peeking wouldn't send extra `getStats` requests.
+* Added quality settings for gallery thumbnails.
 * Gallery immediately refreshes sketches on page load so it's up to date.
-* Gallery canvas is focusable by tabbing.
+* Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of having its HTML purged.
+* Viewer canvas is focusable by tabbing.
+* Viewer buttons aren't user-selectable.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
+* `show()` ignores non-numerical IDs.
 
 ### Personal tweaks
 
@@ -54,13 +72,9 @@ A complete list of changes by the script is listed below.
 * Gallery viewer has a box shadow so it visually stands out.
 * Gallery viewer buttons also dim out when hovered. The close and save buttons now have a pointer too.
 * Some personal keybinds for the gallery viewer:
-    * `space` to skip animation;
+    * `space` to skip (or replay) sketch animation;
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
 
-## Installation
-
-1. Install Violentmonkey or Tampermonkey onto your browser.
-2. Simply open up the [raw version of sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js).
-3. The extension should automatically install the userscript.
+---
