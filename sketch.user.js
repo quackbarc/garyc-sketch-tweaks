@@ -391,7 +391,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
     $("#skipanimation").prop("checked", settings.noAnimation);
-    $("#doreplay").prop("checked", settings.noAnimation);
+    $("#doreplay").prop("checked", settings.doReplay);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
 
     $("#cachesize").change(function(e) {
