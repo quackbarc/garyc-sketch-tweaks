@@ -17,12 +17,12 @@
 
 /* TODO:
     - SVG saving..?
+    - animation speed setting..?
 
     - debug:
-      - why "0% ink used" pops up when a sketch is still loading
-
-    - race conditions for fetching the same sketch and drawing it still happen.
-    - add animation speed setting
+      - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
+      - "0% ink used" pops up when a sketch is still loading
+      - race conditions for fetching the same sketch and drawing it still happen.
 */
 
 var settings = {};
