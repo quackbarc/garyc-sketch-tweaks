@@ -398,6 +398,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
             left: calc((100vw - 1008px) / 2);
         }
 
+        #holder img {
+            user-select: none;
+        }
+
         #tilesEnd {
             padding: 10px;
             text-align: center;
