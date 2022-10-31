@@ -41,6 +41,13 @@ async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
 }
 
+/* interval purging */
+
+const lastInterval = setTimeout(() => void 0, 0) - 1;
+for(let int = 0; int <= lastInterval; int++) {
+    clearInterval(int);
+}
+
 /* / */
 
 function _getSettings() {
@@ -159,6 +166,14 @@ async function detailsAlert(msg) {
 }
 
 // overrides
+
+function update() {
+    // dummy
+}
+
+function refresh() {
+    // dummy
+}
 
 function show(id, force=false) {
     // show() via page init passes the ID as a string (from URL hash).
@@ -460,6 +475,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
         _updateTheme();
         _saveSettings();
     });
+
+    window.update = update;
+    window.refresh = refresh;
+    setInterval(window.update, 1000/30);
+    setInterval(window.refresh, 15000);
 
     window.show = show;
     window.hide = hide;
@@ -777,17 +797,14 @@ if(window.location.pathname == "/sketch/") {
         }
     `);
 
+    setInterval(window.update, 1000/30);
+    setInterval(window.getStats, 30000);
+
     window.reset = sketch_reset;
     window.setData = sketch_setData;
     window.swap = swap;
     window.attemptSwap = attemptSwap;
     window.getLatest = getLatest;
-
-    // this script fires immediately after the body, and
-    // the old getStats interval is the last interval in it,
-    // so as long as those are true, this should be fine.
-    let newInterval = setInterval(window.getStats, 30000);
-    clearInterval(newInterval - 1);
 
     document.addEventListener("DOMContentLoaded", function() {
         // mark parent of swap button and add progress bar
