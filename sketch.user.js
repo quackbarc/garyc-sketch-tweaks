@@ -228,6 +228,7 @@ function show(id, force=false) {
     // show() via page init passes the ID as a string (from URL hash).
     // can't change that since it's fired from an event listener.
     id = parseInt(id);
+    if(Number.isNaN(id)) return;
 
     if(id == 0) return;
     // prevents showing the same sketch again.
