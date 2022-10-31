@@ -29,7 +29,6 @@
             to be equal to lines.length, the reset happens one line too early.
 
     - debug:
-      - why copyCanvas() is so slow, maybe cache the resulting blob too
       - why "0% ink used" pops up when a sketch is still loading
 
     - race conditions for fetching the same sketch and drawing it still happen.
@@ -119,6 +118,7 @@ if(window.location.pathname.startsWith("/sketch")) {
 const cache = {};
 let lastCurrent = null;
 let lastAlertPromise = null;
+let cachedCanvasBlob = null;
 window.surpassPossible = false;
 
 function currentURL() {
@@ -206,6 +206,10 @@ function show(id, force=false) {
     $("#holder").empty();
     $("#holder").append([top, left, sketch, right, bottom, save]);
     $("#tiles").css({opacity: "75%"});
+
+    // this is better done on reset() but i don't wanna monkeypatch
+    // that method right now just for this
+    cachedCanvasBlob = null;
 
     sketch.show();
     sketch.on("click", () => {
@@ -489,10 +493,30 @@ if(window.location.pathname == "/sketch/gallery.php") {
         if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey)) {
             if(!window.ClipboardItem) return false;
             e.preventDefault();
-            $("#sketch")[0].toBlob(async (blob) => {
+
+            if(cachedCanvasBlob == null) {
+                var blob = await new Promise((resolve) => {
+                    $("#sketch")[0].toBlob(blob => resolve(blob))
+                });
+                if(autodrawpos < 0) {
+                    cachedCanvasBlob = blob;
+                }
+            }
+            else {
+                var blob = cachedCanvasBlob;
+            }
+
+            try {
                 await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
-                await detailsAlert("copied canvas");
-            });
+            }
+            catch (e) {
+                // .write will raise a DOMException if the document lost focus.
+                // that should be the only user-made error to expect during the copying anyway.
+                await detailsAlert("failed to copy canvas. try again?")
+                throw e;
+            }
+
+            await detailsAlert("copied canvas");
         }
         if(e.ctrlKey && e.key.toLowerCase() == "s" && !(e.altKey || e.metaKey || e.shiftKey)) {
             e.preventDefault();
