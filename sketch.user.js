@@ -18,8 +18,6 @@
 /* TODO:
     - SVG saving..?
     - correct gallery thumbnail resolutions? requires refresh() to be monkeypatched too
-    - update():
-        - fix segmented lines
 
     - debug:
       - why "0% ink used" pops up when a sketch is still loading
@@ -179,7 +177,9 @@ function update() {
                 break;
             }
             var line = lines[autodrawpos++];
-            graphics.moveTo(line.x1, line.y1);
+            if(line.moveTo) {
+                graphics.moveTo(line.x1, line.y1);
+            }
             graphics.lineTo(line.x2, line.y2);
         }
     }
@@ -222,6 +222,38 @@ async function refresh() {
       });
 
     enableRefresh();
+}
+
+function drawData(data) {
+    reset();
+
+    var parts = data.split(" ");
+    var ox = 0;
+    var oy = 0;
+    for(var i = 0; i < parts.length; i++) {
+        var part = parts[i];
+        for(var j = 0; j < part.length; j += 4) {
+            var x = dec(part.substr(j, 2));
+            var y = dec(part.substr(j+2, 2));
+            if(j >= 4) {
+                lines.push({
+                    moveTo: (j == 4),
+                    x1: ox,
+                    y1: oy,
+                    x2: x,
+                    y2: y,
+                });
+            }
+            ox = x;
+            oy = y;
+        }
+    }
+
+    // dunno what this extra space is for but that's what was
+    // on the original client
+    window.dat = data.trim() + " ";
+
+    autodrawpos = 0;
 }
 
 function show(id, force=false) {
@@ -528,6 +560,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     setInterval(window.update, 1000/30);
     setInterval(window.refresh, 15000);
 
+    window.drawData = drawData;
     window.show = show;
     window.hide = hide;
     window.addMore = addMore;
