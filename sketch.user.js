@@ -18,8 +18,6 @@
 /* TODO:
     - SVG saving..?
     - correct gallery thumbnail resolutions? requires refresh() to be monkeypatched too
-    - refresh():
-        - auto adding left arrow
     - update():
         - fix segmented lines
 
@@ -208,6 +206,16 @@ async function refresh() {
                   .hide()
                   .show(1000)
             );
+        }
+
+        if(window.current == window.max) {
+            let cur = window.current;
+            let left = [
+                `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
+                    `<img src="left.png">`,
+                `</a>`,
+            ].join("")
+            $(".left").replaceWith(left);
         }
 
         window.max = newMax;
