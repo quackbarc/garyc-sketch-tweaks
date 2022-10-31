@@ -123,6 +123,17 @@ let lastAlertPromise = null;
 let cachedCanvasBlob = null;
 window.surpassPossible = false;
 
+function getTile(id) {
+    return $([
+        `<a href="#${id}" onclick="show(${id});">`,
+        `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=20" style="`,
+            `padding: 5px;`,
+            `width: 160px;`,
+            `height: 120px;`,
+        `"></a>`,
+    ].join(""));
+}
+
 function currentURL() {
     if(window.db != 0) {
         return `https://garyc.me/sketch/gallery.php?db=${window.db}#${window.current}`;
@@ -176,8 +187,33 @@ function update() {
     }
 }
 
-function refresh() {
-    // dummy
+async function refresh() {
+    $("#refresh").prop("disabled", true);
+    $("#refresh").val("checking...");
+
+    function enableRefresh() {
+        $("#refresh").prop("disabled", false);
+        $("#refresh").val("refresh");
+    }
+
+    await fetch(`getMaxID.php?db=${db}`)
+      .then(r => r.text())
+      .then(function(dat) {
+        const newMax = parseInt(dat);
+        if(window.max == newMax) return;
+
+        for(let id = window.max + 1; id <= newMax; id++) {
+            $("#tiles").prepend(
+                $(getTile(id))
+                  .hide()
+                  .show(1000)
+            );
+        }
+
+        window.max = newMax;
+      });
+
+    enableRefresh();
 }
 
 function show(id, force=false) {
@@ -299,14 +335,7 @@ function addMore(n=100) {
     let target = Math.max(last - n, limit);
     let newtiles = [];
     for(let id = last - 1; id >= target; id--) {
-        newtiles.push([
-            `<a href="#${id}" onclick="show(${id});">`,
-            `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=20" style="`,
-                `padding: 5px;`,
-                `width: 160px;`,
-                `height: 120px;`,
-            `"></a>`,
-        ].join(""));
+        newtiles.push(getTile(id));
     }
 
     if(target == limit && last != limit) {
