@@ -22,11 +22,6 @@
         - auto adding left arrow
     - update():
         - fix segmented lines
-        - fix constant TypeErrors from malformed data
-        - #7198742: fix early termination of update() that causes last line to not be drawn
-          - the reset back to -1 happens before the `graphics` line drawing commands, and
-            autodrawpos gets incremented right BEFORE the reset. if autodrawpos is incremented
-            to be equal to lines.length, the reset happens one line too early.
 
     - debug:
       - why "0% ink used" pops up when a sketch is still loading
@@ -168,7 +163,17 @@ async function detailsAlert(msg) {
 // overrides
 
 function update() {
-    // dummy
+    if(autodrawpos >= 0) {
+        for(var i = 0; i < 8; i++) {
+            if(autodrawpos == lines.length) {
+                autodrawpos = -1;
+                break;
+            }
+            var line = lines[autodrawpos++];
+            graphics.moveTo(line.x1, line.y1);
+            graphics.lineTo(line.x2, line.y2);
+        }
+    }
 }
 
 function refresh() {
