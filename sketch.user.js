@@ -17,7 +17,6 @@
 
 /* TODO:
     - SVG saving..?
-    - correct gallery thumbnail resolutions? requires refresh() to be monkeypatched too
 
     - debug:
       - why "0% ink used" pops up when a sketch is still loading
@@ -48,6 +47,7 @@ function _getSettings() {
         theme: "auto",
         noAnimation: false,
         doReplay: false,
+        thumbQuality: "default",
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -120,9 +120,22 @@ let cachedCanvasBlob = null;
 window.surpassPossible = false;
 
 function getTile(id) {
+    let size;
+    switch(settings.thumbQuality) {
+        case "raster":
+            size = 20.1;
+            break;
+        case "hq":
+            size = 40;
+            break;
+        case "default":
+        default:
+            size = 20;
+    };
+
     return $([
         `<a href="#${id}" onclick="show(${id});">`,
-        `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=20" style="`,
+        `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=${size}" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
@@ -534,6 +547,14 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <br>
             <i>(useful to turn off to reduce browser history clutter)</i>
         </div>
+        <div class="preference">
+            <label for="thumbquality">Thumbnail quality:</label>
+            <select id="thumbquality" name="thumbquality">
+                <option value="default" selected>Default</option>
+                <option value="raster">Rasterized</option>
+                <option value="hq">High quality</option>
+            </select>
+        </div>
     `);
     button.click(() => preferences.toggle());
     $("#holder").before([button, preferences]);
@@ -542,6 +563,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#skipanimation").prop("checked", settings.noAnimation);
     $("#doreplay").prop("checked", settings.doReplay);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
+    $("#thumbquality").val(settings.thumbQuality);
 
     $("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -563,6 +585,26 @@ if(window.location.pathname == "/sketch/gallery.php") {
         settings.theme = e.target.value;
         _updateTheme();
         _saveSettings();
+    });
+    $("#thumbquality").change(function(e) {
+        settings.thumbQuality = e.target.value;
+        _saveSettings();
+
+        let size;
+        switch(settings.thumbQuality) {
+            case "raster":
+                size = 20.1;
+                break;
+            case "hq":
+                size = 40;
+                break;
+            case "default":
+            default:
+                size = 20;
+        };
+        $("a > img").each(function(i, e) {
+            e.src = e.src.replace(/size=[\d.]+/, `size=${size}`);
+        });
     });
 
     window.update = update;
