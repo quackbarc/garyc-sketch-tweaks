@@ -194,34 +194,39 @@ async function refresh() {
         $("#refresh").val("refresh");
     }
 
-    await fetch(`getMaxID.php?db=${db}`)
-      .then(r => r.text())
-      .then(function(dat) {
-        const newMax = parseInt(dat);
-        if(window.max == newMax) return;
+    $.ajax({
+        url: `/sketch/getMaxID.php?db=${db}`,
+        datatype: "text",
+        success: function(dat) {
+            const newMax = parseInt(dat);
+            if(window.max == newMax) {
+                return enableRefresh();
+            }
 
-        for(let id = window.max + 1; id <= newMax; id++) {
-            $("#tiles").prepend(
-                $(getTile(id))
-                  .hide()
-                  .show(1000)
-            );
-        }
+            for(let id = window.max + 1; id <= newMax; id++) {
+                $("#tiles").prepend(
+                    $(getTile(id))
+                      .hide()
+                      .show(1000)
+                );
+            }
 
-        if(window.current == window.max) {
-            let cur = window.current;
-            let left = [
-                `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
-                    `<img src="left.png">`,
-                `</a>`,
-            ].join("")
-            $(".left").replaceWith(left);
-        }
-
-        window.max = newMax;
-      });
-
-    enableRefresh();
+            if(window.current == window.max) {
+                let cur = window.current;
+                let left = [
+                    `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
+                        `<img src="left.png">`,
+                    `</a>`,
+                ].join("")
+                $(".left").replaceWith(left);
+            }
+            window.max = newMax;
+            enableRefresh();
+        },
+        error: function(req) {
+            enableRefresh();
+        },
+    });
 }
 
 function drawData(data) {
@@ -356,15 +361,20 @@ async function get(id) {
         return success(cache["#" + id]);
     }
 
-    await fetch(`/sketch/get.php?db=${db}&id=${id}`)
-      .then(r => r.text())
-      .then(function(dat) {
-        addToCache(id, dat);
-        if(window.current == id) {
-            success(dat);
-        }
-      })
-      .catch(e => $("#details").html("network error."));
+    $.ajax({
+        url: `/sketch/get.php?db=${db}&id=${id}`,
+        datatype: "text",
+        success: function(dat) {
+            addToCache(id, dat);
+            if(window.current == id) {
+                success(dat);
+            }
+        },
+        error: function(req) {
+            console.log(req);
+            $("#details").html("network error.");
+        },
+    });
 }
 
 function addMore(n=100) {
