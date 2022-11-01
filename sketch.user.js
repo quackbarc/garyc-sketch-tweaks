@@ -5,7 +5,7 @@
 // @description QoL tweaks and personal mods for garyc.me/sketch
 // @homepage    https://github.com/quackbarc/garyc-sketch-tweaks
 // @author      quac
-// @version     1.0.1
+// @version     1.1.0
 // @match       https://garyc.me/sketch*
 // @icon        https://raw.githubusercontent.com/quackbarc/garyc-sketch-tweaks/master/crunge.png
 // @downloadURL https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
