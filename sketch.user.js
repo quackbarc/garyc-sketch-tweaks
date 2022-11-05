@@ -622,7 +622,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     document.addEventListener("keydown", async function(e) {
         // prevent abortion of resource loading when closing the viewer
         // while the page is still loading
-        if(e.key == "Escape" && document.readyState != "complete") {
+        if(e.key == "Escape" && window.current != null && document.readyState != "complete") {
             e.preventDefault();
         }
 
