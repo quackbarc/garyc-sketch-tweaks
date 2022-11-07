@@ -18,10 +18,10 @@
 /* TODO:
     - SVG saving..?
     - animation speed setting..?
+    - option to save the canvas instead of the getIMG link?
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
-      - "0% ink used" pops up when a sketch is still loading
       - race conditions for fetching the same sketch and drawing it still happen.
 */
 
@@ -322,8 +322,10 @@ function show(id, force=false) {
     $("#holder").append([top, left, sketch, right, bottom, save]);
     $("#tiles").css({opacity: "75%"});
 
-    // this is better done on reset() but i don't wanna monkeypatch
-    // that method right now just for this
+    // clear alerts and other cached properties from the last shown sketch
+    lastAlertPromise = null;
+    // clearing the cached blob is better done on reset() but i don't wanna
+    // monkeypatch that method right now just for this
     cachedCanvasBlob = null;
 
     sketch.show();
