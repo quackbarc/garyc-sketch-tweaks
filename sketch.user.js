@@ -133,9 +133,10 @@ function getTile(id) {
             size = 20;
     };
 
+    let dbParam = window.db != 0 ? `&db=${window.db}` : "";
     return $([
         `<a href="#${id}" onclick="show(${id});">`,
-        `<img src="getIMG.php?format=png&db=${window.db}&id=${id}&size=${size}" style="`,
+        `<img src="getIMG.php?format=png${dbParam}&id=${id}&size=${size}" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
