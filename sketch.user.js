@@ -208,6 +208,8 @@ async function refresh() {
         $("#refresh").val("refresh");
     }
 
+    window.getStats();
+
     $.ajax({
         url: `/sketch/getMaxID.php?db=${db}`,
         datatype: "text",
@@ -467,6 +469,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
 
         /* preferences */
+        input[type=submit], button {
+            margin: 0 3px;
+        }
         #preferences {
             width: 350px;
             margin: 5px; /* match that of #tiles */
@@ -560,7 +565,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
         </div>
     `);
     button.click(() => preferences.toggle());
-    $("#holder").before([button, preferences]);
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
     $("#skipanimation").prop("checked", settings.noAnimation);
@@ -698,6 +702,17 @@ if(window.location.pathname == "/sketch/gallery.php") {
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
+        // load preferences button here.
+        // todo: i dunno if this can be outside of $(document).ready(),
+        // but it definitely, for some reason, didn't work in the parent scope.
+        $("input[type=submit]:last-of-type").after(button);
+        $("#tiles").before(preferences);
+        // remove text nodes that causes buttons to be spaced out.
+        // the spacing will get re-added as css.
+        let text_nodes = Array
+            .from(document.body.childNodes)
+            .filter(e => e.nodeType == Node.TEXT_NODE);
+        $(text_nodes).remove();
     });
 
     $(document).ready(function() {
