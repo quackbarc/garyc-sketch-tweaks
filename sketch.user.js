@@ -19,6 +19,7 @@
     - SVG saving..?
     - animation speed setting..?
     - option to save the canvas instead of the getIMG link?
+    - fix incorrect grammar in the gallery's stats bar? (it's missing a comma)
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
@@ -429,6 +430,18 @@ function addMore(n=100) {
 
 if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
+        body {
+            margin: 10px 10px;
+        }
+
+        input[type=submit], button {
+            margin: 5px 4px;
+        }
+
+        #stats {
+            margin: 0px 4px;
+        }
+
         canvas {
             /* prevent canvas from showing up for a split second on page boot */
             display: none;
@@ -469,9 +482,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
 
         /* preferences */
-        input[type=submit], button {
-            margin: 0 3px;
-        }
         #preferences {
             width: 350px;
             margin: 5px; /* match that of #tiles */
