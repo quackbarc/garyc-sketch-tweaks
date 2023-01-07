@@ -575,6 +575,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
         </div>
     `);
     button.click(() => preferences.toggle());
+
+    $("input[type=submit]:last-of-type").after(button);
+    $("#tiles").before(preferences);
+
     $("#theme").val(settings.theme);
     $("#cachesize").val(settings.cacheSize);
     $("#skipanimation").prop("checked", settings.noAnimation);
@@ -712,11 +716,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
-        // load preferences button here.
-        // todo: i dunno if this can be outside of $(document).ready(),
-        // but it definitely, for some reason, didn't work in the parent scope.
-        $("input[type=submit]:last-of-type").after(button);
-        $("#tiles").before(preferences);
         // remove text nodes that causes buttons to be spaced out.
         // the spacing will get re-added as css.
         let text_nodes = Array
