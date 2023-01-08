@@ -119,6 +119,7 @@ let lastCurrent = null;
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
 window.surpassPossible = false;
+window.details = null;
 
 function getTile(id) {
     let size;
@@ -166,8 +167,40 @@ function updateDetails(msg=null) {
         elems.push("(unavailable)");
     }
 
-    let url = currentURL();
+    // This build custom HTML for the URL, unlike currentURL(), which only
+    // returns it as a string.
+    let current = `<span class="id">#${window.current}</span>`;
+    let url = (
+        window.db != 0
+        ? `https://garyc.me/sketch/gallery.php?db=${window.db}${current}`
+        : `https://garyc.me/sketch/gallery.php${current}`
+    );
     elems.push(url);
+
+    const today = new Date();
+    const yesterday = new Date(today - 86_400_000);
+    const dateOptions = {
+        weekday: "short",
+        month: "long",
+        day: "2-digit",
+        year: "numeric",
+    };
+
+    let origin = window.details.origin;
+    let date = new Date(window.details.timestamp * 1000);
+    let timestamp = date
+        .toLocaleString("default", {
+            weekday: "short",
+            month: "long",
+            day: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+        .replace(today.toLocaleString("default", dateOptions), "Today")
+        .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+    let detailsText = `<span class="extra">from ${origin} • ${timestamp}</span>`;
+    elems.push(detailsText);
 
     $("#details").empty();
     $("#details").append(elems.join("<br>"));
@@ -349,11 +382,13 @@ function hide() {
     $("#holder").removeClass("active");
     window.location.hash = 0;
     window.current = lastCurrent = null;
+    window.details = null;
     reset();
 }
 
-function addToCache(id, dat) {
-    cache['#' + id] = dat.trim();
+function addToCache(id, details) {
+    details.data = details.data.trim();
+    cache['#' + id] = details;
     let keys = Object.keys(cache);
     let tail = keys[0];
     if(keys.length > settings.cacheSize) {
@@ -362,8 +397,10 @@ function addToCache(id, dat) {
 }
 
 async function get(id) {
-    function success(dat) {
+    function success(details) {
+        let dat = details.data;
         window.dat = dat;
+        window.details = details;
         updateDetails();
 
         if(dat == "wait") return;
@@ -381,12 +418,12 @@ async function get(id) {
     }
 
     $.ajax({
-        url: `/sketch/get.php?db=${db}&id=${id}`,
-        datatype: "text",
-        success: function(dat) {
-            addToCache(id, dat);
+        url: `/sketch/get.php?db=${db}&id=${id}&details`,
+        dataType: "json",
+        success: function(details) {
+            addToCache(id, details);
             if(window.current == id) {
-                success(dat);
+                success(details);
             }
         },
         error: function(req) {
@@ -456,6 +493,15 @@ if(window.location.pathname == "/sketch/gallery.php") {
             text-align: left;
             font-size: 18px;
             font-family: monospace;
+        }
+
+        #details .id {
+            font-weight: bold;
+        }
+
+        #details .extra {
+            opacity: 80%;
+            font-style: italic;
         }
 
         #holder {
