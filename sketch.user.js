@@ -121,19 +121,22 @@ let cachedCanvasBlob = null;
 window.surpassPossible = false;
 window.details = null;
 
-function getTile(id) {
-    let size;
-    switch(settings.thumbQuality) {
+function _getThumbSize(qualityName) {
+    switch(qualityName) {
+        case "oldDefault":
+            return 20;
         case "raster":
-            size = 20.1;
-            break;
+            return 20.1;
         case "hq":
-            size = 40;
-            break;
+            return 40;
         case "default":
         default:
-            size = 20;
+            return 100;
     };
+}
+
+function getTile(id) {
+    let size = _getThumbSize(settings.thumbQuality);
 
     let dbParam = window.db != 0 ? `&db=${window.db}` : "";
     return $([
@@ -633,8 +636,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
             <label for="thumbquality">Thumbnail quality:</label>
             <select id="thumbquality" name="thumbquality">
                 <option value="default" selected>Default</option>
+                <option value="hq">Downscaled</option>
                 <option value="raster">Rasterized</option>
-                <option value="hq">High quality</option>
+                <option value="oldDefault">Old default</option>
             </select>
         </div>
         <div class="preference">
@@ -680,20 +684,12 @@ if(window.location.pathname == "/sketch/gallery.php") {
         settings.thumbQuality = e.target.value;
         _saveSettings();
 
-        let size;
-        switch(settings.thumbQuality) {
-            case "raster":
-                size = 20.1;
-                break;
-            case "hq":
-                size = 40;
-                break;
-            case "default":
-            default:
-                size = 20;
-        };
-        $("a > img").each(function(i, e) {
-            e.src = e.src.replace(/size=[\d.]+/, `size=${size}`);
+        let size = _getThumbSize(settings.thumbQuality);
+        $("a > img").each(function(ind, img) {
+            img.src = img.src.replace(
+                /size=[\d.]+/,
+                `size=${size}`
+            );
         });
     });
     $("#relativetimestamps").change(function(e) {
