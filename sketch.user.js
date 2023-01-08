@@ -23,7 +23,6 @@
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
-      - race conditions for fetching the same sketch and drawing it still happen.
 */
 
 var settings = {};
@@ -424,6 +423,11 @@ async function get(id) {
         url: `/sketch/get.php?db=${db}&id=${id}&details`,
         dataType: "json",
         success: function(details) {
+            if(window.dat.trim() == details.data.trim()) {
+                // We already loaded this sketch; don't load it again.
+                return;
+            }
+
             addToCache(id, details);
             if(window.current == id) {
                 success(details);
