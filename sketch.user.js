@@ -188,6 +188,17 @@ function updateDetails(msg=null) {
             hour: "2-digit",
             minute: "2-digit",
         });
+    let timestampTooltip = date
+        .toLocaleString("default", {
+            weekday: "short",
+            month: "long",
+            day: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            timeZoneName: "short",
+        });
     if(settings.relativeTimestamps) {
         const today = new Date();
         const yesterday = new Date(today - 86_400_000);
@@ -201,7 +212,8 @@ function updateDetails(msg=null) {
             .replace(today.toLocaleString("default", dateOptions), "Today")
             .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
     }
-    let detailsText = `<span class="extra">from ${origin} • ${timestamp}</span>`;
+    let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
+    let detailsText = `<span class="extra">from ${origin} • ${timestampHTML}</span>`;
     elems.push(detailsText);
 
     $("#details").empty();
