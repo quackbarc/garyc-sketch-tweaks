@@ -430,7 +430,6 @@ async function get(id) {
             }
         },
         error: function(req) {
-            console.log(req);
             $("#details").html("network error.");
         },
     });
