@@ -699,12 +699,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
     // these are keybinds i personally use to speed up sketch posting.
     // feel free to remove em or use em.
     document.addEventListener("keydown", async function(e) {
-        // prevent abortion of resource loading when closing the viewer
-        // while the page is still loading
-        if(e.key == "Escape" && window.current != null && document.readyState != "complete") {
-            e.preventDefault();
-        }
-
         // shortcuts from here on only apply when the viewer's open
         if(window.current == null) return;
 
@@ -754,6 +748,16 @@ if(window.location.pathname == "/sketch/gallery.php") {
             $(".save").click();
         }
     });
+
+    // Prevent abortion of page load when `escape` is pressed and the viewer
+    // is still open; the user only wants to exit the viewer in this case.
+    document.addEventListener("keydown", function(e) {
+        if(e.key == "Escape"
+            && window.current != null
+            && document.readyState != "complete") {
+            e.preventDefault();
+        }
+    }, true);
 
     window.addEventListener("hashchange", function(e) {
         let id = parseInt(window.location.hash.slice(1));
