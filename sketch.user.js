@@ -49,6 +49,7 @@ function _getSettings() {
         noAnimation: false,
         doReplay: false,
         thumbQuality: "default",
+        relativeTimestamps: true,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -177,15 +178,6 @@ function updateDetails(msg=null) {
     );
     elems.push(url);
 
-    const today = new Date();
-    const yesterday = new Date(today - 86_400_000);
-    const dateOptions = {
-        weekday: "short",
-        month: "long",
-        day: "2-digit",
-        year: "numeric",
-    };
-
     let origin = window.details.origin;
     let date = new Date(window.details.timestamp * 1000);
     let timestamp = date
@@ -196,9 +188,20 @@ function updateDetails(msg=null) {
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-        })
-        .replace(today.toLocaleString("default", dateOptions), "Today")
-        .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+        });
+    if(settings.relativeTimestamps) {
+        const today = new Date();
+        const yesterday = new Date(today - 86_400_000);
+        const dateOptions = {
+            weekday: "short",
+            month: "long",
+            day: "2-digit",
+            year: "numeric",
+        };
+        timestamp = timestamp
+            .replace(today.toLocaleString("default", dateOptions), "Today")
+            .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+    }
     let detailsText = `<span class="extra">from ${origin} • ${timestamp}</span>`;
     elems.push(detailsText);
 
@@ -619,6 +622,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
                 <option value="hq">High quality</option>
             </select>
         </div>
+        <div class="preference">
+            <label for="relativetimestamps">Show timestamps as relative:</label>
+            <input type="checkbox" id="relativetimestamps">
+        </div>
     `);
     button.click(() => preferences.toggle());
 
@@ -631,6 +638,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $("#doreplay").prop("checked", settings.doReplay);
     $("#hashnav").prop("checked", settings.changeHashOnNav);
     $("#thumbquality").val(settings.thumbQuality);
+    $("#relativetimestamps").prop("checked", settings.relativeTimestamps);
 
     $("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -672,6 +680,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
         $("a > img").each(function(i, e) {
             e.src = e.src.replace(/size=[\d.]+/, `size=${size}`);
         });
+    });
+    $("#relativetimestamps").change(function(e) {
+        settings.relativeTimestamps = e.target.checked;
+        _saveSettings();
     });
 
     window.update = update;
