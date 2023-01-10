@@ -158,16 +158,17 @@ function currentURL() {
 }
 
 function updateDetails(msg=null) {
+    const unavailable = window.dat == "wait";
     let elems = [];
 
     if(msg != null) {
         elems.push(msg);
-    } else if(window.dat != "wait") {
+    } else if(unavailable) {
+        elems.push("(unavailable)");
+    } else {
         let ink = Math.floor(window.dat.length / 65535 * 100);
         let inkText = `${ink}% ink used`;
         elems.push(inkText);
-    } else {
-        elems.push("(unavailable)");
     }
 
     // This build custom HTML for the URL, unlike currentURL(), which only
@@ -180,44 +181,46 @@ function updateDetails(msg=null) {
     );
     elems.push(url);
 
-    let origin = window.details.origin;
-    let date = new Date(window.details.timestamp * 1000);
-    let timestamp = date
-        .toLocaleString("default", {
-            weekday: "short",
-            month: "long",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    let timestampTooltip = date
-        .toLocaleString("default", {
-            weekday: "short",
-            month: "long",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            timeZoneName: "short",
-        });
-    if(settings.relativeTimestamps) {
-        const today = new Date();
-        const yesterday = new Date(today - 86_400_000);
-        const dateOptions = {
-            weekday: "short",
-            month: "long",
-            day: "2-digit",
-            year: "numeric",
-        };
-        timestamp = timestamp
-            .replace(today.toLocaleString("default", dateOptions), "Today")
-            .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+    if(!unavailable) {
+        let origin = window.details.origin;
+        let date = new Date(window.details.timestamp * 1000);
+        let timestamp = date
+            .toLocaleString("default", {
+                weekday: "short",
+                month: "long",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        let timestampTooltip = date
+            .toLocaleString("default", {
+                weekday: "short",
+                month: "long",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short",
+            });
+        if(settings.relativeTimestamps) {
+            const today = new Date();
+            const yesterday = new Date(today - 86_400_000);
+            const dateOptions = {
+                weekday: "short",
+                month: "long",
+                day: "2-digit",
+                year: "numeric",
+            };
+            timestamp = timestamp
+                .replace(today.toLocaleString("default", dateOptions), "Today")
+                .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+        }
+        let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
+        let detailsText = `<span class="extra">from ${origin} • ${timestampHTML}</span>`;
+        elems.push(detailsText);
     }
-    let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
-    let detailsText = `<span class="extra">from ${origin} • ${timestampHTML}</span>`;
-    elems.push(detailsText);
 
     $("#details").empty();
     $("#details").append(elems.join("<br>"));
@@ -436,8 +439,22 @@ async function get(id) {
 
     $.ajax({
         url: `/sketch/get.php?db=${db}&id=${id}&details`,
-        dataType: "json",
-        success: function(details) {
+        dataType: "text",
+        success: function(resp) {
+            // Despite being a JSON endpoint, "wait" still gets sent as plain
+            // text without quotes.
+            let details;
+            if(resp == "wait") {
+                details = {
+                    id: id,
+                    data: "wait",
+                    timestamp: null,
+                    origin: null,
+                }
+            } else {
+                details = JSON.parse(resp);
+            }
+
             if(window.dat.trim() == details.data.trim()) {
                 // We already loaded this sketch; don't load it again.
                 return;
