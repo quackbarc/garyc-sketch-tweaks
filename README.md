@@ -20,7 +20,7 @@ A complete list of changes by the script is listed below.
 * Dark theme, automatically detected or manually set.
 * Drawing client redesigned to imitate the old Flash UI.
 * Gallery sketch caching to a configurable limit.
-* Additional details on gallery sketches, like ink used.
+* A slightly better-looking details section on gallery sketches, with extra info like "ink used".
 * Optional auto-skipping and replay of sketch animations in the gallery.
 
 ### Bug fixes
@@ -41,9 +41,9 @@ A complete list of changes by the script is listed below.
 * Fixed sketch animations ending one line too early.
 * Fixed duplicate sketches from scrolling down.
 * Fixed sketches being saved with a `.jpg` extension despite being PNGs.
-* Handled malformed sketch data that would've caused constant errors on the console.
+* Handled silent errors from parsing unreachable sketches as JSON, as it's actually sent as raw text.
 * URL changes now navigate sketches.
-* Loading the same sketch twice won't redraw the sketch.
+* Concurrent fetches of sketches will only animate the sketch once.
 * Pressing `escape` on the gallery while images are still loading will keep them loading.
 * The left button on the sketch viewer automatically appears when the gallery gets updated.
 * Gallery wouldn't load old sketches that are unreachable (sketches that would show up as X's), by default at least.
@@ -54,7 +54,6 @@ A complete list of changes by the script is listed below.
 * Swapping and peeking are properly mutex locked.
 * Swapping and peeking now handle request errors.
 * Swapping and peeking wouldn't send extra `getStats` requests.
-* Added quality settings for gallery thumbnails.
 * Gallery immediately refreshes sketches on page load so it's up to date.
 * Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
@@ -67,6 +66,7 @@ A complete list of changes by the script is listed below.
 ### Personal tweaks
 
 * There's a nice little interface for userscript preferences (found in the gallery).
+* Thumbnails can be shown in different qualities: default (100%), downscaled (40%), rasterized (20.1%) and the old default (20%).
 * Pressing left/right in the gallery without the viewer sketch open will show the latest sketch.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer has a box shadow so it visually stands out.
@@ -76,5 +76,8 @@ A complete list of changes by the script is listed below.
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
+* Hovering on sketch timestamps will show its full date and time.
+* Sketch timestamps may show dates as "Today" or "Yesterday".
+    * This can be disabled, mainly because I can't be bothered localizing those words for other time locales.
 
 ---
