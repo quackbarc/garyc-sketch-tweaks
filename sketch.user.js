@@ -109,7 +109,7 @@ main();
 
 if(window.location.pathname.startsWith("/sketch")) {
     let db = new URLSearchParams(window.location.search).get("db");
-    window.db = db != null ? parseInt(db) : 0;
+    window.db = db && parseInt(db);    // db can be `null`
 }
 
 /* /sketch/gallery.php */
@@ -138,7 +138,7 @@ function _getThumbSize(qualityName) {
 function getTile(id) {
     let size = _getThumbSize(settings.thumbQuality);
 
-    let dbParam = window.db != 0 ? `&db=${window.db}` : "";
+    let dbParam = window.db != null ? `&db=${window.db}` : "";
     return $([
         `<a href="#${id}" onclick="show(${id});">`,
         `<img src="getIMG.php?format=png${dbParam}&id=${id}&size=${size}" style="`,
@@ -150,7 +150,7 @@ function getTile(id) {
 }
 
 function currentURL() {
-    if(window.db != 0) {
+    if(window.db != null) {
         return `https://garyc.me/sketch/gallery.php?db=${window.db}#${window.current}`;
     } else {
         return `https://garyc.me/sketch/gallery.php#${window.current}`;
@@ -175,7 +175,7 @@ function updateDetails(msg=null) {
     // returns it as a string.
     let current = `<span class="id">#${window.current}</span>`;
     let url = (
-        window.db != 0
+        window.db != null
         ? `https://garyc.me/sketch/gallery.php?db=${window.db}${current}`
         : `https://garyc.me/sketch/gallery.php${current}`
     );
@@ -265,7 +265,7 @@ async function refresh() {
     window.getStats();
 
     $.ajax({
-        url: `/sketch/getMaxID.php?db=${db}`,
+        url: `/sketch/getMaxID.php?db=${db || ""}`,
         datatype: "text",
         success: function(dat) {
             const newMax = parseInt(dat);
@@ -357,7 +357,7 @@ function show(id, force=false) {
     // html building
     // TODO: don't rebuild this everytime this function's called
 
-    var downloadFn = window.db == 0 ? `${id}` : `${window.db}#${id}`;
+    var downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
     var top = `<a href="#0" onclick="hide()" class="top"><img src="top.png"></a>`;
     var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left"><img src="left.png"></a>`;
     var leftMax = `<div class="left"></div>`;
@@ -438,7 +438,7 @@ async function get(id) {
     }
 
     $.ajax({
-        url: `/sketch/get.php?db=${db}&id=${id}&details`,
+        url: `/sketch/get.php?db=${db || ""}&id=${id}&details`,
         dataType: "text",
         success: function(resp) {
             // Despite being a JSON endpoint, "wait" still gets sent as plain
@@ -910,7 +910,7 @@ function swap() {
     }
 
     $.ajax({
-        url: `swap.php?db=${db}&v=32`,
+        url: `swap.php?db=${db || ""}&v=32`,
         method: "POST",
         data: window.dat,
 
@@ -936,7 +936,7 @@ function attemptSwap() {
     _setProgress(2);
 
     $.ajax({
-        url: `get.php?id=${swapID}&db=${db}`,
+        url: `get.php?id=${swapID}&db=${db || ""}`,
         method: "GET",
 
         error: function() {
@@ -968,7 +968,7 @@ function getLatest() {
     window.locked = true;
 
     $.ajax({
-        url: `get.php?db=${db}`,
+        url: `get.php?db=${db || ""}`,
         method: "GET",
 
         error: function() {
