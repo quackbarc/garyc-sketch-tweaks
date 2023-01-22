@@ -19,7 +19,6 @@
     - SVG saving..?
     - animation speed setting..?
     - option to save the canvas instead of the getIMG link?
-    - fix incorrect grammar in the gallery's stats bar? (it's missing a comma)
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
@@ -235,6 +234,21 @@ async function detailsAlert(msg) {
     }
 }
 
+function updateStats(json) {
+    const {sketches, artists, peekers} = json;
+    let es_were = sketches == 1 ? " was" : "es were";
+    let different_artists = artists == 1 ? " artist" : "different artists";
+    let were = peekers == 1 ? "was" : "were";
+    let people = peekers == 1 ? "person" : "people";
+
+    $("#stats").html(
+        "In the past 5 minutes, "
+        + `<b>${sketches}</b> sketch${es_were} swapped by `
+        + `<b>${artists}</b> ${different_artists}. There ${were} also `
+        + `<b>${peekers}</b> ${people} who only peeked.`
+    );
+}
+
 // overrides
 
 function update() {
@@ -262,13 +276,13 @@ async function refresh() {
         $("#refresh").val("refresh");
     }
 
-    window.getStats();
-
     $.ajax({
-        url: `/sketch/getMaxID.php?db=${db || ""}`,
-        datatype: "text",
-        success: function(dat) {
-            const newMax = parseInt(dat);
+        url: `/sketch/getStats.php?details&db=${db || ""}`,
+        dataType: "json",
+        success: function(json) {
+            updateStats(json);
+
+            const newMax = json.maxID;
             if(window.max == newMax) {
                 return enableRefresh();
             }
@@ -290,7 +304,9 @@ async function refresh() {
                 ].join("")
                 $(".left").replaceWith(left);
             }
+
             window.max = newMax;
+            window.min = json.minID;
             enableRefresh();
         },
         error: function(req) {
@@ -806,6 +822,8 @@ if(window.location.pathname == "/sketch/gallery.php") {
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
+        // add a little init text for the stats
+        document.getElementById("stats").innerHTML = "...";
         // remove text nodes that causes buttons to be spaced out.
         // the spacing will get re-added as css.
         let text_nodes = Array
