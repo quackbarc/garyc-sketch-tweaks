@@ -54,7 +54,6 @@ A complete list of changes by the script is listed below.
 * Swapping and peeking are properly mutex locked.
 * Swapping and peeking now handle request errors.
 * Swapping and peeking wouldn't send extra `getStats` requests.
-* Gallery immediately refreshes sketches on page load so it's up to date.
 * Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of having its HTML purged.

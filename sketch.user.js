@@ -817,8 +817,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     document.addEventListener("DOMContentLoaded", function() {
         window.current = null;
-        // prematurely refresh cached max and thumbnails
-        refresh();
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
