@@ -566,7 +566,8 @@ function createPreferencesUI() {
             <input type="checkbox" id="relativetimestamps">
         </div>
     `);
-    button.click(() => preferences.toggle());
+
+    button.click(() => preferences.slideToggle(200));
 
     preferences.find("#theme").val(settings.theme);
     preferences.find("#cachesize").val(settings.cacheSize);
