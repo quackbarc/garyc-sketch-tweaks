@@ -519,6 +519,104 @@ function addMore(n=100) {
     $("#tiles").append(newtiles);
 }
 
+function createPreferencesUI() {
+    const button = $("<button>preferences</button>");
+    const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
+    preferences.html(`
+        <legend>Preferences</legend>
+        <div class="preference">
+            <label for="theme">Theme:</label>
+            <select id="theme" name="theme">
+                <option value="auto" selected>System default</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+        <div class="preference">
+            <label for="cachesize">Cache size:</label>
+            <input type="number" id="cachesize" min="0">
+        </div>
+        <div class="preference">
+            <label for="skipanimation">Auto-skip sketch animation:</label>
+            <input type="checkbox" id="skipanimation">
+        </div>
+        <div class="preference">
+            <label for="doreplay">Enable sketch animation replay:</label>
+            <input type="checkbox" id="doreplay">
+            <br>
+            <i>(with LMB click or space keypress)</i>
+        </div>
+        <div class="preference">
+            <label for="hashnav">Update URL from arrow key navigation:</label>
+            <input type="checkbox" id="hashnav">
+            <br>
+            <i>(useful to turn off to reduce browser history clutter)</i>
+        </div>
+        <div class="preference">
+            <label for="thumbquality">Thumbnail quality:</label>
+            <select id="thumbquality" name="thumbquality">
+                <option value="default" selected>Default</option>
+                <option value="hq">Downscaled</option>
+                <option value="raster">Rasterized</option>
+                <option value="oldDefault">Old default</option>
+            </select>
+        </div>
+        <div class="preference">
+            <label for="relativetimestamps">Show timestamps as relative:</label>
+            <input type="checkbox" id="relativetimestamps">
+        </div>
+    `);
+    button.click(() => preferences.toggle());
+
+    preferences.find("#theme").val(settings.theme);
+    preferences.find("#cachesize").val(settings.cacheSize);
+    preferences.find("#skipanimation").prop("checked", settings.noAnimation);
+    preferences.find("#doreplay").prop("checked", settings.doReplay);
+    preferences.find("#hashnav").prop("checked", settings.changeHashOnNav);
+    preferences.find("#thumbquality").val(settings.thumbQuality);
+    preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
+
+    preferences.find("#cachesize").change(function(e) {
+        settings.cacheSize = e.target.value;
+        _saveSettings();
+    });
+    preferences.find("#hashnav").change(function(e) {
+        settings.changeHashOnNav = e.target.checked;
+        _saveSettings();
+    });
+    preferences.find("#skipanimation").change(function(e) {
+        settings.noAnimation = e.target.checked;
+        _saveSettings();
+    });
+    preferences.find("#doreplay").change(function(e) {
+        settings.doReplay = e.target.checked;
+        _saveSettings();
+    });
+    preferences.find("#theme").change(function(e) {
+        settings.theme = e.target.value;
+        _updateTheme();
+        _saveSettings();
+    });
+    preferences.find("#thumbquality").change(function(e) {
+        settings.thumbQuality = e.target.value;
+        _saveSettings();
+
+        let size = _getThumbSize(settings.thumbQuality);
+        $("a > img").each(function(ind, img) {
+            img.src = img.src.replace(
+                /size=[\d.]+/,
+                `size=${size}`
+            );
+        });
+    });
+    preferences.find("#relativetimestamps").change(function(e) {
+        settings.relativeTimestamps = e.target.checked;
+        _saveSettings();
+    });
+
+    return [button, preferences];
+}
+
 if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
         body {
@@ -632,104 +730,6 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
     `);
 
-    // add preferences menu in gallery
-    const button = $("<button>preferences</button>");
-    const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
-    preferences.html(`
-        <legend>Preferences</legend>
-        <div class="preference">
-            <label for="theme">Theme:</label>
-            <select id="theme" name="theme">
-                <option value="auto" selected>System default</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-            </select>
-        </div>
-        <div class="preference">
-            <label for="cachesize">Cache size:</label>
-            <input type="number" id="cachesize" min="0">
-        </div>
-        <div class="preference">
-            <label for="skipanimation">Auto-skip sketch animation:</label>
-            <input type="checkbox" id="skipanimation">
-        </div>
-        <div class="preference">
-            <label for="doreplay">Enable sketch animation replay:</label>
-            <input type="checkbox" id="doreplay">
-            <br>
-            <i>(with LMB click or space keypress)</i>
-        </div>
-        <div class="preference">
-            <label for="hashnav">Update URL from arrow key navigation:</label>
-            <input type="checkbox" id="hashnav">
-            <br>
-            <i>(useful to turn off to reduce browser history clutter)</i>
-        </div>
-        <div class="preference">
-            <label for="thumbquality">Thumbnail quality:</label>
-            <select id="thumbquality" name="thumbquality">
-                <option value="default" selected>Default</option>
-                <option value="hq">Downscaled</option>
-                <option value="raster">Rasterized</option>
-                <option value="oldDefault">Old default</option>
-            </select>
-        </div>
-        <div class="preference">
-            <label for="relativetimestamps">Show timestamps as relative:</label>
-            <input type="checkbox" id="relativetimestamps">
-        </div>
-    `);
-    button.click(() => preferences.toggle());
-
-    $("input[type=submit]:last-of-type").after(button);
-    $("#tiles").before(preferences);
-
-    $("#theme").val(settings.theme);
-    $("#cachesize").val(settings.cacheSize);
-    $("#skipanimation").prop("checked", settings.noAnimation);
-    $("#doreplay").prop("checked", settings.doReplay);
-    $("#hashnav").prop("checked", settings.changeHashOnNav);
-    $("#thumbquality").val(settings.thumbQuality);
-    $("#relativetimestamps").prop("checked", settings.relativeTimestamps);
-
-    $("#cachesize").change(function(e) {
-        settings.cacheSize = e.target.value;
-        _saveSettings();
-    });
-    $("#hashnav").change(function(e) {
-        settings.changeHashOnNav = e.target.checked;
-        _saveSettings();
-    });
-    $("#skipanimation").change(function(e) {
-        settings.noAnimation = e.target.checked;
-        _saveSettings();
-    });
-    $("#doreplay").change(function(e) {
-        settings.doReplay = e.target.checked;
-        _saveSettings();
-    });
-    $("#theme").change(function(e) {
-        settings.theme = e.target.value;
-        _updateTheme();
-        _saveSettings();
-    });
-    $("#thumbquality").change(function(e) {
-        settings.thumbQuality = e.target.value;
-        _saveSettings();
-
-        let size = _getThumbSize(settings.thumbQuality);
-        $("a > img").each(function(ind, img) {
-            img.src = img.src.replace(
-                /size=[\d.]+/,
-                `size=${size}`
-            );
-        });
-    });
-    $("#relativetimestamps").change(function(e) {
-        settings.relativeTimestamps = e.target.checked;
-        _saveSettings();
-    });
-
     window.update = update;
     window.refresh = refresh;
     setInterval(window.update, 1000/30);
@@ -817,6 +817,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     document.addEventListener("DOMContentLoaded", function() {
         window.current = null;
+
+        const [button, preferences] = createPreferencesUI();
+        $("input[type=submit]:last-of-type").after(button);
+        $("#tiles").before(preferences);
+
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
