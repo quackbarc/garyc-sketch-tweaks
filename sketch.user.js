@@ -811,6 +811,14 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     document.addEventListener("keydown", personalKeybinds.bind(this));
 
+    $(window).off("scroll");
+    $(window).on("scroll", function(e) {
+        let bottom = document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight) < 1;
+        if(bottom) {
+            addMore(100);
+        }
+    });
+
     // Prevent abortion of page load when `escape` is pressed and the viewer
     // is still open; the user only wants to exit the viewer in this case.
     document.addEventListener("keydown", function(e) {
