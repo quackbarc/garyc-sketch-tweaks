@@ -618,6 +618,74 @@ function createPreferencesUI() {
     return [button, preferences];
 }
 
+async function personalKeybinds(e) {
+    if(window.current == null) {
+        return;
+    }
+
+    switch(e.key.toLowerCase()) {
+        case " ": {
+            // space -- skip/replay animation
+            if(!(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
+                e.preventDefault();
+                if(autodrawpos == -1 && settings.doReplay) {
+                    drawData(window.dat);
+                } else {
+                    setData(window.dat);
+                }
+            }
+            break;
+        }
+        case "c": {
+            // ctrl+C -- copying URL to clipboard
+            if(e.ctrlKey && !(e.altKey || e.metaKey || e.shiftKey)) {
+                e.preventDefault();
+                await navigator.clipboard.writeText(currentURL());
+                await detailsAlert("copied url");
+            }
+
+            // ctrl+shift+C -- copying canvas image to clipboard
+            if(e.ctrlKey && e.shiftKey && !(e.altKey || e.metaKey)) {
+                if(!window.ClipboardItem) {
+                    await detailsAlert("no permission to copy canvas");
+                    return false;
+                }
+
+                e.preventDefault();
+
+                let blob = cachedCanvasBlob || await new Promise((resolve) => {
+                    document.querySelector("#sketch").toBlob(blob => resolve(blob))
+                });
+
+                if(autodrawpos == -1) {
+                    cachedCanvasBlob = blob;
+                }
+
+                try {
+                    await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
+                }
+                catch (e) {
+                    // .write will raise a DOMException if the document lost focus.
+                    // that should be the only user-made error to expect during the copying anyway.
+                    await detailsAlert("failed to copy canvas. try again?")
+                    throw e;
+                }
+
+                await detailsAlert("copied canvas");
+            }
+            break;
+        }
+        case "s": {
+            // ctrl+S -- downloads/saves a sketch
+            if(e.ctrlKey && !(e.altKey || e.metaKey || e.shiftKey)) {
+                e.preventDefault();
+                $(".save").click();
+            }
+        }
+    }
+}
+
+
 if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
         body {
@@ -741,58 +809,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     window.hide = hide;
     window.addMore = addMore;
 
-    // these are keybinds i personally use to speed up sketch posting.
-    // feel free to remove em or use em.
-    document.addEventListener("keydown", async function(e) {
-        // shortcuts from here on only apply when the viewer's open
-        if(window.current == null) return;
-
-        if(e.key == " " && !(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
-            e.preventDefault();
-            if(autodrawpos == -1 && settings.doReplay) {
-                drawData(window.dat);
-            } else {
-                setData(window.dat);
-            }
-        }
-        if(e.ctrlKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey || e.shiftKey)) {
-            e.preventDefault();
-            await navigator.clipboard.writeText(currentURL());
-            await detailsAlert("copied url");
-        }
-        if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "c" && !(e.altKey || e.metaKey)) {
-            if(!window.ClipboardItem) return false;
-            e.preventDefault();
-
-            if(cachedCanvasBlob == null) {
-                var blob = await new Promise((resolve) => {
-                    $("#sketch")[0].toBlob(blob => resolve(blob))
-                });
-                if(autodrawpos < 0) {
-                    cachedCanvasBlob = blob;
-                }
-            }
-            else {
-                var blob = cachedCanvasBlob;
-            }
-
-            try {
-                await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
-            }
-            catch (e) {
-                // .write will raise a DOMException if the document lost focus.
-                // that should be the only user-made error to expect during the copying anyway.
-                await detailsAlert("failed to copy canvas. try again?")
-                throw e;
-            }
-
-            await detailsAlert("copied canvas");
-        }
-        if(e.ctrlKey && e.key.toLowerCase() == "s" && !(e.altKey || e.metaKey || e.shiftKey)) {
-            e.preventDefault();
-            $(".save").click();
-        }
-    });
+    document.addEventListener("keydown", personalKeybinds.bind(this));
 
     // Prevent abortion of page load when `escape` is pressed and the viewer
     // is still open; the user only wants to exit the viewer in this case.
