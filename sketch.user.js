@@ -20,6 +20,9 @@
     - animation speed setting..?
     - option to save the canvas instead of the getIMG link?
 
+    - sketch: update():
+      - update the UI with updateUI(State.IDLE)
+
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
 */
@@ -882,11 +885,92 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
 /* /sketch/ */
 
+const SwapState = {
+    IDLE: 0,
+    SWAPPING: 1,
+    PEEKING_FROM_SWAP: 2,
+    PEEKING: 3,
+    WAITING_PEEK: 4,
+    DONE_FROM_SWAP: 5,
+    DONE: 6,
+}
+
 function _setProgress(n) {
     n = Math.min(Math.max(n, 0), 3);
     let width = Math.round(n / 3 * 100);
     $("#progress").attr({"aria-valuenow": n});
     $("#progressBar").width(`${width}%`);
+}
+
+function updateUI(state) {
+    switch(state) {
+        case SwapState.IDLE: {
+            let ink = Math.floor(window.dat.length / window.limit * 100);
+            $("#ink").html(`Ink used: ${ink}%`);
+            $("#reset").prop("disabled", false);
+            $("#undo").prop("disabled", window.dat.length == 0);
+            $("#swap").prop("disabled", ink < 1);
+            $("#peek").prop("disabled", ink >= 1);
+            $("#swap").val("swap");
+            _setProgress(0);
+            break;
+        }
+        case SwapState.SWAPPING: {
+            let ink = Math.floor(window.dat.length / window.limit * 100);
+            $("#ink").html(`Ink used: ${ink}%`);
+            $("#reset").prop("disabled", true);
+            $("#undo").prop("disabled", true);
+            $("#swap").prop("disabled", true);
+            $("#peek").prop("disabled", true);
+            $("#swap").val("swapping...");
+            _setProgress(1);
+            break;
+        }
+        case SwapState.PEEKING_FROM_SWAP: {
+            $("#swap").val("swapping...");
+        }
+        case SwapState.PEEKING_FROM_SWAP:
+        case SwapState.PEEKING: {
+            let ink = Math.floor(window.dat.length / window.limit * 100);
+            $("#ink").html(`Ink used: ${ink}%`);
+            $("#reset").prop("disabled", true);
+            $("#undo").prop("disabled", true);
+            $("#swap").prop("disabled", true);
+            $("#peek").prop("disabled", true);
+            _setProgress(2);
+            break;
+        }
+        case SwapState.WAITING_PEEK: {
+            let ink = Math.floor(window.dat.length / window.limit * 100);
+            $("#ink").html(`Ink used: ${ink}%`);
+            $("#reset").prop("disabled", true);
+            $("#undo").prop("disabled", true);
+            $("#swap").prop("disabled", true);
+            $("#peek").prop("disabled", true);
+            $("#swap").val("waiting for other sketch to be drawn...");
+            _setProgress(2);
+            break;
+        }
+        case SwapState.DONE_FROM_SWAP: {
+            $("#swap").val("swapped!");
+        }
+        case SwapState.DONE_FROM_SWAP:
+        case SwapState.DONE: {
+            let ink = Math.floor(window.dat.length / window.limit * 100);
+            $("#ink").html(`Ink used: ${ink}%`);
+            $("#reset").prop("disabled", false);
+            $("#undo").prop("disabled", true);
+            $("#swap").prop("disabled", true);
+            $("#peek").prop("disabled", true);
+            _setProgress(3);
+            break;
+        }
+    }
+}
+
+function resetUI() {
+    updateUI(SwapState.IDLE);
+    window.locked = false;
 }
 
 // overrides
@@ -905,10 +989,7 @@ function sketch_setData(data) {
     // using normal reset() would've left the wrong buttons enabled
     // every time as if ink really was 0%.
     resetCanvas();
-    let ink = Math.floor(window.dat.length / window.limit * 100);
-    $("#ink").html(`Ink used: ${ink}%`);
-    $("#swap").prop("disabled", ink < 1);
-    $("#peek").prop("disabled", ink >= 1);
+    resetUI();
 
     const parts = data.split(" ");
     for(var i = 0; i < parts.length; i++) {
@@ -926,51 +1007,31 @@ function sketch_setData(data) {
 }
 
 function sketch_reset() {
-    $("#swap").prop("disabled", true);
-    $("#peek").prop("disabled", false);
-    $("#swap").val("swap");
-    $("#ink").html("Ink used: 0%");
-    _setProgress(0);
-    resetCanvas();
     window.dat = "";
-    window.locked = false;
     window.lines = [];
     window.autodrawpos = -1;
+    resetCanvas();
+    resetUI();
 }
 
 function swap() {
     // lock the client *before* the swap request, gary
-    $("#reset").prop("disabled", true);
-    $("#undo").prop("disabled", true);
-    $("#swap").prop("disabled", true);
-    $("#swap").val("swapping...");
-    _setProgress(1);
+    updateUI(SwapState.SWAPPING);
     window.locked = true;
-
-    function rollback() {
-        $("#reset").prop("disabled", false);
-        $("#undo").prop("disabled", false);
-        $("#swap").prop("disabled", false);
-        $("#swap").val("swap");
-        _setProgress(0);
-        window.locked = false;
-    }
 
     $.ajax({
         url: `swap.php?db=${db || ""}&v=32`,
         method: "POST",
         data: window.dat,
-
         error: function() {
             alert("There was an error swapping.");
-            rollback();
+            resetUI();
         },
-
         success: function(n) {
             n = parseInt(n);
             if(n < 0) {
                 alert(`On cooldown; please wait ${n} more seconds before swapping again.`);
-                rollback();
+                resetUI();
                 return;
             }
             window.swapID = n;
@@ -980,57 +1041,43 @@ function swap() {
 }
 
 function attemptSwap() {
-    _setProgress(2);
+    updateUI(SwapState.PEEKING_FROM_SWAP);
+    getStats();
 
     $.ajax({
         url: `get.php?id=${swapID}&db=${db || ""}`,
         method: "GET",
-
         error: function() {
             setTimeout(attemptSwap, 2000);
         },
-
         success: function(result) {
             if(result == "wait") {
-                $("#swap").val("waiting for other sketch to be drawn...");
+                updateUI(SwapState.WAITING_PEEK);
                 setTimeout(attemptSwap, 2000);
             } else {
                 drawData(result);
-                $("#swap").val("done");
-                $("#peek").prop("disabled", true); // thanks reset()
-                $("#reset").prop("disabled", false);
-                _setProgress(3);
                 getStats();
+                updateUI(SwapState.DONE_FROM_SWAP);
             }
         }
     });
 }
 
 function getLatest() {
-    let undoWasDisabled = $("#undo").prop("disabled");
-    $("#peek").prop("disabled", true);
-    $("#undo").prop("disabled", true);
-    $("#reset").prop("disabled", true);
-    _setProgress(2);
+    updateUI(SwapState.PEEKING);
     window.locked = true;
 
     $.ajax({
         url: `get.php?db=${db || ""}`,
         method: "GET",
-
         error: function() {
             alert("There was an error getting the latest sketch.");
-            $("#peek").prop("disabled", false);
-            $("#undo").prop("disabled", undoWasDisabled);
-            window.locked = false;
+            resetUI();
         },
-
         success: function(result) {
             drawData(result);
-            $("#peek").prop("disabled", true); // thanks reset()
-            $("#reset").prop("disabled", false);
-            _setProgress(3);
             getStats();
+            updateUI(SwapState.DONE);
         }
     });
 }
