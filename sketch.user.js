@@ -251,7 +251,7 @@ function updateStats(json) {
 
 // overrides
 
-function update() {
+function gallery_update() {
     if(autodrawpos >= 0) {
         for(var i = 0; i < 8; i++) {
             if(autodrawpos == lines.length) {
@@ -315,7 +315,7 @@ async function refresh() {
     });
 }
 
-function drawData(data) {
+function gallery_drawData(data) {
     reset();
 
     var parts = data.split(" ");
