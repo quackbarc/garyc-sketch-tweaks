@@ -1085,16 +1085,19 @@ if(window.location.pathname == "/sketch/") {
         }
     `);
 
-    setInterval(window.update, 1000/30);
-    setInterval(window.getStats, 30000);
-
-    window.reset = sketch_reset;
-    window.setData = sketch_setData;
-    window.swap = swap;
-    window.attemptSwap = attemptSwap;
-    window.getLatest = getLatest;
+    // base site's JS happens at the body,
+    // inject when that finishes loading
 
     document.addEventListener("DOMContentLoaded", function() {
+        setInterval(window.update, 1000/30);
+        setInterval(window.getStats, 30000);
+
+        window.reset = sketch_reset;
+        window.setData = sketch_setData;
+        window.swap = swap;
+        window.attemptSwap = attemptSwap;
+        window.getLatest = getLatest;
+
         // mark parent of swap button and add progress bar
         // don't wanna use native <progress> due to lack of its styling
         // support on firefox
