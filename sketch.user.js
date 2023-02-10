@@ -117,7 +117,6 @@ if(window.location.pathname.startsWith("/sketch")) {
 /* /sketch/gallery.php */
 
 const cache = {};
-let lastCurrent = null;
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
 window.surpassPossible = false;
@@ -350,7 +349,7 @@ function gallery_drawData(data) {
     autodrawpos = 0;
 }
 
-function show(id, force=false) {
+function show(id) {
     // show() via page init passes the ID as a string (from URL hash).
     // can't change that since it's fired from an event listener.
     id = parseInt(id);
@@ -358,17 +357,10 @@ function show(id, force=false) {
 
     if(id == 0) return;
     // prevents showing the same sketch again.
-    // would've used window.current if the arrow navigation listener
-    // didn't do the changing themselves.
-    if(id == lastCurrent) return;
+    if(id == window.current) return;
 
-    // eh, why not.
-    if(!force && (id == -1 || id == 1)) {
-        id = window.max;
-    }
+    window.current = id;
 
-    // fixes arrow navigation.
-    window.current = lastCurrent = id;
     if(settings.changeHashOnNav) {
         window.location.hash = id;
     }
@@ -420,7 +412,7 @@ function hide() {
     $("#tiles").css({opacity: "100%"});
     $("#holder").removeClass("active");
     window.location.hash = 0;
-    window.current = lastCurrent = null;
+    window.current = null;
     window.details = null;
     reset();
 }
@@ -814,6 +806,8 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     document.addEventListener("keydown", personalKeybinds.bind(this));
 
+    // Fix new scrolling behavior to use the old one instead;
+    // i.e. adding thumbnails happens when scrolled to bottom of the page
     $(window).off("scroll");
     $(window).on("scroll", function(e) {
         let bottom = document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight) < 1;
@@ -822,15 +816,38 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
     });
 
-    // Prevent abortion of page load when `escape` is pressed and the viewer
-    // is still open; the user only wants to exit the viewer in this case.
-    document.addEventListener("keydown", function(e) {
-        if(e.key == "Escape"
-            && window.current != null
-            && document.readyState != "complete") {
-            e.preventDefault();
+    $(document).off("keydown");
+    $(document).on("keydown", function(e) {
+        switch(e.key) {
+            case "Escape": {
+                if(window.current != null) {
+                    hide();
+                    // Prevent abortion of page load when the viewer is still open.
+                    // The user only wants to exit the viewer in this case.
+                    e.preventDefault();
+                }
+            }
+
+            // ArrowLeft and ArrowRight no longer
+            // update window.current.
+
+            case "ArrowLeft": {
+                if(window.current == null) return;
+                if(window.current == window.max) return;
+                show(window.current + 1);
+                return false;
+            }
+
+            case "ArrowRight": {
+                if(window.current == null) {
+                    show(window.max);
+                    return false;
+                }
+                show(window.current - 1);
+                return false;
+            }
         }
-    }, true);
+    });
 
     window.addEventListener("hashchange", function(e) {
         let id = parseInt(window.location.hash.slice(1));
@@ -839,8 +856,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
         if(id == 0) {
             hide();
         } else {
-            // force special cases like 1 and -1
-            show(id, true);
+            show(id);
         }
     });
 
