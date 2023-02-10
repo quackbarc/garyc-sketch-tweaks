@@ -22,6 +22,8 @@
 
     - sketch: update():
       - update the UI with updateUI(State.IDLE)
+      - fix animation ending one line too early
+      - fix animation using the moveTo/lineTo way of drawing
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
@@ -50,6 +52,7 @@ function _getSettings() {
         noAnimation: false,
         doReplay: false,
         thumbQuality: "default",
+        sketchQuality: "default",
         relativeTimestamps: true,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
@@ -77,6 +80,22 @@ function _updateTheme() {
         }
         default: {
             $("html").attr({"theme": "light"});
+        }
+    }
+}
+
+function _updateSketchQuality(quality) {
+    const ctx = $("canvas")[0].getContext("2d");
+
+    switch(quality) {
+        case "spiky": {
+            ctx.lineJoin = "miter";
+            break;
+        }
+        case "default":
+        default: {
+            ctx.lineJoin = "round";
+            break;
         }
     }
 }
@@ -557,6 +576,13 @@ function createPreferencesUI() {
             </select>
         </div>
         <div class="preference">
+            <label for="sketchquality">Sketch quality:</label>
+            <select id="sketchquality" name="sketchquality">
+                <option value="default" selected>No spikes (default)</option>
+                <option value="spiky">Spiky (old)</option>
+            </select>
+        </div>
+        <div class="preference">
             <label for="relativetimestamps">Show timestamps as relative:</label>
             <input type="checkbox" id="relativetimestamps">
         </div>
@@ -570,6 +596,7 @@ function createPreferencesUI() {
     preferences.find("#doreplay").prop("checked", settings.doReplay);
     preferences.find("#hashnav").prop("checked", settings.changeHashOnNav);
     preferences.find("#thumbquality").val(settings.thumbQuality);
+    preferences.find("#sketchquality").val(settings.sketchQuality);
     preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
 
     preferences.find("#cachesize").change(function(e) {
@@ -604,6 +631,11 @@ function createPreferencesUI() {
                 `size=${size}`
             );
         });
+    });
+    preferences.find("#sketchquality").change(function(e) {
+        settings.sketchQuality = e.target.value;
+        _updateSketchQuality(settings.sketchQuality);
+        _saveSettings();
     });
     preferences.find("#relativetimestamps").change(function(e) {
         settings.relativeTimestamps = e.target.checked;
@@ -894,8 +926,8 @@ if(window.location.pathname == "/sketch/gallery.php") {
             width: "800px",
             height: "600px",
         });
-        // fix miter spikes on the canvas
-        $("#sketch")[0].getContext("2d").lineJoin = "round";
+
+        _updateSketchQuality(settings.sketchQuality);
     })
 }
 
@@ -1185,8 +1217,7 @@ if(window.location.pathname == "/sketch/") {
             </div>
         `);
 
-        // fix miter spikes on the canvas
-        window.app.view.getContext("2d").lineJoin = "round";
+        _updateSketchQuality(settings.sketchQuality);
     })
 
     $(document).ready(function() {
