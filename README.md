@@ -28,12 +28,12 @@ A complete list of changes by the script is listed below.
 * Drawing client redesigned to imitate the old Flash UI.
 * A slightly better-looking sketch viewer, with extra details like "ink used".
 * Optional auto-skipping and replay of sketch animations in the gallery.
+* Optional spiky line style for sketches.
 
 ## Tweaks and bug fixes
 
 ### Drawing client
 
-* Fixed drawing client and gallery sketches being spiky.
 * Fixed swap button getting locked on undo.
 * Fixed swap button alternating its text during swaps.
 * Fixed button locking from swaps/peeks.
@@ -54,8 +54,11 @@ A complete list of changes by the script is listed below.
 * Fixed concurrent fetches of sketch data causing a sketch to animate more than once.
 * Fixed silent errors from parsing unreachable sketches as JSON, as it's actually sent as raw text.
 * Fixed pressing `escape` on the gallery aborting a page load.
+* Sketch thumbnails are no longer data URIs, which made loading them very slow.
 * The left button on the sketch viewer automatically appears when the gallery gets updated.
-* Gallery won't load old, unreachable sketches (sketches that show up as X's). By default at least.
+* Gallery won't load old, unreachable sketches (sketches that show up as X's).
+* New sketches will only show up when the page is fully scrolled down.
+    * This was the old scrolling behavior; not a huge fan of the new one that adds sketches midway through the page.
 
 #### Very technical tweaks
 
