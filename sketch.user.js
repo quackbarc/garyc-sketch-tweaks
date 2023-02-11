@@ -140,7 +140,6 @@ const cache = {};
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
 let datecardDates = new Set();
-window.surpassPossible = false;
 window.details = null;
 
 function _getThumbSize(qualityName) {
@@ -590,11 +589,11 @@ async function addDateCards(last, size) {
 async function addMore(n=100) {
     const hardLimit = 1;
     const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
-    const limit = surpassPossible ? hardLimit : lastPossible;
+    const limit = lastPossible;
 
     let datecards = {};
     let newtiles = [];
-    let last = window.max - ($("#tiles").children().length) + 1;
+    let last = window.max - ($("#tiles").children("a").length) + 1;
     let target = Math.max(last - n, limit);
 
     if(settings.showDatecards) {
@@ -613,20 +612,14 @@ async function addMore(n=100) {
     }
 
     if(target == limit && last != limit) {
-        $("#tiles").after(`<div id="tilesEnd">reached the end of the gallery.</div>`);
-
-        // note: we don't show the button if we're at the hard limit
-        if(!window.surpassPossible && limit > hardLimit) {
-            $("#tilesEnd").append([
-                `<br>`,
-                `<button id="surpassPossible">load more anyway</button>`,
-            ].join(""));
-
-            $("button#surpassPossible").click(() => {
-                window.surpassPossible = true;
-                $("#tilesEnd").remove();
-            });
-        }
+        const tilesEnd = $(`
+            <div id="tilesEnd">
+                and then there were none.
+                <button>back to top</button>
+            </div>
+        `);
+        $("#tiles").after(tilesEnd);
+        $("#tilesEnd button").on("click", () => document.documentElement.scrollIntoView());
     }
 
     $("#tiles").append(newtiles);
@@ -892,6 +885,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
         #tilesEnd {
             padding: 10px;
             text-align: center;
+            font-family: monospace;
         }
 
         /* preferences */
