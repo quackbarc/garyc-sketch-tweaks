@@ -987,7 +987,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
     // i.e. adding thumbnails happens when scrolled to bottom of the page
     $(window).off("scroll");
     $(window).on("scroll", function(e) {
-        let bottom = document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight) < 1;
+        let bodyHeight = document.body.scrollHeight;
+        let bodyScroll = document.body.scrollTop + document.body.clientHeight;
+        let bottom = bodyHeight - bodyScroll < 1;
         if(bottom) {
             addMore(100);
         }
