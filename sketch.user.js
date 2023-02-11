@@ -54,6 +54,7 @@ function _getSettings() {
         thumbQuality: "default",
         sketchQuality: "default",
         relativeTimestamps: true,
+        showDatecards: true,    // on the UI, these would be called "time cards"
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -138,6 +139,7 @@ if(window.location.pathname.startsWith("/sketch")) {
 const cache = {};
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
+let datecardDates = new Set();
 window.surpassPossible = false;
 window.details = null;
 
@@ -167,6 +169,18 @@ function getTile(id) {
             `height: 120px;`,
         `"></a>`,
     ].join(""));
+}
+
+function createDateCard(dt) {
+    let weekday = dt.toLocaleString("default", {weekday: "long"});
+    let date = dt.toLocaleString("default", {month: "long", day: "numeric", year: "numeric"});
+    return $(`
+        <div class="datecard">
+            <div>
+                ${weekday}<br>${date}
+            </div>
+        </div>
+    `);
 }
 
 function currentURL() {
@@ -270,6 +284,57 @@ function updateStats(json) {
     );
 }
 
+async function getDateCards(endID, size) {
+    if(size <= 0) {
+        return [];
+    }
+
+    let fromID = endID - size + 1;
+    let toID = endID;
+    let lastTimestamp = new Date();
+
+    var ret = [];
+
+    const fetchIDFrom = Math.ceil(fromID / 100) * 100;
+    const fetchIDTo = Math.ceil(toID / 100) * 100;
+    for(let fetchID = fetchIDTo; fetchID >= fetchIDFrom; fetchID -= 100) {
+        let html = await fetch(`getMore.php?start=${fetchID}&db=${db || ""}`)
+            .then(r => r.text());
+
+        // Parsing HTML with regex instead of making a document dragment,
+        // since one, it's cleaner to write than the alternative, and two,
+        // we won't get 404s from thumbnails of sketches that don't exist.
+
+        const htmlRegex = /class='timestamp'.+?>(?<timestamp>\d*)<\/div><a href=['"](?<href>#\d+)/g;
+        for(const match of html.matchAll(htmlRegex)) {
+            if(!match.groups.timestamp) {
+                continue;
+            }
+
+            let timestamp = new Date(match.groups.timestamp * 1000);
+            let href = match.groups.href;
+
+            if(lastTimestamp.toDateString() != timestamp.toDateString()) {
+                ret.push([timestamp, createDateCard(timestamp), href]);
+            }
+
+            lastTimestamp = timestamp;
+        }
+    }
+
+    return ret;
+}
+
+async function getDateCardMapping(last, size) {
+    let datecards = {};
+    for(const [timestamp, datecard, href] of await getDateCards(last, size)) {
+        let date = timestamp.toDateString();
+        let id = parseInt(href.replace("#", ""));
+        datecards[id] = [datecard, date];
+    }
+    return datecards;
+}
+
 // overrides
 
 function gallery_update() {
@@ -314,6 +379,12 @@ async function refresh() {
                       .hide()
                       .show(1000)
                 );
+            }
+
+            if(settings.showDatecards) {
+                // Size is +1'd so the previous sketch gets a datecard
+                // when the current day changes.
+                addDateCards(newMax, newMax - window.max + 1);
             }
 
             if(window.current == window.max) {
@@ -501,15 +572,43 @@ async function get(id) {
     });
 }
 
-function addMore(n=100) {
+async function addDateCards(last, size) {
+    for(const [timestamp, datecard, href] of await getDateCards(last, size)) {
+        let date = timestamp.toDateString();
+        if(datecardDates.has(date)) {
+            continue;
+        }
+
+        const a = $(`a[href='${href}']`);
+        if(a.length > 0) {
+            a.before(datecard);
+            datecardDates.add(date);
+        }
+    }
+}
+
+async function addMore(n=100) {
     const hardLimit = 1;
     const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
     const limit = surpassPossible ? hardLimit : lastPossible;
 
+    let datecards = {};
+    let newtiles = [];
     let last = window.max - ($("#tiles").children().length) + 1;
     let target = Math.max(last - n, limit);
-    let newtiles = [];
+
+    if(settings.showDatecards) {
+        datecards = await getDateCardMapping(last - 1, n);
+    }
+
     for(let id = last - 1; id >= target; id--) {
+        if(settings.showDatecards) {
+            if(datecards.hasOwnProperty(id)) {
+                const [datecard, date] = datecards[id];
+                newtiles.push(datecard);
+                datecardDates.add(date);
+            }
+        }
         newtiles.push(getTile(id));
     }
 
@@ -586,6 +685,10 @@ function createPreferencesUI() {
             <label for="relativetimestamps">Show timestamps as relative:</label>
             <input type="checkbox" id="relativetimestamps">
         </div>
+        <div class="preference">
+            <label for="showdatecards">Show time cards on gallery:</label>
+            <input type="checkbox" id="showdatecards">
+        </div>
     `);
 
     button.click(() => preferences.slideToggle(200));
@@ -598,6 +701,7 @@ function createPreferencesUI() {
     preferences.find("#thumbquality").val(settings.thumbQuality);
     preferences.find("#sketchquality").val(settings.sketchQuality);
     preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
+    preferences.find("#showdatecards").prop("checked", settings.showDatecards);
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -640,6 +744,17 @@ function createPreferencesUI() {
     preferences.find("#relativetimestamps").change(function(e) {
         settings.relativeTimestamps = e.target.checked;
         _saveSettings();
+    });
+    preferences.find("#showdatecards").change(function(e) {
+        settings.showDatecards = e.target.checked;
+        _saveSettings();
+
+        if(e.target.checked) {
+            addDateCards(window.max, $("#tiles").children().length - 1);
+        } else {
+            $(".datecard").remove();
+            datecardDates.clear();
+        }
     });
 
     return [button, preferences];
@@ -732,6 +847,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
             display: none;
         }
 
+        #tiles {
+            font-family: monospace;
+        }
+
         #details {
             box-sizing: border-box;
             padding: 10px 60px;
@@ -812,6 +931,32 @@ if(window.location.pathname == "/sketch/gallery.php") {
             padding-left: 5px;
             grid-area: s;
             justify-self: start;
+        }
+
+        /* datecards */
+        .datecard {
+            display: inline-block;
+            vertical-align: middle;
+            width: 160px;
+            height: 120px;
+
+            box-sizing: border-box;
+            border: 2px solid #ccd;
+            margin: 5px;
+        }
+        .datecard div {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        a img {
+            /* aligns sketch thumbnails with the cards */
+            vertical-align: middle;
         }
 
         /* just some stylistic choices */
