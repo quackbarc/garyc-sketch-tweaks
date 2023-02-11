@@ -1,63 +1,69 @@
 
 # ![the unofficial sketch mascot, crunge](/crunge.png)&nbsp;garyc.me sketch tweaks
 
-A personal userscript for garyc.me/sketch. Nothing too game-changing, like extra tools on the drawing client. Just a handful of visual tweaks and a plethora of bug fixes.
+A personal userscript for garyc.me/sketch. Nothing too game-changing, like
+extra tools on the drawing client. Just a handful of visual tweaks and a
+plethora of bug fixes.
 
-This script is currently not compatible with older browsers that don't support `async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
+This script is currently not compatible with older browsers that don't support
+`async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
 
 ## Installation
 
-1. Install Violentmonkey or Tampermonkey onto your browser.
-2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js) onto the browser.
+1. Install Violentmonkey, Tampermonkey, or any other userscript extension onto your browser.
+2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js)
+onto the browser.
 3. The extension should automatically prompt to install the userscript.
+
+Updates to the userscript are regularly checked and handled by the extension,
+so re-installing it just to update won't be very necessary.
 
 -----
 
 A complete list of changes by the script is listed below.
 
-## Features
+## Main features
 
 * Dark theme, automatically detected or manually set.
 * Drawing client redesigned to imitate the old Flash UI.
-* Gallery sketch caching to a configurable limit.
-* A slightly better-looking details section on gallery sketches, with extra info like "ink used".
+* A slightly better-looking sketch viewer, with extra details like "ink used".
 * Optional auto-skipping and replay of sketch animations in the gallery.
 
-### Bug fixes
+## Tweaks and bug fixes
 
-#### Drawing client
+### Drawing client
 
 * Fixed drawing client and gallery sketches being spiky.
 * Fixed swap button getting locked on undo.
 * Fixed swap button alternating its text during swaps.
-* Corrected button locking after swaps/peeks.
+* Fixed button locking from swaps/peeks.
+* Swapping and peeking now handle request errors.
+* Swapping and peeking won't immediately reload stats.
+* Sketch stats are fetched every 30 seconds instead of 60.
 
-#### Gallery
+### Gallery
 
 * Fixed canvas showing up for a split second on page load.
 * Fixed canvas being 798x598 instead of 800x600.
 * Fixed arrow-key navigation always starting at the latest sketch.
-* Fixed a race condition with loading sketches.
 * Fixed sketch animations ending one line too early.
 * Fixed duplicate sketches from scrolling down.
 * Fixed sketches being saved with a `.jpg` extension despite being PNGs.
-* Handled silent errors from parsing unreachable sketches as JSON, as it's actually sent as raw text.
-* URL changes now navigate sketches.
-* Concurrent fetches of sketches will only animate the sketch once.
-* Pressing `escape` on the gallery while images are still loading will keep them loading.
+* Fixed URL changes not navigating sketches.
+* Fixed a race condition with loading different sketches.
+* Fixed concurrent fetches of sketch data causing a sketch to animate more than once.
+* Fixed silent errors from parsing unreachable sketches as JSON, as it's actually sent as raw text.
+* Fixed pressing `escape` on the gallery aborting a page load.
 * The left button on the sketch viewer automatically appears when the gallery gets updated.
-* Gallery wouldn't load old sketches that are unreachable (sketches that would show up as X's), by default at least.
+* Gallery won't load old, unreachable sketches (sketches that show up as X's). By default at least.
 
-### Other technical tweaks 🤓
+#### Very technical tweaks
 
-* Sketch stats are fetched every 30 seconds instead of 60.
-* Swapping and peeking are properly mutex locked.
-* Swapping and peeking now handle request errors.
-* Swapping and peeking wouldn't send extra `getStats` requests.
+* Sketches are cached to a configurable limit.
 * Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of having its HTML purged.
-* Viewer canvas is focusable by tabbing.
+* Viewer canvas is tab-focusable.
 * Viewer buttons aren't user-selectable.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
 * `show()` ignores non-numerical IDs.
@@ -65,8 +71,8 @@ A complete list of changes by the script is listed below.
 ### Personal tweaks
 
 * There's a nice little interface for userscript preferences (found in the gallery).
-* Thumbnails can be shown in different qualities: default (100%), downscaled (40%), rasterized (20.1%) and the old default (20%).
-* Pressing left/right in the gallery without the viewer sketch open will show the latest sketch.
+* Pressing `right` in the gallery when no sketch is open shows the latest sketch.
+* Gallery thumbnails can be shown in different qualities: default, downscaled, rasterized, and the old default.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer has a box shadow so it visually stands out.
 * Gallery viewer buttons also dim out when hovered. The close and save buttons now have a pointer too.
@@ -77,6 +83,6 @@ A complete list of changes by the script is listed below.
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
 * Hovering on sketch timestamps will show its full date and time.
 * Sketch timestamps may show dates as "Today" or "Yesterday".
-    * This can be disabled, mainly because I can't be bothered localizing those words for other time locales.
+    * This can be toggled off, mainly because localization of those words can be an issue.
 
 ---
