@@ -852,6 +852,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     $(document).on("keydown", function(e) {
         switch(e.key) {
             case "Escape": {
+                if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
                 if(window.current != null) {
                     hide();
                     // Prevent abortion of page load when the viewer is still open.
@@ -864,6 +865,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             // update window.current.
 
             case "ArrowLeft": {
+                if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
                 if(window.current == null) return;
                 if(window.current == window.max) return;
                 show(window.current + 1);
@@ -871,6 +873,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             }
 
             case "ArrowRight": {
+                if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
                 if(window.current == null) {
                     show(window.max);
                     return false;
