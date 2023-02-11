@@ -461,8 +461,10 @@ function show(id) {
     var top = `<a href="#0" onclick="hide()" class="top"><img src="top.png"></a>`;
     var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left"><img src="left.png"></a>`;
     var leftMax = `<div class="left"></div>`;
-    var left = id == max ? leftMax : leftReg;
-    var right = `<a href="#${id-1}" onclick="show(${id-1})" class="right"><img src="right.png"></a>`;
+    var rightReg = `<a href="#${id-1}" onclick="show(${id-1})" class="right"><img src="right.png"></a>`;
+    var rightMin = `<div class="right"></div>`;
+    var left = id >= window.max ? leftMax : leftReg;
+    var right = id <= window.min ? rightMin : rightReg;
     var save = [
         `<a`,
             ` href="getIMG.php?format=png&db=${window.db}&id=${id}"`,
@@ -1019,6 +1021,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
                     show(window.max);
                     return false;
                 }
+                if(window.current == window.min) return;
                 show(window.current - 1);
                 return false;
             }
