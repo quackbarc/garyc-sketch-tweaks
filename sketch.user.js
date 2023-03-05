@@ -1289,13 +1289,14 @@ function swap() {
                 return;
             }
             window.swapID = n;
+
+            updateUI(SwapState.PEEKING_FROM_SWAP);
             attemptSwap();
         },
     });
 }
 
 function attemptSwap() {
-    updateUI(SwapState.PEEKING_FROM_SWAP);
     getStats();
 
     $.ajax({
