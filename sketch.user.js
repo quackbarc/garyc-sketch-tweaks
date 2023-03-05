@@ -139,7 +139,7 @@ if(window.location.pathname.startsWith("/sketch")) {
 const cache = {};
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
-let datecardDates = new Set();
+let datecardDates = new Map();
 window.details = null;
 
 function _getThumbSize(qualityName) {
@@ -381,9 +381,16 @@ async function refresh() {
             }
 
             if(settings.showDatecards) {
-                // Size is +1'd so the previous sketch gets a datecard
-                // when the current day changes.
-                addDateCards(newMax, newMax - window.max + 1);
+                // Max values are -1'd so that IDs ending with 00 are NOT
+                // equal to IDs ending with 01; the latter's where
+                // `addMore.php`'s thumbnails start.
+                let lastMax100 = Math.floor((window.max - 1) / 100);
+                let newMax100 = Math.floor((newMax - 1) / 100);
+                if(newMax100 > lastMax100) {
+                    // Size is +1'd so the previous sketch gets a datecard
+                    // when the current day changes.
+                    addDateCards(newMax, newMax - window.max + 1);
+                }
             }
 
             if(window.current == window.max) {
@@ -576,14 +583,14 @@ async function get(id) {
 async function addDateCards(last, size) {
     for(const [timestamp, datecard, href] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
-        if(datecardDates.has(date)) {
+        if(datecardDates.get(date) == href) {
             continue;
         }
 
         const a = $(`a[href='${href}']`);
         if(a.length > 0) {
             a.before(datecard);
-            datecardDates.add(date);
+            datecardDates.set(date, href);
         }
     }
 }
@@ -606,8 +613,9 @@ async function addMore(n=100) {
         if(settings.showDatecards) {
             if(datecards.hasOwnProperty(id)) {
                 const [datecard, date] = datecards[id];
+                const href = `#${id}`;
                 newtiles.push(datecard);
-                datecardDates.add(date);
+                datecardDates.set(date, href);
             }
         }
         newtiles.push(getTile(id));
@@ -683,6 +691,8 @@ function createPreferencesUI() {
         <div class="preference">
             <label for="showdatecards">Show time cards on gallery:</label>
             <input type="checkbox" id="showdatecards">
+            <br>
+            <i>(cards might not show up for newer sketches due to an API limitation)</i>
         </div>
     `);
 
