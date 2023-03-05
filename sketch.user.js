@@ -474,7 +474,7 @@ function show(id) {
     var right = id <= window.min ? rightMin : rightReg;
     var save = [
         `<a`,
-            ` href="getIMG.php?format=png&db=${window.db}&id=${id}"`,
+            ` href="getIMG.php?format=png&db=${window.db || ''}&id=${id}"`,
             ` download="${downloadFn}.png"`,
             ` class="save"`,
         `>`,
