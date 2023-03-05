@@ -69,20 +69,17 @@ function _saveSettings() {
 function _updateTheme() {
     switch(settings.theme) {
         case "auto": {
-            let prefersDark = (
-                window.matchMedia
-                && window.matchMedia("(prefers-color-scheme: dark)")
-            );
-            $("html").attr({"theme": prefersDark ? "dark" : "light"});
+            let prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+            document.documentElement.setAttribute("theme", prefersDark ? "dark" : "light");
             break;
         }
         case "dark":
         case "light": {
-            $("html").attr({"theme": settings.theme});
+            document.documentElement.setAttribute("theme", settings.theme);
             break;
         }
         default: {
-            $("html").attr({"theme": "light"});
+            document.documentElement.setAttribute("theme", "light");
         }
     }
 }
