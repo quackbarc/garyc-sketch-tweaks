@@ -18,7 +18,7 @@
 /* TODO:
     - SVG saving..?
     - animation speed setting..?
-    - option to save the canvas instead of the getIMG link?
+    - noz.rip support?
 
     - sketch: update():
       - update the UI with updateUI(State.IDLE)
@@ -55,6 +55,7 @@ function _getSettings() {
         sketchQuality: "default",
         relativeTimestamps: true,
         showDatecards: true,    // on the UI, these would be called "time cards"
+        saveAsCanvas: false,
     };
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
@@ -334,6 +335,26 @@ async function getDateCardMapping(last, size) {
     return datecards;
 }
 
+async function saveCanvas() {
+    if(window.current == null) {
+        return;
+    }
+
+    window.setData(window.dat);
+
+    const sketch = window.sketch[0];
+    let blob = await new Promise((res, rej) => sketch.toBlob(blob => res(blob)));
+    let url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    let downloadFn = window.db == null ? `${window.current}` : `${window.db}#${window.current}`;
+    a.href = url;
+    a.download = downloadFn;
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
 // overrides
 
 function gallery_update() {
@@ -464,7 +485,6 @@ function show(id) {
     // html building
     // TODO: don't rebuild this everytime this function's called
 
-    var downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
     var top = `<a href="#0" onclick="hide()" class="top"><img src="top.png"></a>`;
     var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left"><img src="left.png"></a>`;
     var leftMax = `<div class="left"></div>`;
@@ -472,21 +492,41 @@ function show(id) {
     var rightMin = `<div class="right"></div>`;
     var left = id >= window.max ? leftMax : leftReg;
     var right = id <= window.min ? rightMin : rightReg;
-    var save = [
-        `<a`,
-            ` href="getIMG.php?format=png&db=${window.db || ''}&id=${id}"`,
-            ` download="${downloadFn}.png"`,
-            ` class="save"`,
-        `>`,
+
+    let saveParts = [];
+
+    let saveAnchorStart;
+    if(settings.saveAsCanvas) {
+        saveAnchorStart = '<a class="save">'
+    } else {
+        let dbParam = window.db != null ? `&db=${window.db}` : "";
+        let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
+        saveAnchorStart = [
+            `<a`,
+                ` href="https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}"`,
+                ` download="${downloadFn}.png"`,
+                ` class="save"`,
+            `>`
+        ].join("");
+    }
+
+    saveParts.push(
+        saveAnchorStart,
         `<img src="save.png" style="width: 25px; height: 25px; position: relative;">`,
         `</a>`,
-    ].join("");
+    );
+
+    var save = saveParts.join("");
     var bottom = `<div id="details">...</div>`;
 
     $("#holder").addClass("active");
     $("#holder").empty();
     $("#holder").append([top, left, sketch, right, bottom, save]);
     $("#tiles").css({opacity: "75%"});
+
+    if(settings.saveAsCanvas) {
+        $(".save").click(() => saveCanvas());
+    }
 
     // clear alerts and other cached properties from the last shown sketch
     lastAlertPromise = null;
@@ -694,6 +734,10 @@ function createPreferencesUI() {
             <br>
             <i>(cards might not show up for newer sketches due to an API limitation)</i>
         </div>
+        <div class="preference">
+            <label for="saveascanvas">Save sketches in canvas quality:</label>
+            <input type="checkbox" id="saveascanvas">
+        </div>
     `);
 
     button.click(() => preferences.slideToggle(200));
@@ -707,6 +751,7 @@ function createPreferencesUI() {
     preferences.find("#sketchquality").val(settings.sketchQuality);
     preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
     preferences.find("#showdatecards").prop("checked", settings.showDatecards);
+    preferences.find("#saveascanvas").prop("checked", settings.saveAsCanvas);
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -760,6 +805,10 @@ function createPreferencesUI() {
             $(".datecard").remove();
             datecardDates.clear();
         }
+    });
+    preferences.find("#saveascanvas").change(function(e) {
+        settings.saveAsCanvas = e.target.checked;
+        _saveSettings();
     });
 
     return [button, preferences];
