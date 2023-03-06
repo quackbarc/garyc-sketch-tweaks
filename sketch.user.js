@@ -7,6 +7,7 @@
 // @author      quac
 // @version     1.4.0
 // @match       https://garyc.me/sketch*
+// @match       http*://noz.rip/sketch*
 // @icon        https://raw.githubusercontent.com/quackbarc/garyc-sketch-tweaks/master/crunge.png
 // @downloadURL https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
 // @updateURL   https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
@@ -123,6 +124,11 @@ function main() {
         }
         :root[theme="dark"] h1 {
             color: #eee;
+        }
+
+        /* noz.rip */
+        :root[theme="dark"] .panel {
+            border-color: #888;
         }
     `);
     _updateTheme();
@@ -1166,12 +1172,20 @@ function _setProgress(n) {
 }
 
 function updateUI(state) {
+    let dat;
+    if(window.location.hostname == "noz.rip") {
+        dat = window.arrdat.join(" ");
+    } else {
+        dat = window.dat;
+    }
+
+    const ink = Math.floor(dat.length / window.limit * 100);
+
     switch(state) {
         case SwapState.IDLE: {
-            let ink = Math.floor(window.dat.length / window.limit * 100);
             $("#ink").html(`Ink used: ${ink}%`);
             $("#reset").prop("disabled", false);
-            $("#undo").prop("disabled", window.dat.length == 0);
+            $("#undo").prop("disabled", dat.length == 0);
             $("#swap").prop("disabled", ink < 1);
             $("#peek").prop("disabled", ink >= 1);
             $("#swap").val("swap");
@@ -1179,7 +1193,6 @@ function updateUI(state) {
             break;
         }
         case SwapState.SWAPPING: {
-            let ink = Math.floor(window.dat.length / window.limit * 100);
             $("#ink").html(`Ink used: ${ink}%`);
             $("#reset").prop("disabled", true);
             $("#undo").prop("disabled", true);
@@ -1194,7 +1207,6 @@ function updateUI(state) {
         }
         case SwapState.PEEKING_FROM_SWAP:
         case SwapState.PEEKING: {
-            let ink = Math.floor(window.dat.length / window.limit * 100);
             $("#ink").html(`Ink used: ${ink}%`);
             $("#reset").prop("disabled", true);
             $("#undo").prop("disabled", true);
@@ -1204,7 +1216,6 @@ function updateUI(state) {
             break;
         }
         case SwapState.WAITING_PEEK: {
-            let ink = Math.floor(window.dat.length / window.limit * 100);
             $("#ink").html(`Ink used: ${ink}%`);
             $("#reset").prop("disabled", true);
             $("#undo").prop("disabled", true);
@@ -1219,7 +1230,6 @@ function updateUI(state) {
         }
         case SwapState.DONE_FROM_SWAP:
         case SwapState.DONE: {
-            let ink = Math.floor(window.dat.length / window.limit * 100);
             $("#ink").html(`Ink used: ${ink}%`);
             $("#reset").prop("disabled", false);
             $("#undo").prop("disabled", true);
@@ -1269,9 +1279,56 @@ function sketch_setData(data) {
     }
 }
 
+function noz_sketch_setData(arrdata) {
+    window.arrdat = arrdata.filter((part) => part != "");
+
+    // using normal reset() would've left the wrong buttons enabled
+    // every time as if ink really was 0%.
+    resetCanvas();
+    resetUI();
+
+    for(var h = 0; h < arrdata.length; h++) {
+        const arrpart = arrdat[h];
+        const parts = arrpart.split(" ");
+        for(var i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            for(var j = 0; j < part.length; j += 4) {
+                var x = dec(part.substr(j, 2));
+                var y = dec(part.substr(j+2, 2));
+                if(j == 0) {
+                    graphics.moveTo(x, y);
+                } else {
+                    graphics.lineTo(x, y);
+                }
+            }
+        }
+    }
+}
+
 function sketch_reset() {
     window.dat = "";
     window.lines = [];
+    window.autodrawpos = -1;
+    resetCanvas();
+    resetUI();
+}
+
+function noz_sketch_reset(manual) {
+    if(manual) {
+        window.backupdat = {
+            arrdat: window.arrdat,
+            screentoningPoints: window.screentoningPoints,
+        };
+        window.screentoningPoints = {};
+        saveIncomplete(false);
+    }
+
+    if(window.locked) {
+        window.backupdat = {};
+    }
+
+    window.dat = "";
+    window.arrdat = [];
     window.autodrawpos = -1;
     resetCanvas();
     resetUI();
@@ -1305,11 +1362,42 @@ function swap() {
     });
 }
 
+function noz_swap() {
+    updateUI(SwapState.SWAPPING);
+    window.locked = true;
+
+    let dat = window.arrdat.join(" ") + " ";
+
+    $.ajax({
+        url: `https://garyc.me/sketch/swap.php?db=${db || ""}&v=32`,
+        method: "POST",
+        data: dat,
+        error: function() {
+            alert("There was an error swapping.");
+            resetUI();
+        },
+        success: function(n) {
+            n = parseInt(n);
+            if(n < 0) {
+                alert(`On cooldown; please wait ${n} more seconds before swapping again.`);
+                resetUI();
+                return;
+            }
+
+            window.swapID = n;
+            window.backupdat = {};
+            window.screentoningPoints = {};
+            saveIncomplete(false);
+            attemptSwap();
+        },
+    });
+}
+
 function attemptSwap() {
     getStats();
 
     $.ajax({
-        url: `get.php?id=${swapID}&db=${db || ""}`,
+        url: `https://garyc.me/sketch/get.php?id=${swapID}&db=${db || ""}`,
         method: "GET",
         error: function() {
             setTimeout(attemptSwap, 2000);
@@ -1318,11 +1406,19 @@ function attemptSwap() {
             if(result == "wait") {
                 updateUI(SwapState.WAITING_PEEK);
                 setTimeout(attemptSwap, 2000);
-            } else {
-                drawData(result);
-                getStats();
-                updateUI(SwapState.DONE_FROM_SWAP);
+                return;
             }
+
+            switch(window.location.hostname) {
+                case "noz.rip":
+                    drawData([result]);
+                    break;
+                default:
+                    drawData(result);
+                    break;
+            }
+            getStats();
+            updateUI(SwapState.DONE_FROM_SWAP);
         }
     });
 }
@@ -1332,19 +1428,27 @@ function getLatest() {
     window.locked = true;
 
     $.ajax({
-        url: `get.php?db=${db || ""}`,
+        url: `https://garyc.me/sketch/get.php?db=${db || ""}`,
         method: "GET",
         error: function() {
             alert("There was an error getting the latest sketch.");
             resetUI();
         },
         success: function(result) {
-            drawData(result);
+            switch(window.location.hostname) {
+                case "noz.rip":
+                    drawData([result]);
+                    break;
+                default:
+                    drawData(result);
+                    break;
+            }
             getStats();
             updateUI(SwapState.DONE);
         }
     });
 }
+
 
 if(window.location.pathname == "/sketch/") {
     GM_addStyle(`
@@ -1404,11 +1508,10 @@ if(window.location.pathname == "/sketch/") {
         }
     `);
 
-    // base site's JS happens at the body,
+    // both noz.rip and garyc.me's JS happen at the document body,
     // inject when that finishes loading
 
     document.addEventListener("DOMContentLoaded", function() {
-        setInterval(window.update, 1000/30);
         setInterval(window.getStats, 30000);
 
         window.reset = sketch_reset;
@@ -1438,5 +1541,23 @@ if(window.location.pathname == "/sketch/") {
         });
 
         _updateSketchQuality(settings.sketchQuality);
+    });
+}
+
+if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.me") {
+    document.addEventListener("DOMContentLoaded", function() {
+        setInterval(window.update, 1000/30);
+    });
+}
+
+if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.rip") {
+    document.addEventListener("DOMContentLoaded", function() {
+        // not sure how i'd monkeypatch update() here;
+        // it uses requestAnimationFrame instead of setInterval
+        setInterval(() => saveIncomplete(true), 10000);
+
+        window.reset = noz_sketch_reset;
+        window.setData = noz_sketch_setData;
+        window.swap = noz_swap;
     });
 }
