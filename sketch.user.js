@@ -1041,13 +1041,13 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
     document.addEventListener("keydown", personalKeybinds.bind(this));
 
-    // Fix new scrolling behavior to use the old one instead;
-    // i.e. adding thumbnails happens when scrolled to bottom of the page
+    // On garyc.me, this uses the scrolling behavior the site used to have;
+    // i.e. thumbnails will only get added at the *bottom* of the page.
     $(window).off("scroll");
     $(window).on("scroll", function(e) {
-        let bodyHeight = document.body.scrollHeight;
-        let bodyScroll = document.body.scrollTop + document.body.clientHeight;
-        let bottom = bodyHeight - bodyScroll < 1;
+        let pageHeight = document.documentElement.scrollHeight;
+        let pageScroll = window.scrollY + window.innerHeight;
+        let bottom = pageHeight - pageScroll < 1;
         if(bottom) {
             addMore(100);
         }
