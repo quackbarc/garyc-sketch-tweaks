@@ -19,12 +19,16 @@
 /* TODO:
     - SVG saving..?
     - animation speed setting..?
-    - noz.rip support?
+    - narrow down purgeIntervals() to just the necessary intervals?
+      cuz it might consequently affect other extensions.
 
     - sketch: update():
       - update the UI with updateUI(State.IDLE)
       - fix animation ending one line too early
       - fix animation using the moveTo/lineTo way of drawing
+
+    - noz.rip, gallery:
+      - make toSVG() download the blob instead of opening it on the same page?
 
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
@@ -38,10 +42,14 @@ async function _sleep(ms) {
 
 /* interval purging */
 
-const lastInterval = setTimeout(() => void 0, 0) - 1;
-for(let int = 0; int <= lastInterval; int++) {
-    clearInterval(int);
+function purgeIntervals() {
+    const lastInterval = setTimeout(() => void 0, 0) - 1;
+    for(let int = 0; int <= lastInterval; int++) {
+        clearInterval(int);
+    }
 }
+
+purgeIntervals();
 
 /* / */
 
@@ -58,6 +66,11 @@ function _getSettings() {
         showDatecards: true,    // on the UI, these would be called "time cards"
         saveAsCanvas: false,
     };
+    if(window.location.hostname == "noz.rip") {
+        // noz.rip has its own cache with a limited size; gotta be faithful with it.
+        defaultSettings["cacheSize"] = 10;
+    }
+
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
     return {...defaultSettings, ...storedSettings};
 }
@@ -122,6 +135,18 @@ function main() {
         :root[theme="dark"] h1 {
             color: #eee;
         }
+        :root[theme="dark"] a {
+            color: #5c99ff;
+        }
+        :root[theme="dark"] a:hover {
+            color: #5c99ffcc;
+        }
+        :root[theme="dark"] a:visited {
+            color: #8c1ae9;
+        }
+        :root[theme="dark"] a:visited:hover {
+            color: #8c1ae9cc;
+        }
 
         /* noz.rip */
         :root[theme="dark"] .panel {
@@ -166,7 +191,7 @@ function getTile(id) {
     let dbParam = window.db != null ? `&db=${window.db}` : "";
     return $([
         `<a href="#${id}" onclick="show(${id});">`,
-        `<img src="getIMG.php?format=png${dbParam}&id=${id}&size=${size}" style="`,
+        `<img src="https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}&size=${size}" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
@@ -188,9 +213,9 @@ function createDateCard(dt) {
 
 function currentURL() {
     if(window.db != null) {
-        return `https://garyc.me/sketch/gallery.php?db=${window.db}#${window.current}`;
+        return `https://${window.location.hostname}/sketch/gallery.php?db=${window.db}#${window.current}`;
     } else {
-        return `https://garyc.me/sketch/gallery.php#${window.current}`;
+        return `https://${window.location.hostname}/sketch/gallery.php#${window.current}`;
     }
 }
 
@@ -210,11 +235,12 @@ function updateDetails(msg=null) {
 
     // This build custom HTML for the URL, unlike currentURL(), which only
     // returns it as a string.
+    let domain = window.location.hostname;
     let current = `<span class="id">#${window.current}</span>`;
     let url = (
         window.db != null
-        ? `https://garyc.me/sketch/gallery.php?db=${window.db}${current}`
-        : `https://garyc.me/sketch/gallery.php${current}`
+        ? `https://${domain}/sketch/gallery.php?db=${window.db}${current}`
+        : `https://${domain}/sketch/gallery.php${current}`
     );
     elems.push(url);
 
@@ -307,7 +333,7 @@ async function getDateCards(endID, size) {
     const fetchIDFrom = Math.ceil(fromID / 100) * 100;
     const fetchIDTo = Math.ceil(toID / 100) * 100;
     for(let fetchID = fetchIDTo; fetchID >= fetchIDFrom; fetchID -= 100) {
-        let html = await fetch(`getMore.php?start=${fetchID}&db=${db || ""}`)
+        let html = await fetch(`https://garyc.me/sketch/getMore.php?start=${fetchID}&db=${db || ""}`)
             .then(r => r.text());
 
         // Parsing HTML with regex instead of making a document dragment,
@@ -391,13 +417,48 @@ async function refresh() {
         $("#refresh").val("refresh");
     }
 
+    function addLeftButton() {
+        let leftAsset;
+        switch(window.location.hostname) {
+            case "noz.rip": {
+                // I don't have noz.rip's left SVGs in hand.
+            }
+            default: {
+                leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
+            }
+        }
+
+        let cur = window.current;
+        let left = [
+            `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
+                leftAsset,
+            `</a>`,
+        ].join("");
+        $(".left").replaceWith(left);
+    }
+
     $.ajax({
-        url: `/sketch/getStats.php?details&db=${db || ""}`,
+        url: `https://garyc.me/sketch/getStats.php?details&db=${db || ""}`,
         dataType: "json",
         success: function(json) {
             updateStats(json);
 
             const newMax = json.maxID;
+
+            // noz.rip: `window.max` can be fetched from a $.ajax() on init,
+            // but it's saved as a string. Firing this request a bit after
+            // the $.ajax() call SHOULD fix that on time.
+
+            const init = window.max == null || typeof window.max == "string";
+            if(init) {
+                if(window.current < newMax) {
+                    addLeftButton();
+                }
+                window.max = newMax;
+                window.min = json.minID;
+                return enableRefresh();
+            }
+
             if(window.max == newMax) {
                 return enableRefresh();
             }
@@ -424,13 +485,7 @@ async function refresh() {
             }
 
             if(window.current == window.max) {
-                let cur = window.current;
-                let left = [
-                    `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
-                        `<img src="left.png">`,
-                    `</a>`,
-                ].join("")
-                $(".left").replaceWith(left);
+                addLeftButton();
             }
 
             window.max = newMax;
@@ -494,15 +549,29 @@ function show(id) {
     // html building
     // TODO: don't rebuild this everytime this function's called
 
-    var top = `<a href="#0" onclick="hide()" class="top"><img src="top.png"></a>`;
-    var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left"><img src="left.png"></a>`;
+    let topAsset, leftAsset, rightAsset;
+    switch(window.location.hostname) {
+        case "noz.rip": {
+            // placeholder for noz.rip's SVG URIs;
+            // someday i'll have the guts to dump those beasts on this script
+        }
+        default: {
+            topAsset = `<img src="https://garyc.me/sketch/top.png">`;
+            leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
+            rightAsset = `<img src="https://garyc.me/sketch/right.png">`;
+        }
+    }
+
+    var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
+    var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left">${leftAsset}</a>`;
     var leftMax = `<div class="left"></div>`;
-    var rightReg = `<a href="#${id-1}" onclick="show(${id-1})" class="right"><img src="right.png"></a>`;
+    var rightReg = `<a href="#${id-1}" onclick="show(${id-1})" class="right">${rightAsset}</a>`;
     var rightMin = `<div class="right"></div>`;
     var left = id >= window.max ? leftMax : leftReg;
     var right = id <= window.min ? rightMin : rightReg;
 
     let saveParts = [];
+    let saveSVGParts = [];
 
     let saveAnchorStart;
     if(settings.saveAsCanvas) {
@@ -525,16 +594,27 @@ function show(id) {
         `</a>`,
     );
 
-    var save = saveParts.join("");
+    if(window.location.hostname == "noz.rip") {
+        saveSVGParts.push(
+            '<a class="saveSVG">',
+            `<img src="svg.png" style="width: 25px; height: 25px; position: relative;">`,
+            '</a>',
+        );
+    }
+
+    var saves = [`<div class="saves">`, ...saveParts, ...saveSVGParts, `</div>`].join("");
     var bottom = `<div id="details">...</div>`;
 
     $("#holder").addClass("active");
     $("#holder").empty();
-    $("#holder").append([top, left, sketch, right, bottom, save]);
+    $("#holder").append([top, left, sketch, right, bottom, saves]);
     $("#tiles").css({opacity: "75%"});
 
     if(settings.saveAsCanvas) {
         $(".save").click(() => saveCanvas());
+    }
+    if(window.location.hostname == "noz.rip") {
+        $(".saveSVG").click(() => toSVG());
     }
 
     // clear alerts and other cached properties from the last shown sketch
@@ -596,7 +676,7 @@ async function get(id) {
     }
 
     $.ajax({
-        url: `/sketch/get.php?db=${db || ""}&id=${id}&details`,
+        url: `https://garyc.me/sketch/get.php?db=${db || ""}&id=${id}&details`,
         dataType: "text",
         success: function(resp) {
             // Despite being a JSON endpoint, "wait" still gets sent as plain
@@ -982,7 +1062,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
         #holder > canvas {grid-area: c;}
         #holder > .right {grid-area: r;}
         #holder > #details {grid-area: d;}
-        #holder > .save {
+        #holder > .saves {
             box-sizing: border-box;
             width: 100%;
             padding-left: 5px;
@@ -1027,18 +1107,9 @@ if(window.location.pathname == "/sketch/gallery.php") {
             opacity: 80%;
         }
     `);
+}
 
-    window.update = gallery_update;
-    window.refresh = refresh;
-    setInterval(window.update, 1000/30);
-    setInterval(window.refresh, 15000);
-
-    window.drawData = gallery_drawData;
-    window.show = show;
-    window.hide = hide;
-    window.get = get;
-    window.addMore = addMore;
-
+function _gallery_commonOverrides() {
     document.addEventListener("keydown", personalKeybinds.bind(this));
 
     // On garyc.me, this uses the scrolling behavior the site used to have;
@@ -1104,26 +1175,49 @@ if(window.location.pathname == "/sketch/gallery.php") {
             show(id);
         }
     });
+}
+
+function _gallery_commonDOMOverrides() {
+    // remove text nodes that causes buttons to be spaced out.
+    // the spacing will get re-added as css.
+    let text_nodes = Array
+        .from(document.body.childNodes)
+        .filter(e => e.nodeType == Node.TEXT_NODE);
+    $(text_nodes).remove();
+
+    const [button, preferences] = createPreferencesUI();
+    $("input[type=submit]:last-of-type").after(button);
+    $("#tiles").before(preferences);
+}
+
+
+if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "garyc.me") {
+    window.update = gallery_update;
+    window.refresh = refresh;
+    setInterval(window.update, 1000/30);
+    setInterval(window.refresh, 15000);
+
+    window.drawData = gallery_drawData;
+    window.show = show;
+    window.hide = hide;
+    window.get = get;
+    window.addMore = addMore;
+
+    _gallery_commonOverrides();
+
+    // garyc.me doesn't even HAVE a <body> tag;
+    // DOM manipulation can only happen after DOMContentLoaded.
 
     document.addEventListener("DOMContentLoaded", function() {
-
         window.current = null;
 
-        const [button, preferences] = createPreferencesUI();
-        $("input[type=submit]:last-of-type").after(button);
-        $("#tiles").before(preferences);
+        _gallery_commonDOMOverrides();
 
         // clear the script tag and the extra newline that causes
         // misalignment of new sketches
         document.getElementById("tiles").innerHTML = "";
         // add a little init text for the stats
         document.getElementById("stats").innerHTML = "...";
-        // remove text nodes that causes buttons to be spaced out.
-        // the spacing will get re-added as css.
-        let text_nodes = Array
-            .from(document.body.childNodes)
-            .filter(e => e.nodeType == Node.TEXT_NODE);
-        $(text_nodes).remove();
 
         $("#holder").css({
             // remove inline css for the style overrides
@@ -1148,6 +1242,61 @@ if(window.location.pathname == "/sketch/gallery.php") {
         _updateSketchQuality(settings.sketchQuality);
     });
 }
+
+if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
+    // noz.rip has the JS code AFTER the <body> tag.
+    // Same case with the jQuery import, so DOM manipulation
+    // can only be executed after DOMContentLoaded.
+    // One of these days, I'm just gonna snap.
+
+    document.addEventListener("DOMContentLoaded", function() {
+        purgeIntervals();
+
+        // noz.rip doesn't have a stats bar but this works surprisingly fine.
+        window.refresh = refresh;
+        setInterval(window.refresh, 15000);
+
+        window.show = show;
+        window.hide = hide;
+        window.get = get;
+        window.addMore = addMore;
+
+        _gallery_commonOverrides();
+
+        window.max = null;
+        window.min = null;
+        window.current = null;
+        // turn window.max into a Number;
+        // the window.max fetched via $.ajax() is saved as a string.
+        window.refresh();
+
+        // use the new show();
+        // setupOverlay override cancels the old show() from being used
+        window.setupOverlay = (() => void 0);
+        let hash = window.location.hash.slice(1);
+        if(hash) {
+            window.show(hash);
+        }
+
+        _gallery_commonDOMOverrides();
+
+        // remove inline css for the style overrides
+        $("#holder").css({
+            position: "",
+            width: "",
+            height: "",
+            backgroundColor: "",
+            display: "",
+        });
+
+        $("#sketch").attr({
+            tabindex: "0",
+        });
+
+        _updateSketchQuality(settings.sketchQuality);
+    });
+}
+
 
 /* /sketch/ */
 
