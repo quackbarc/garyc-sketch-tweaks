@@ -931,6 +931,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
             font-style: italic;
         }
 
+        #details .extra span[title]:hover {
+            text-decoration: underline dotted;
+        }
+
         #holder {
             display: none;
             z-index: 1;
