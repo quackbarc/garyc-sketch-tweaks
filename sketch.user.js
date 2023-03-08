@@ -252,8 +252,14 @@ function updateDetails(msg=null) {
                 .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
         }
         let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
-        let detailsText = `<span class="extra">from ${origin} • ${timestampHTML}</span>`;
-        elems.push(detailsText);
+
+        let detailsText = `from ${origin} • ${timestampHTML}`;
+        if(origin == null) {
+            detailsText = timestampHTML;
+        }
+        let detailsHTML = `<span class="extra">${detailsText}</span>`
+
+        elems.push(detailsHTML);
     }
 
     $("#details").empty();
