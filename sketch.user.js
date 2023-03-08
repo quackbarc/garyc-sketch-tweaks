@@ -914,18 +914,28 @@ async function personalKeybinds(e) {
             // ctrl+C -- copying URL to clipboard
             if(e.ctrlKey && !(e.altKey || e.metaKey || e.shiftKey)) {
                 e.preventDefault();
+
+                if(!navigator.clipboard) {
+                    await detailsAlert("no clipboard permissions!");
+                    return false;
+                }
+
                 await navigator.clipboard.writeText(currentURL());
                 await detailsAlert("copied url");
             }
 
             // ctrl+shift+C -- copying canvas image to clipboard
             if(e.ctrlKey && e.shiftKey && !(e.altKey || e.metaKey)) {
+                e.preventDefault();
+
                 if(!window.ClipboardItem) {
                     await detailsAlert("no permission to copy canvas");
                     return false;
                 }
-
-                e.preventDefault();
+                if(!navigator.clipboard) {
+                    await detailsAlert("no clipboard permissions!");
+                    return false;
+                }
 
                 let blob = cachedCanvasBlob || await new Promise((resolve) => {
                     document.querySelector("#sketch").toBlob(blob => resolve(blob))
