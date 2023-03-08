@@ -942,11 +942,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
             box-shadow: 0px 0px 10px #00000077;
             position: fixed;
 
-            /* fixes original centering management */
+            /* fixes garyc.me's centering management */
             position: fixed;
-            top: calc((100vh - 800px) / 2) !important;
-            /* sure have this computed too i guess */
-            left: calc((100vw - 1008px) / 2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         #holder img {
@@ -1109,6 +1109,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
 
     document.addEventListener("DOMContentLoaded", function() {
+
         window.current = null;
 
         const [button, preferences] = createPreferencesUI();
@@ -1129,6 +1130,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
 
         $("#holder").css({
             // remove inline css for the style overrides
+            top: "",
             left: "",
             margin: "",
             position: "",
