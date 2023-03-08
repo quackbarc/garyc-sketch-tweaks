@@ -1126,9 +1126,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             .from(document.body.childNodes)
             .filter(e => e.nodeType == Node.TEXT_NODE);
         $(text_nodes).remove();
-    });
 
-    $(document).ready(function() {
         $("#holder").css({
             // remove inline css for the style overrides
             left: "",
@@ -1136,6 +1134,11 @@ if(window.location.pathname == "/sketch/gallery.php") {
             position: "",
             width: "",
         });
+    });
+
+    // these are assigned on another `.ready` event;
+    // overwrite them on another one
+    $(document).ready(function() {
         $("#sketch").attr({
             tabindex: "0",
             // fix canvas not being 798x598
@@ -1144,7 +1147,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
         });
 
         _updateSketchQuality(settings.sketchQuality);
-    })
+    });
 }
 
 /* /sketch/ */
@@ -1434,12 +1437,10 @@ if(window.location.pathname == "/sketch/") {
             </div>
         `);
 
-        _updateSketchQuality(settings.sketchQuality);
-    })
-
-    $(document).ready(function() {
         $("img[src='save.png']").css({
             left: "",
         });
+
+        _updateSketchQuality(settings.sketchQuality);
     });
 }
