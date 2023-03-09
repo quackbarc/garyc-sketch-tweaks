@@ -819,8 +819,16 @@ function createBooruFormUI(id) {
                 autocomplete="off"
                 class="autocomplete_tags">
             <div id="booruButtons">
+                <!-- Select isn't natively part of the form; post-processing is done to make
+                     ratings actually get sent. -->
+                <select id="rating">
+                    <option value="?" selected>Unrated</option>
+                    <option value="s">Safe</option>
+                    <option value="q">Questionable</option>
+                    <option value="e">Explicit</option>
+                </select>
                 <button type="submit">post to booru</button>
-                <button type="button" id="hideBooru">hide booru menu</button>
+                <button type="button" id="hideBooru">hide</button>
             </div>
         </form>
     `);
@@ -842,6 +850,17 @@ function createBooruFormUI(id) {
 
     const sourceField = form.find("input[name='source']");
     sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
+
+    form.submit(function(event) {
+        const form = $(this);
+        const ratingSelect = form.find("select");
+        const rating = ratingSelect.val();
+
+        const tagsBar = form.find("input[name='tags']");
+        let tags = tagsBar.val();
+        let newtags = tags.replace(/\s?rating:./gi, "") + ` rating:${rating}`;
+        tagsBar.val(newtags.trim());
+    });
 
     if(settings.showingBooruMenu) {
         toggleForm();
