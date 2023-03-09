@@ -50,7 +50,7 @@ function _getSettings() {
         cacheSize: 100,
         theme: "auto",
         noAnimation: false,
-        doReplay: false,
+        doReplay: true,
         thumbQuality: "default",
         sketchQuality: "default",
         relativeTimestamps: true,
