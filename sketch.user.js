@@ -791,6 +791,15 @@ function createBooruFormUI(id) {
         return [null, null];
     }
 
+    if(window.db) {
+        const warning = $(
+            `<button disabled>
+                booru doesn't support custom DBs
+            </button>
+        `);
+        return [null, warning];
+    }
+
     const showButton = $("<button>show booru menu</button>");
     const form = $(`
         <form
