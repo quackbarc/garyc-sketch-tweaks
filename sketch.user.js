@@ -998,6 +998,7 @@ if(window.location.pathname == "/sketch/gallery.php") {
             padding: 10px 60px;
             width: 100%;
             height: 100%;
+            overflow: auto;
 
             text-align: left;
             font-size: 18px;
