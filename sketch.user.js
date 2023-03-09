@@ -54,7 +54,7 @@ purgeIntervals();
 /* / */
 
 function _getSettings() {
-    const defaultSettings = {
+    let defaultSettings = {
         changeHashOnNav: true,
         cacheSize: 100,
         theme: "auto",
@@ -67,8 +67,13 @@ function _getSettings() {
         saveAsCanvas: false,
     };
     if(window.location.hostname == "noz.rip") {
-        // noz.rip has its own cache with a limited size; gotta be faithful with it.
-        defaultSettings["cacheSize"] = 10;
+        defaultSettings = {
+            ...defaultSettings,
+            useArchiveAsBooruSource: true,
+            showingBooruMenu: false,
+            // noz.rip has its own cache with a limited size; gotta be faithful with it.
+            cacheSize: 10,
+        };
     }
 
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
@@ -219,6 +224,14 @@ function currentURL() {
     }
 }
 
+function currentArchiveURL() {
+    if(window.db != null) {
+        return null;
+    } else {
+        return `https://noz.rip/sketch_bunker/gallery.php?maxid=${window.current}#${window.current}`;
+    }
+}
+
 function updateDetails(msg=null) {
     const unavailable = window.dat == "wait";
     let elems = [];
@@ -291,8 +304,24 @@ function updateDetails(msg=null) {
         elems.push(detailsHTML);
     }
 
-    $("#details").empty();
-    $("#details").append(elems.join("<br>"));
+    switch(window.location.hostname) {
+        case "noz.rip": {
+            const left = $(`<div id="details-left"></div>`);
+            const right = $(`<div id="details-right"></div>`);
+
+            const [booruForm, booruToggle] = createBooruFormUI(window.current);
+
+            $("#details").empty();
+            $("#details").append(left, right);
+            left.append(elems.join("<br>"));
+            right.append(booruForm, booruToggle);
+            break;
+        }
+        default: {
+            $("#details").empty();
+            $("#details").append(elems.join("<br>"));
+        }
+    }
 }
 
 async function detailsAlert(msg) {
@@ -753,6 +782,65 @@ async function addMore(n=100) {
     addDateCards(last - 1, n);
 }
 
+function createBooruFormUI(id) {
+    const cookies = document.cookie.split(";");
+    const shimUser = cookies.some((c) => c.trim().startsWith("shm_user="));
+    const shimSess = cookies.some((c) => c.trim().startsWith("shm_session="));
+    const hasBooruCredentials = shimUser && shimSess;
+    if(!hasBooruCredentials) {
+        return [null, null];
+    }
+
+    const showButton = $("<button>show booru menu</button>");
+    const form = $(`
+        <form
+            id="booruForm"
+            target="_blank"
+            action="/booru/upload"
+            method="POST"
+            enctype="multipart/form-data"
+            style="display: none;">
+            <input type="hidden" name="sketchid" value="${id}">
+            <input type="hidden" name="source" value="${currentArchiveURL()}">
+            <input
+                type="text"
+                name="tags"
+                required
+                placeholder="tagme"
+                autocomplete="off"
+                class="autocomplete_tags">
+            <div id="booruButtons">
+                <button type="submit">post to booru</button>
+                <button type="button" id="hideBooru">hide booru menu</button>
+            </div>
+        </form>
+    `);
+
+    function toggleFormAndSettings(showing){
+        settings.showingBooruMenu = showing;
+        _saveSettings();
+        toggleForm();
+    }
+
+    function toggleForm() {
+        form.toggle();
+        showButton.toggle();
+    }
+
+    const hideButton = form.find("#booruButtons #hideBooru");
+    showButton.click(() => toggleFormAndSettings(true));
+    hideButton.click(() => toggleFormAndSettings(false));
+
+    const sourceField = form.find("input[name='source']");
+    sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
+
+    if(settings.showingBooruMenu) {
+        toggleForm();
+    }
+
+    return [form, showButton];
+}
+
 function createPreferencesUI() {
     const button = $("<button>preferences</button>");
     const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
@@ -889,11 +977,34 @@ function createPreferencesUI() {
         _saveSettings();
     });
 
+    if(window.location.hostname == "noz.rip") {
+        appendNozPreferences(preferences);
+    }
+
     return [button, preferences];
+}
+
+function appendNozPreferences(preferences) {
+    preferences.append(`
+        <div class="preference">
+            <label for="archiveassource">Add archive link as booru source:</label>
+            <input type="checkbox" id="archiveassource">
+        </div>
+    `);
+
+    preferences.find("#archiveassource").prop("checked", settings.useArchiveAsBooruSource);
+
+    preferences.find("#archiveassource").change(function(e) {
+        settings.useArchiveAsBooruSource = e.target.checked;
+        _saveSettings();
+    });
 }
 
 async function personalKeybinds(e) {
     if(window.current == null) {
+        return;
+    }
+    if(document.activeElement.nodeName == "INPUT") {
         return;
     }
 
@@ -974,6 +1085,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
     GM_addStyle(`
         body {
             margin: 10px 10px;
+        }
+
+        input[type=text] {
+            margin: 0px 4px;
         }
 
         input[type=submit], button {
@@ -1137,6 +1252,10 @@ function _gallery_commonOverrides() {
 
     $(document).off("keydown");
     $(document).on("keydown", function(e) {
+        if(document.activeElement.nodeName == "INPUT") {
+            return;
+        }
+
         switch(e.key) {
             case "Escape": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
@@ -1255,6 +1374,48 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 }
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
+    GM_addStyle(`
+        /* noz.rip-specific #details styles */
+
+        #details {
+            display: flex;
+            gap: 30px;
+
+            height: min-content;
+            max-height: 100%;
+        }
+
+        #details #details-left {
+            flex: 0 1 auto;
+            overflow: auto;
+        }
+
+        #details #details-right {
+            flex: 1 0 auto;
+
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-end;
+        }
+
+        #details form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        #details form input[type="text"] {
+            min-width: min-content;
+            width: 100%;
+            max-width: 400px;
+            height: 2em;
+            padding: 0px 5px;
+            box-sizing: border-box;
+        }
+    `);
+
     // noz.rip has the JS code AFTER the <body> tag.
     // Same case with the jQuery import, so DOM manipulation
     // can only be executed after DOMContentLoaded.
