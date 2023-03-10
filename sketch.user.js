@@ -646,24 +646,11 @@ async function addMore(n=100) {
     const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
     const limit = lastPossible;
 
-    let datecards = {};
     let newtiles = [];
     let last = window.max - ($("#tiles").children("a").length) + 1;
     let target = Math.max(last - n, limit);
 
-    if(settings.showDatecards) {
-        datecards = await getDateCardMapping(last - 1, n);
-    }
-
     for(let id = last - 1; id >= target; id--) {
-        if(settings.showDatecards) {
-            if(datecards.hasOwnProperty(id)) {
-                const [datecard, date] = datecards[id];
-                const href = `#${id}`;
-                newtiles.push(datecard);
-                datecardDates.set(date, href);
-            }
-        }
         newtiles.push(getTile(id));
     }
 
@@ -679,6 +666,8 @@ async function addMore(n=100) {
     }
 
     $("#tiles").append(newtiles);
+
+    addDateCards(last - 1, n);
 }
 
 function createPreferencesUI() {
