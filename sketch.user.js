@@ -1087,6 +1087,10 @@ if(window.location.pathname == "/sketch/gallery.php") {
     });
 
     window.addEventListener("hashchange", function(e) {
+        if(!window.location.hash) {
+            hide();
+        }
+
         let id = parseInt(window.location.hash.slice(1));
         // prevent show() from firing again
         if(id == window.current) return;
