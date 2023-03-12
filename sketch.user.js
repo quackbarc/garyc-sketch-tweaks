@@ -40,6 +40,13 @@ async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
 }
 
+/* base URL guessing */
+
+var baseURL = "https://garyc.me/sketch";
+if(window.location.pathname.startsWith("/sketch_bunker/") && window.location.hostname == "noz.rip") {
+    baseURL = "https://noz.rip/sketch_bunker";
+}
+
 /* interval purging */
 
 function purgeIntervals() {
@@ -118,6 +125,10 @@ function _updateSketchQuality(quality) {
     }
 }
 
+function currentClient() {
+    return window.location.hostname + window.location.pathname;
+}
+
 function main() {
     settings = _getSettings();
 
@@ -191,12 +202,19 @@ function _getThumbSize(qualityName) {
 }
 
 function getTile(id) {
-    let size = _getThumbSize(settings.thumbQuality);
+    const client = currentClient();
+    let imgURL;
+    if(client == "noz.rip/sketch_bunker/gallery.php") {
+        imgURL = `getIMG.php?format=png&id=${id}`;
+    } else {
+        let size = _getThumbSize(settings.thumbQuality);
+        let dbParam = window.db != null ? `&db=${window.db}` : "";
+        imgURL = `https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
+    }
 
-    let dbParam = window.db != null ? `&db=${window.db}` : "";
     return $([
         `<a href="#${id}" onclick="show(${id});">`,
-        `<img src="https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}&size=${size}" style="`,
+        `<img src="${imgURL}" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
@@ -257,7 +275,8 @@ function updateDetails(msg=null) {
     );
     elems.push(url);
 
-    if(!unavailable) {
+    const hasSketchDetails = window.details.origin && window.details.timestamp;
+    if(hasSketchDetails) {
         let origin = window.details.origin;
         let date = new Date(window.details.timestamp * 1000);
         let timestamp = date
@@ -304,8 +323,8 @@ function updateDetails(msg=null) {
         elems.push(detailsHTML);
     }
 
-    switch(window.location.hostname) {
-        case "noz.rip": {
+    switch(window.location.hostname + window.location.pathname) {
+        case "noz.rip/sketch/gallery.php": {
             const left = $(`<div id="details-left"></div>`);
             const right = $(`<div id="details-right"></div>`);
 
@@ -437,6 +456,26 @@ function gallery_update() {
     }
 }
 
+function addLeftButton() {
+    let leftAsset;
+    switch(window.location.hostname) {
+        case "noz.rip": {
+            // I don't have noz.rip's left SVG in hand.
+        }
+        default: {
+            leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
+        }
+    }
+
+    let cur = window.current;
+    let left = [
+        `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
+            leftAsset,
+        `</a>`,
+    ].join("");
+    $(".left").replaceWith(left);
+}
+
 async function refresh() {
     $("#refresh").prop("disabled", true);
     $("#refresh").val("checking...");
@@ -444,26 +483,6 @@ async function refresh() {
     function enableRefresh() {
         $("#refresh").prop("disabled", false);
         $("#refresh").val("refresh");
-    }
-
-    function addLeftButton() {
-        let leftAsset;
-        switch(window.location.hostname) {
-            case "noz.rip": {
-                // I don't have noz.rip's left SVGs in hand.
-            }
-            default: {
-                leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
-            }
-        }
-
-        let cur = window.current;
-        let left = [
-            `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
-                leftAsset,
-            `</a>`,
-        ].join("");
-        $(".left").replaceWith(left);
     }
 
     $.ajax({
@@ -519,6 +538,49 @@ async function refresh() {
 
             window.max = newMax;
             window.min = json.minID;
+            enableRefresh();
+        },
+        error: function(req) {
+            enableRefresh();
+        },
+    });
+}
+
+async function nozBunker_refresh() {
+    if(window.customMax) {
+        return;
+    }
+
+    $("#refresh").prop("disabled", true);
+    $("#refresh").val("checking...");
+
+    function enableRefresh() {
+        $("#refresh").prop("disabled", false);
+        $("#refresh").val("refresh");
+    }
+
+    $.ajax({
+        url: `https://noz.rip/sketch_bunker/getMaxID.php`,
+        dataType: "text",
+        success: function(resp) {
+            const newMax = parseInt(resp);
+            if(window.max == newMax) {
+                return enableRefresh();
+            }
+
+            for(let id = window.max + 1; id <= newMax; id++) {
+                $("#tiles").prepend(
+                    $(getTile(id))
+                      .hide()
+                      .show(1000)
+                );
+            }
+
+            if(window.current == window.max) {
+                addLeftButton();
+            }
+
+            window.max = newMax;
             enableRefresh();
         },
         error: function(req) {
@@ -610,7 +672,7 @@ function show(id) {
         let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
         saveAnchorStart = [
             `<a`,
-                ` href="https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}"`,
+                ` href="${baseURL}/getIMG.php?format=png${dbParam}&id=${id}"`,
                 ` download="${downloadFn}.png"`,
                 ` class="save"`,
             `>`
@@ -623,7 +685,9 @@ function show(id) {
         `</a>`,
     );
 
-    if(window.location.hostname == "noz.rip") {
+    const client = window.location.hostname + window.location.pathname;
+    const nozClient = client == "noz.rip/sketch/gallery.php";
+    if(nozClient) {
         saveSVGParts.push(
             '<a class="saveSVG">',
             `<img src="svg.png" style="width: 25px; height: 25px; position: relative;">`,
@@ -705,7 +769,7 @@ async function get(id) {
     }
 
     $.ajax({
-        url: `https://garyc.me/sketch/get.php?db=${db || ""}&id=${id}&details`,
+        url: `${baseURL}/get.php?db=${db || ""}&id=${id}&details`,
         dataType: "text",
         success: function(resp) {
             // Despite being a JSON endpoint, "wait" still gets sent as plain
@@ -717,9 +781,20 @@ async function get(id) {
                     data: "wait",
                     timestamp: null,
                     origin: null,
-                }
+                };
             } else {
-                details = JSON.parse(resp);
+                try {
+                    details = JSON.parse(resp);
+                }
+                catch(err) {
+                    // If we're here, then this is just plain data.
+                    details = {
+                        id: id,
+                        data: resp,
+                        timestamp: null,
+                        origin: null,
+                    };
+                }
             }
 
             if(window.dat.trim() == details.data.trim()) {
@@ -754,9 +829,17 @@ async function addDateCards(last, size) {
 }
 
 async function addMore(n=100) {
-    const hardLimit = 1;
-    const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
-    const limit = lastPossible;
+    const client = window.location.hostname + window.location.pathname;
+    const bunkerClient = client == "noz.rip/sketch_bunker/gallery.php";
+
+    let limit;
+    if(bunkerClient) {
+        limit = 1;
+    } else {
+        const hardLimit = 1;
+        const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
+        limit = lastPossible;
+    }
 
     let newtiles = [];
     let last = window.max - ($("#tiles").children("a").length) + 1;
@@ -779,7 +862,9 @@ async function addMore(n=100) {
 
     $("#tiles").append(newtiles);
 
-    addDateCards(last - 1, n);
+    if(!bunkerClient) {
+        addDateCards(last - 1, n);
+    }
 }
 
 function createBooruFormUI(id) {
@@ -1109,7 +1194,7 @@ async function personalKeybinds(e) {
 }
 
 
-if(window.location.pathname == "/sketch/gallery.php") {
+function _gallery_commonStyles() {
     GM_addStyle(`
         body {
             margin: 10px 10px;
@@ -1350,6 +1435,8 @@ function _gallery_commonDOMOverrides() {
 
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "garyc.me") {
+    _gallery_commonStyles();
+
     window.update = gallery_update;
     window.refresh = refresh;
     setInterval(window.update, 1000/30);
@@ -1402,6 +1489,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 }
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
+    _gallery_commonStyles();
     GM_addStyle(`
         /* noz.rip-specific #details styles */
 
@@ -1492,6 +1580,66 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         $("#sketch").attr({
             tabindex: "0",
         });
+
+        _updateSketchQuality(settings.sketchQuality);
+    });
+}
+
+if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.hostname == "noz.rip") {
+    _gallery_commonStyles();
+
+    // Use .customMax instead of noz.rip's .custom_max for the sake of naming consistency.
+    // I advise contributors to use this one too for the same reason.
+    window.customMax = null;
+    const customMax = new URLSearchParams(window.location.search).get("maxid");
+    const cm = parseInt(customMax);
+    if(!Number.isNaN(cm)) {
+        window.customMax = cm;
+    }
+
+    // noz.rip/sketch_bunker/ ALSO has the body after the JS tag.
+    // There will be bloodshed.
+
+    document.addEventListener("DOMContentLoaded", function() {
+        purgeIntervals();
+
+        window.refresh = nozBunker_refresh;
+        setInterval(window.refresh, 15000);
+
+        window.show = show;
+        window.hide = hide;
+        window.get = get;
+        window.addMore = addMore;
+
+        _gallery_commonOverrides();
+
+        window.max = window.customMax || window.max;
+        window.current = null;
+
+        // use the new show();
+        // setupOverlay override cancels the old show() from being used
+        window.setupOverlay = (() => void 0);
+        let hash = window.location.hash.slice(1);
+        if(hash) {
+            window.show(hash);
+        }
+
+        _gallery_commonDOMOverrides();
+
+        // remove inline css for the style overrides
+        $("#holder").css({
+            position: "",
+            width: "",
+            height: "",
+            backgroundColor: "",
+            display: "",
+        });
+
+        $("#sketch").attr({
+            tabindex: "0",
+        });
+
+        $("#refresh").prop("disabled", !!window.customMax);
 
         _updateSketchQuality(settings.sketchQuality);
     });
