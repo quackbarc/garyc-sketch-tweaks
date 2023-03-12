@@ -547,7 +547,7 @@ async function refresh() {
 }
 
 async function nozBunker_refresh() {
-    if(window.customMax) {
+    if(window.customMax != null) {
         return;
     }
 
@@ -867,6 +867,32 @@ async function addMore(n=100) {
     }
 }
 
+function addMoreTop(n=100) {
+    const client = window.location.hostname + window.location.pathname;
+    const bunkerClient = client == "noz.rip/sketch_bunker/gallery.php";
+    if(!bunkerClient) {
+        return;
+    }
+
+    let newtiles = [];
+    let last = window.max;
+    let target = Math.min(last + n, window.archiveMax);
+
+    for(let id = target; id > window.max; id--) {
+        newtiles.push(getTile(id));
+    }
+
+    window.max = target;
+    $("#tiles").prepend(newtiles);
+    $("#status").html(`Showing sketches up to #${target}`);
+    if(target == window.archiveMax) {
+        $("#loadmore").prop("disabled", true);
+    }
+    if(window.current == last) {
+        addLeftButton();
+    }
+}
+
 function createBooruFormUI(id) {
     const cookies = document.cookie.split(";");
     const shimUser = cookies.some((c) => c.trim().startsWith("shm_user="));
@@ -1113,6 +1139,18 @@ function appendNozPreferences(preferences) {
     });
 }
 
+function createLoadMoreButton() {
+    const button = $(`<button id="loadmore">load more</button>`);
+
+    button.click(() => addMoreTop(100));
+    return button;
+}
+
+function createBunkerStatus() {
+    const status = $(`<span id="status"></span>`);
+    return status;
+}
+
 async function personalKeybinds(e) {
     if(window.current == null) {
         return;
@@ -1208,8 +1246,14 @@ function _gallery_commonStyles() {
             margin: 5px 4px;
         }
 
-        #stats {
+        #stats,
+        #status {
+            font-family: "Helvetica", "Arial", sans-serif;
             margin: 0px 4px;
+        }
+
+        #status {
+            font-style: italic;
         }
 
         canvas {
@@ -1614,7 +1658,16 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         _gallery_commonOverrides();
 
         window.max = window.customMax || window.max;
+        window.archiveMax = null;
         window.current = null;
+
+        const script = document.querySelector("#tiles + script");
+        if(script) {
+            const maxMatch = $(script).html().match(/max=(?<max>\d+)/);
+            if(maxMatch) {
+                window.archiveMax = parseInt(maxMatch.groups.max);
+            }
+        }
 
         // use the new show();
         // setupOverlay override cancels the old show() from being used
@@ -1625,6 +1678,18 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         }
 
         _gallery_commonDOMOverrides();
+
+        if(window.archiveMax && (window.archiveMax > window.max)) {
+            const loadmore = createLoadMoreButton();
+            const status = createBunkerStatus();
+
+            const preferencesButton = $("button + #holder").prev();
+            preferencesButton.after(status);
+            $("#refresh").after(loadmore);
+            $("#refresh").hide();
+
+            status.html(`Showing sketches up to #${window.max}`);
+        }
 
         // remove inline css for the style overrides
         $("#holder").css({
