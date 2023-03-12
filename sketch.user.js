@@ -319,9 +319,10 @@ async function getDateCards(endID, size) {
 
             let timestamp = new Date(match.groups.timestamp * 1000);
             let href = match.groups.href;
+            let id = parseInt(href.replace("#", ""));
 
             if(lastTimestamp.toDateString() != timestamp.toDateString()) {
-                ret.push([timestamp, createDateCard(timestamp), href]);
+                ret.push([timestamp, createDateCard(timestamp), id]);
             }
 
             lastTimestamp = timestamp;
@@ -333,9 +334,8 @@ async function getDateCards(endID, size) {
 
 async function getDateCardMapping(last, size) {
     let datecards = {};
-    for(const [timestamp, datecard, href] of await getDateCards(last, size)) {
+    for(const [timestamp, datecard, id] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
-        let id = parseInt(href.replace("#", ""));
         datecards[id] = [datecard, date];
     }
     return datecards;
@@ -627,16 +627,16 @@ async function get(id) {
 }
 
 async function addDateCards(last, size) {
-    for(const [timestamp, datecard, href] of await getDateCards(last, size)) {
+    for(const [timestamp, datecard, id] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
-        if(datecardDates.get(date) == href) {
+        if(datecardDates.get(date) == id) {
             continue;
         }
 
-        const a = $(`a[href='${href}']`);
+        const a = $(`a[href='#${id}']`);
         if(a.length > 0) {
             a.before(datecard);
-            datecardDates.set(date, href);
+            datecardDates.set(date, id);
         }
     }
 }
