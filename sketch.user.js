@@ -629,7 +629,7 @@ async function get(id) {
 async function addDateCards(last, size) {
     for(const [timestamp, datecard, id] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
-        if(datecardDates.get(date) == id) {
+        if((datecardDates.get(date) ?? -Infinity) >= id) {
             continue;
         }
 
