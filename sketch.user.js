@@ -1025,14 +1025,15 @@ if(window.location.pathname == "/sketch/gallery.php") {
         }
     `);
 
-    window.update = update;
+    window.update = gallery_update;
     window.refresh = refresh;
     setInterval(window.update, 1000/30);
     setInterval(window.refresh, 15000);
 
-    window.drawData = drawData;
+    window.drawData = gallery_drawData;
     window.show = show;
     window.hide = hide;
+    window.get = get;
     window.addMore = addMore;
 
     document.addEventListener("keydown", personalKeybinds.bind(this));
