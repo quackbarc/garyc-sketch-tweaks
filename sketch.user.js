@@ -6,8 +6,9 @@
 // @homepage    https://github.com/quackbarc/garyc-sketch-tweaks
 // @author      quac
 // @version     1.4.0
-// @match       https://garyc.me/sketch*
-// @match       http*://noz.rip/sketch*
+// @match       https://garyc.me/sketch/*
+// @match       http*://noz.rip/sketch/*
+// @match       http*://noz.rip/sketch_bunker/*
 // @icon        https://raw.githubusercontent.com/quackbarc/garyc-sketch-tweaks/master/crunge.png
 // @downloadURL https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
 // @updateURL   https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
