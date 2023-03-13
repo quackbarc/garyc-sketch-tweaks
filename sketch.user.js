@@ -667,7 +667,7 @@ function show(id) {
 
     let saveAnchorStart;
     if(settings.saveAsCanvas) {
-        saveAnchorStart = '<a class="save">'
+        saveAnchorStart = '<a class="save" title="Save (PNG)">'
     } else {
         let dbParam = window.db != null ? `&db=${window.db}` : "";
         let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
@@ -676,6 +676,7 @@ function show(id) {
                 ` href="${baseURL}/getIMG.php?format=png${dbParam}&id=${id}"`,
                 ` download="${downloadFn}.png"`,
                 ` class="save"`,
+                ` title="Save (PNG)"`,
             `>`
         ].join("");
     }
@@ -690,7 +691,7 @@ function show(id) {
     const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
         saveSVGParts.push(
-            '<a class="saveSVG">',
+            '<a class="saveSVG" title="Save (SVG)">',
             `<img src="svg.png" style="width: 25px; height: 25px; position: relative;">`,
             '</a>',
         );
