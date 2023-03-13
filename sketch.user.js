@@ -1627,6 +1627,11 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             display: "",
         });
         $("#sketch").css({
+            // remove absolute positioning of the canvas
+            position: "",
+            top: "",
+            left: "",
+            transform: "",
             // replace box-shadow with border; caused dark mode to show
             // white edges around the canvas
             boxShadow: "",
