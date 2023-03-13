@@ -733,10 +733,14 @@ function show(id) {
 function hide() {
     $("#tiles").css({opacity: "100%"});
     $("#holder").removeClass("active");
-    window.location.hash = 0;
     window.current = null;
     window.details = null;
     reset();
+
+    const firedFromHash = (!window.location.hash || window.location.hash == "#0");
+    if(!firedFromHash) {
+        window.history.pushState(window.history.state, "", "#0");
+    }
 }
 
 function addToCache(id, details) {
