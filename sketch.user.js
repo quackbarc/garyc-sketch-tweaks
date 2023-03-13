@@ -1260,6 +1260,8 @@ function _gallery_commonStyles() {
         canvas {
             /* prevent canvas from showing up for a split second on page boot */
             display: none;
+            /* re-add garyc.me border on noz.rip */
+            border: 1px black solid;
         }
 
         #tiles {
@@ -1509,13 +1511,16 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         // add a little init text for the stats
         document.getElementById("stats").innerHTML = "...";
 
+        // remove inline css for the style overrides
         $("#holder").css({
-            // remove inline css for the style overrides
             top: "",
             left: "",
             margin: "",
             position: "",
             width: "",
+        });
+        $("#sketch").css({
+            border: "",
         });
     });
 
@@ -1620,6 +1625,11 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             height: "",
             backgroundColor: "",
             display: "",
+        });
+        $("#sketch").css({
+            // replace box-shadow with border; caused dark mode to show
+            // white edges around the canvas
+            boxShadow: "",
         });
 
         $("#sketch").attr({
