@@ -1650,6 +1650,8 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             display: "",
         });
         $("#sketch").css({
+            // remove white background of the canvas
+            background: "",
             // remove absolute positioning of the canvas
             position: "",
             top: "",
