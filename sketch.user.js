@@ -1117,14 +1117,22 @@ function createPreferencesUI() {
         _saveSettings();
     });
 
-    if(window.location.hostname == "noz.rip") {
-        appendNozPreferences(preferences);
+    const client = window.location.hostname + window.location.pathname;
+    switch(client) {
+        case "noz.rip/sketch/gallery.php": {
+            applyNozPreferences(preferences);
+            break;
+        }
+        case "noz.rip/sketch_bunker/gallery.php": {
+            applyBunkerPreferences(preferences);
+            break;
+        }
     }
 
     return [button, preferences];
 }
 
-function appendNozPreferences(preferences) {
+function applyNozPreferences(preferences) {
     preferences.append(`
         <div class="preference">
             <label for="archiveassource">Add archive link as booru source:</label>
@@ -1138,6 +1146,16 @@ function appendNozPreferences(preferences) {
         settings.useArchiveAsBooruSource = e.target.checked;
         _saveSettings();
     });
+}
+
+function applyBunkerPreferences(preferences) {
+    const toremove = [
+        preferences.find("#thumbquality"),
+        preferences.find("#showdatecards"),
+    ];
+    for(const pref of toremove) {
+        pref.parent().remove();
+    }
 }
 
 function createLoadMoreButton() {
