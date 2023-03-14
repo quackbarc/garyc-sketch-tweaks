@@ -236,10 +236,11 @@ function createDateCard(dt) {
 }
 
 function currentURL() {
+    const client = window.location.hostname + window.location.pathname;
     if(window.db != null) {
-        return `https://${window.location.hostname}/sketch/gallery.php?db=${window.db}#${window.current}`;
+        return `https://${client}?db=${window.db}#${window.current}`;
     } else {
-        return `https://${window.location.hostname}/sketch/gallery.php#${window.current}`;
+        return `https://${client}#${window.current}`;
     }
 }
 
@@ -267,12 +268,12 @@ function updateDetails(msg=null) {
 
     // This build custom HTML for the URL, unlike currentURL(), which only
     // returns it as a string.
-    let domain = window.location.hostname;
+    let client = window.location.hostname + window.location.pathname;
     let current = `<span class="id">#${window.current}</span>`;
     let url = (
         window.db != null
-        ? `https://${domain}/sketch/gallery.php?db=${window.db}${current}`
-        : `https://${domain}/sketch/gallery.php${current}`
+        ? `https://${client}?db=${window.db}${current}`
+        : `https://${client}${current}`
     );
     elems.push(url);
 
