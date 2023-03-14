@@ -1702,11 +1702,11 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         window.archiveMax = null;
         window.current = null;
 
-        const script = document.querySelector("#tiles + script");
-        if(script) {
+        for(const script of $("#tiles ~ script")) {
             const maxMatch = $(script).html().match(/max=(?<max>\d+)/);
             if(maxMatch) {
                 window.archiveMax = parseInt(maxMatch.groups.max);
+                break;
             }
         }
 
