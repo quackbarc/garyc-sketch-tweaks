@@ -855,7 +855,7 @@ async function addMore(n=100) {
         newtiles.push(getTile(id));
     }
 
-    if(target == limit && last != limit) {
+    if((target == limit) && !document.querySelector("#tilesEnd")) {
         const tilesEnd = $(`
             <div id="tilesEnd">
                 and then there were none.
