@@ -253,7 +253,7 @@ function currentArchiveURL() {
 }
 
 function updateDetails(msg=null) {
-    const unavailable = window.dat == "wait";
+    const unavailable = (window.dat == "wait" || window.dat == "wait ");    // thanks drawData();
     let elems = [];
 
     if(msg != null) {
