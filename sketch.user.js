@@ -206,7 +206,7 @@ function getTile(id) {
     const client = currentClient();
     let imgURL;
     if(client == "noz.rip/sketch_bunker/gallery.php") {
-        imgURL = `getIMG.php?format=png&id=${id}`;
+        imgURL = `getIMG.php?id=${id}`;
     } else {
         let size = _getThumbSize(settings.thumbQuality);
         let dbParam = window.db != null ? `&db=${window.db}` : "";
