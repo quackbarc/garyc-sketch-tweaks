@@ -1370,7 +1370,12 @@ function _gallery_commonStyles() {
         #holder > .top {grid-area: x;}
         #holder > .left {grid-area: l;}
         #holder > canvas {grid-area: c;}
-        #holder > .right {grid-area: r;}
+        #holder > .right {
+            grid-area: r;
+            /* prevent overflowing to .saves */
+            overflow: hidden;
+            height: 100%;
+        }
         #holder > #details {grid-area: d;}
         #holder > .saves {
             box-sizing: border-box;
