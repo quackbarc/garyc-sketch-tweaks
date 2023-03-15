@@ -169,6 +169,9 @@ function main() {
         :root[theme="dark"] .panel {
             border-color: #888;
         }
+        :root[theme="dark"] #holder svg {
+            stroke: #e5e5e5;
+        }
     `);
     _updateTheme();
 }
@@ -200,6 +203,68 @@ function _getThumbSize(qualityName) {
         default:
             return 100;
     };
+}
+
+function _getNozSVGAsset(type) {
+    // These COULD be put on separate files for cacheability
+    switch(type) {
+        case "top": {
+            return (`
+                <svg
+                    fill="none"
+                    stroke="black"
+                    stroke-width="30"
+                    stroke-linejoin="round"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 300 300"
+                    width="300" height="300">
+                        <circle cx="150" cy="150" r="135"></circle>
+                        <path d="${[
+                            "M 95,75 L 205,225 z",
+                            "M 205,75 L 95,225 z"
+                        ].join(" ")}">
+                        </path>
+                </svg>
+            `);
+        }
+        case "left": {
+            return (`
+                <svg
+                    fill="none"
+                    stroke="black"
+                    stroke-width="20"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 300 300"
+                    width="300" height="300">
+                        <path d="${[
+                            "M 180,30 L 16,150 L 180,270",
+                            "V 200 H 290 V 100 H 180 V 30 z"
+                        ].join(" ")}">
+                        </path>
+                </svg>
+            `);
+        }
+        case "right": {
+            return (`
+                <svg
+                    fill="none"
+                    stroke="black"
+                    stroke-width="20"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 300 300"
+                    width="300" height="300">
+                        <path d="${[
+                            "M 120,30 L 284,150 L 120,270",
+                            "V 200 H 10 V 100 H 120 V 30 z",
+                        ].join(" ")}">
+                        </path>
+                </svg>
+            `);
+        }
+        default: {
+            throw Error(`unknown asset type "${type}"`);
+        }
+    }
 }
 
 function getTile(id) {
@@ -462,7 +527,8 @@ function addLeftButton() {
     let leftAsset;
     switch(window.location.hostname) {
         case "noz.rip": {
-            // I don't have noz.rip's left SVG in hand.
+            leftAsset = _getNozSVGAsset("left");
+            break;
         }
         default: {
             leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
@@ -645,8 +711,10 @@ function show(id) {
     let topAsset, leftAsset, rightAsset;
     switch(window.location.hostname) {
         case "noz.rip": {
-            // placeholder for noz.rip's SVG URIs;
-            // someday i'll have the guts to dump those beasts on this script
+            topAsset = _getNozSVGAsset("top");
+            leftAsset = _getNozSVGAsset("left");
+            rightAsset = _getNozSVGAsset("right");
+            break;
         }
         default: {
             topAsset = `<img src="https://garyc.me/sketch/top.png">`;
@@ -1424,6 +1492,45 @@ function _gallery_commonStyles() {
     `);
 }
 
+function _gallery_commonNozStyles() {
+    GM_addStyle(`
+        /* #holder svg styles */
+
+        #holder svg {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #holder .top,
+        #holder .left,
+        #holder .right {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* alignment of close button */
+        #holder .top {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: flex-end;
+            padding-right: 100px;
+        }
+        #holder .top svg {
+            height: 60%;
+            width: min-content;
+        }
+
+        /* stylistic choices */
+
+        #holder .top:hover,
+        #holder .left:hover,
+        #holder .right:hover {
+            opacity: 80%;
+        }
+    `);
+}
+
 function _gallery_commonOverrides() {
     document.addEventListener("keydown", personalKeybinds.bind(this));
 
@@ -1569,6 +1676,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
     _gallery_commonStyles();
+    _gallery_commonNozStyles();
     GM_addStyle(`
         /* noz.rip-specific #details styles */
 
@@ -1678,6 +1786,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 
 if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.hostname == "noz.rip") {
     _gallery_commonStyles();
+    _gallery_commonNozStyles();
 
     // Use .customMax instead of noz.rip's .custom_max for the sake of naming consistency.
     // I advise contributors to use this one too for the same reason.
