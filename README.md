@@ -1,4 +1,10 @@
 
+<div align="center">
+    <img src="https://user-images.githubusercontent.com/49148994/225370421-ab5a70c1-729a-4c90-a1af-fe721c639189.png">
+    <br>
+    <i>Featured sketch drawn by archemachine.</i>
+</div>
+
 # ![the unofficial sketch mascot, crunge](/crunge.png)&nbsp;garyc.me sketch tweaks
 
 A personal userscript for garyc.me/sketch.
