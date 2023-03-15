@@ -1,9 +1,10 @@
 
 # ![the unofficial sketch mascot, crunge](/crunge.png)&nbsp;garyc.me sketch tweaks
 
-A personal userscript for garyc.me/sketch. Nothing too game-changing, like
-extra tools on the drawing client. Just a handful of visual tweaks and a
-plethora of bug fixes.
+A personal userscript for garyc.me/sketch.
+Nothing too game-changing, like extra tools on the drawing client.
+Just a handful of visual tweaks and a plethora of bug fixes.
+<!-- you know, I think that's starting to become a lie -->
 
 This script is currently not compatible with older browsers that don't support
 `async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
@@ -29,6 +30,7 @@ A complete list of changes by the script is listed below.
 * A slightly better-looking sketch viewer, with extra details like "ink used".
 * Optional auto-skipping and replay of sketch animations in the gallery.
 * Optional spiky line style for sketches.
+* Support for [noz.rip/sketch](https://noz.rip/sketch/) and [noz.rip/sketch_bunker](https://noz.rip/sketch_bunker/).
 
 ## Tweaks and bug fixes
 
@@ -59,6 +61,11 @@ A complete list of changes by the script is listed below.
 * Gallery won't load old, unreachable sketches (sketches that show up as X's).
 * New sketches will only show up when the page is fully scrolled down.
     * This was the old scrolling behavior; not a huge fan of the new one that adds sketches midway through the page.
+      This was probably done for mobile support, which I'll get to working on sometime in the future.
+
+##### noz.rip
+
+* Fixed canvas' box shadow causing a white border around it.
 
 #### Very technical tweaks
 
@@ -71,10 +78,15 @@ A complete list of changes by the script is listed below.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
 * `show()` ignores non-numerical IDs.
 
+##### noz.rip
+* Viewer canvas is centered with `place-self` instead of `position: absolute`.
+* Viewer button SVGs are recreated due to how large their codes are.
+
 ### Personal tweaks
 
 * There's a nice little interface for userscript preferences (found in the gallery).
 * Pressing `right` in the gallery when no sketch is open shows the latest sketch.
+* Sketches can be saved in either the `getIMG.php` quality or gallery-viewer quality.
 * Gallery thumbnails can be shown in different qualities: default, downscaled, rasterized, and the old default.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer has a box shadow so it visually stands out.
@@ -84,8 +96,19 @@ A complete list of changes by the script is listed below.
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
-* Hovering on sketch timestamps will show its full date and time.
 * Sketch timestamps may show dates as "Today" or "Yesterday".
     * This can be toggled off, mainly because localization of those words can be an issue.
+    * Hovering on sketch timestamps will show their full date and time.
+
+#### noz.rip
+
+* Gallery save buttons have hover tooltips indicating what does what.
+* The booru form has a rating dropdown.
+* The booru form can optionally send a noz.rip/sketch_bunker archive link as a source.
+
+#### noz.rip/sketch_bunker
+
+* Added the ability to load sketches later than a given `maxid`.
+  There's also a status bar on top of the page that tells which sketch ID you're on.
 
 ---
