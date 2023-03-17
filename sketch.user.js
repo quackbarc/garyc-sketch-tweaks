@@ -1514,11 +1514,13 @@ function _gallery_commonNozStyles() {
             display: flex;
             flex-direction: column-reverse;
             align-items: flex-end;
-            padding-right: 100px;
+
+            padding-right: 50px;
+            box-sizing: border-box;
         }
         #holder .top svg {
-            height: 60%;
-            width: min-content;
+            height: 60px;
+            width: 60px;
         }
 
         /* stylistic choices */
