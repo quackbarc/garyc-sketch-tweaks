@@ -1341,6 +1341,7 @@ function _gallery_commonStyles() {
 
         #stats,
         #status {
+            display: inline-block;
             font-family: "Helvetica", "Arial", sans-serif;
             margin: 0px 4px;
         }
