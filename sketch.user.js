@@ -95,7 +95,7 @@ function _saveSettings() {
 function _updateTheme() {
     switch(settings.theme) {
         case "auto": {
-            let prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+            let prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
             document.documentElement.setAttribute("theme", prefersDark ? "dark" : "light");
             break;
         }
