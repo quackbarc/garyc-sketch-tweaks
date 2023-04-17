@@ -2238,6 +2238,10 @@ if(window.location.pathname == "/sketch/") {
         window.attemptSwap = attemptSwap;
         window.getLatest = getLatest;
 
+        // Fix ink limit from 50KiB to 64KiB, the largest amount of data that
+        // garyc.me can take in without truncating it.
+        window.limit = 64 * 1024;
+
         // mark parent of swap button and add progress bar
         // don't wanna use native <progress> due to lack of its styling
         // support on firefox
