@@ -18,7 +18,6 @@
 // ==/UserScript==
 
 /* TODO:
-    - SVG saving..?
     - animation speed setting..?
     - narrow down purgeIntervals() to just the necessary intervals?
       cuz it might consequently affect other extensions.
@@ -190,6 +189,39 @@ let lastAlertPromise = null;
 let cachedCanvasBlob = null;
 let datecardDates = new Map();
 window.details = null;
+
+// miscellaneous methods
+
+function toSVG(dat, linejoin="round") {
+  const commands = [];
+  for(const line of dat.split(" ")) {
+    for(let ind = 0; ind + 4 <= line.length; ind += 4) {
+      const [x, y] = [
+        parseInt(line.slice(ind, ind+2), 36),
+        parseInt(line.slice(ind+2, ind+4), 36)
+      ];
+      const command = ind == 0 ? `M${x},${y}` : `L${x},${y}`;
+      commands.push(command);
+    }
+  }
+
+  const path = commands.join("");
+  const xml = [
+    '<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">',
+    '  <path',
+    `    d="${path}"`,
+    '    fill="none"',
+    '    stroke="black"',
+    '    stroke-width="3px"',
+    '    stroke-miterlimit="10"',
+    `    stroke-linecap="butt"`,
+    `    stroke-linejoin="${linejoin}"/>`,
+    '</svg>'
+  ].join("\n");
+  return xml;
+}
+
+// UI and public API methods
 
 function _getThumbSize(qualityName) {
     switch(qualityName) {
@@ -503,6 +535,23 @@ async function saveCanvas() {
     a.click();
 
     URL.revokeObjectURL(url);
+}
+
+function saveSVG() {
+  if(window.current == null) {
+    return;
+  }
+
+  const linejoin = settings.sketchQuality == "spiky" ? "miter" : "round";
+  const svg = toSVG(window.dat, linejoin);
+
+  const blob = new Blob([svg], {type: "image/svg+xml"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.download = `${window.current}.svg`;
+  a.href = url;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // overrides
