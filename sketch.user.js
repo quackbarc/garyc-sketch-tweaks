@@ -27,9 +27,6 @@
       - fix animation ending one line too early
       - fix animation using the moveTo/lineTo way of drawing
 
-    - noz.rip, gallery:
-      - make toSVG() download the blob instead of opening it on the same page?
-
     - debug:
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
 */
@@ -827,7 +824,7 @@ function show(id) {
         $(".save").click(() => saveCanvas());
     }
     if(window.location.hostname == "noz.rip") {
-        $(".saveSVG").click(() => toSVG());
+        $(".saveSVG").click(() => saveSVG());
     }
 
     // clear alerts and other cached properties from the last shown sketch
