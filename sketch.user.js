@@ -349,9 +349,10 @@ function currentArchiveURL() {
 function updateDetails(options={}) {
     const defaultOptions = {
         message: null,
+        showFullTimestamp: false,
     };
     const mergedOptions = {...defaultOptions, ...options};
-    const {message} = mergedOptions;
+    const {message, showFullTimestamp} = mergedOptions;
 
     const unavailable = (window.dat == "wait" || window.dat == "wait ");    // thanks drawData();
     let elems = [];
@@ -414,7 +415,11 @@ function updateDetails(options={}) {
                 .replace(today.toLocaleString("default", dateOptions), "Today")
                 .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
         }
+
         let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
+        if(showFullTimestamp) {
+            timestampHTML = `<span>${timestampTooltip}</span>`;
+        }
 
         let detailsText = `from ${origin} • ${timestampHTML}`;
         if(origin == null) {
@@ -443,10 +448,21 @@ function updateDetails(options={}) {
             $("#details").append(elems.join("<br>"));
         }
     }
+
+    $(".extra span[title]").click(() => detailsFullTimestamp());
 }
 
 async function detailsAlert(msg) {
     updateDetails({message: msg});
+    let alertPromise = lastAlertPromise = _sleep(3000);
+    await alertPromise;
+    if(alertPromise === lastAlertPromise) {
+        updateDetails();
+    }
+}
+
+async function detailsFullTimestamp() {
+    updateDetails({showFullTimestamp: true});
     let alertPromise = lastAlertPromise = _sleep(3000);
     await alertPromise;
     if(alertPromise === lastAlertPromise) {
