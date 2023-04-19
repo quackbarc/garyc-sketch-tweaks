@@ -1480,7 +1480,7 @@ function _gallery_commonStyles() {
 
         /* preferences */
         #preferences {
-            width: 350px;
+            max-width: 350px;
             margin: 5px; /* match that of #tiles */
             font-family: monospace;
         }
