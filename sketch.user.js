@@ -346,12 +346,18 @@ function currentArchiveURL() {
     }
 }
 
-function updateDetails(msg=null) {
+function updateDetails(options={}) {
+    const defaultOptions = {
+        message: null,
+    };
+    const mergedOptions = {...defaultOptions, ...options};
+    const {message} = mergedOptions;
+
     const unavailable = (window.dat == "wait" || window.dat == "wait ");    // thanks drawData();
     let elems = [];
 
-    if(msg != null) {
-        elems.push(msg);
+    if(message != null) {
+        elems.push(message);
     } else if(unavailable) {
         elems.push("(unavailable)");
     } else {
@@ -440,7 +446,7 @@ function updateDetails(msg=null) {
 }
 
 async function detailsAlert(msg) {
-    updateDetails(msg);
+    updateDetails({message: msg});
     let alertPromise = lastAlertPromise = _sleep(3000);
     await alertPromise;
     if(alertPromise === lastAlertPromise) {
