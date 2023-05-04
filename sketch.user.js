@@ -1128,64 +1128,73 @@ function createPreferencesUI() {
     const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
     preferences.html(`
         <legend>Preferences</legend>
-        <div class="preference">
-            <label for="theme">Theme:</label>
-            <select id="theme" name="theme">
-                <option value="auto" selected>System default</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-            </select>
-        </div>
-        <div class="preference">
-            <label for="cachesize">Cache size:</label>
-            <input type="number" id="cachesize" min="0">
-        </div>
-        <div class="preference">
-            <label for="skipanimation">Auto-skip sketch animation:</label>
-            <input type="checkbox" id="skipanimation">
-        </div>
-        <div class="preference">
-            <label for="doreplay">Enable sketch animation replay:</label>
-            <input type="checkbox" id="doreplay">
-            <br>
-            <i>(with LMB click or space keypress)</i>
-        </div>
-        <div class="preference">
-            <label for="hashnav">Update URL from arrow key navigation:</label>
-            <input type="checkbox" id="hashnav">
-            <br>
-            <i>(useful to turn off to reduce browser history clutter)</i>
-        </div>
-        <div class="preference">
-            <label for="thumbquality">Thumbnail quality:</label>
-            <select id="thumbquality" name="thumbquality">
-                <option value="default" selected>Default</option>
-                <option value="hq">Downscaled</option>
-                <option value="raster">Rasterized</option>
-                <option value="oldDefault">Old default</option>
-            </select>
-        </div>
-        <div class="preference">
-            <label for="sketchquality">Sketch quality:</label>
-            <select id="sketchquality" name="sketchquality">
-                <option value="default" selected>No spikes (default)</option>
-                <option value="spiky">Spiky (old)</option>
-            </select>
-        </div>
-        <div class="preference">
-            <label for="relativetimestamps">Show timestamps as relative:</label>
-            <input type="checkbox" id="relativetimestamps">
-        </div>
-        <div class="preference">
-            <label for="showdatecards">Show time cards on gallery:</label>
-            <input type="checkbox" id="showdatecards">
-            <br>
-            <i>(cards might not show up for newer sketches due to an API limitation)</i>
-        </div>
-        <div class="preference">
-            <label for="saveascanvas">Save sketches in canvas quality:</label>
-            <input type="checkbox" id="saveascanvas">
-        </div>
+        <fieldset id="preferences-gallery">
+            <legend>Gallery</legend>
+            <div class="preference">
+                <label for="theme">Theme:</label>
+                <select id="theme" name="theme">
+                    <option value="auto" selected>System default</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+            <div class="preference">
+                <label for="thumbquality">Thumbnail quality:</label>
+                <select id="thumbquality" name="thumbquality">
+                    <option value="default" selected>Default</option>
+                    <option value="hq">Downscaled</option>
+                    <option value="raster">Rasterized</option>
+                    <option value="oldDefault">Old default</option>
+                </select>
+            </div>
+            <div class="preference">
+                <label for="showdatecards">Show time cards:</label>
+                <input type="checkbox" id="showdatecards">
+                <br>
+                <i>(cards might not show up for newer sketches due to an API limitation)</i>
+            </div>
+        </fieldset>
+        <fieldset id="preferences-sketches">
+            <legend>Sketches</legend>
+            <div class="preference">
+                <label for="skipanimation">Auto-skip sketch animation:</label>
+                <input type="checkbox" id="skipanimation">
+            </div>
+            <div class="preference">
+                <label for="doreplay">Enable sketch animation replay:</label>
+                <input type="checkbox" id="doreplay">
+                <br>
+                <i>(with LMB click or space keypress)</i>
+            </div>
+            <div class="preference">
+                <label for="sketchquality">Sketch quality:</label>
+                <select id="sketchquality" name="sketchquality">
+                    <option value="default" selected>No spikes (default)</option>
+                    <option value="spiky">Spiky (old)</option>
+                </select>
+            </div>
+            <div class="preference">
+                <label for="saveascanvas">Save sketches in canvas quality:</label>
+                <input type="checkbox" id="saveascanvas">
+            </div>
+        </fieldset>
+        <fieldset id="preferences-advanced">
+            <legend>Advanced</legend>
+            <div class="preference">
+                <label for="cachesize">Cache size:</label>
+                <input type="number" id="cachesize" min="0">
+            </div>
+            <div class="preference">
+                <label for="hashnav">Update URL from arrow key navigation:</label>
+                <input type="checkbox" id="hashnav">
+                <br>
+                <i>(useful to turn off to reduce browser history clutter)</i>
+            </div>
+            <div class="preference">
+                <label for="relativetimestamps">Show sketch timestamps as relative:</label>
+                <input type="checkbox" id="relativetimestamps">
+            </div>
+        </fieldset>
     `);
 
     button.click(() => preferences.slideToggle(200));
@@ -1275,7 +1284,8 @@ function createPreferencesUI() {
 }
 
 function applyNozPreferences(preferences) {
-    preferences.append(`
+    const preferencesSketches = preferences.find("#preferences-sketches");
+    preferencesSketches.append(`
         <div class="preference">
             <label for="archiveassource">Add archive link as booru source:</label>
             <input type="checkbox" id="archiveassource">
@@ -1483,6 +1493,11 @@ function _gallery_commonStyles() {
             max-width: 350px;
             margin: 5px; /* match that of #tiles */
             font-family: monospace;
+        }
+        #preferences fieldset {
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
         }
         #preferences .preference {
             padding: 4px;
