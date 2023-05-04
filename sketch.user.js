@@ -1502,6 +1502,9 @@ function _gallery_commonStyles() {
         #preferences .preference {
             padding: 4px;
         }
+        #preferences .preference i {
+            opacity: 50%;
+        }
 
         /* grid styles for holder */
         #holder.active {
