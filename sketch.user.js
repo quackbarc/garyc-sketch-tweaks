@@ -1124,7 +1124,7 @@ function createBooruFormUI(id) {
 }
 
 function createPreferencesUI() {
-    const button = $("<button>preferences</button>");
+    const button = $("<button>userscript preferences</button>");
     const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
     preferences.html(`
         <legend>Preferences</legend>
