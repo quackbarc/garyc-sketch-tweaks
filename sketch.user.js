@@ -1164,7 +1164,7 @@ function createPreferencesUI() {
                 <label for="doreplay">Enable sketch animation replay:</label>
                 <input type="checkbox" id="doreplay">
                 <br>
-                <i>(with LMB click or space keypress)</i>
+                <i>(by clicking on the canvas or pressing Space)</i>
             </div>
             <div class="preference">
                 <label for="sketchquality">Sketch quality:</label>
