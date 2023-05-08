@@ -1919,6 +1919,15 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         window.customMax = cm;
     }
 
+    // Hide <tiles> for this site's addMore() monkeypatch
+    const style = document.createElement("style");
+    style.innerHTML = (`
+        #tiles {
+            display: none;
+        }
+    `);
+    document.head.appendChild(style);
+
     // noz.rip/sketch_bunker/ ALSO has the body after the JS tag.
     // There will be bloodshed.
 
@@ -1956,7 +1965,15 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
             window.show(hash);
         }
 
+        // DOM manipulation
+
         _gallery_commonDOMOverrides();
+
+        // addMore() can't be monkeypatched in time before it gets first fired.
+        // Guess we have to do some dirty work "behind-the-scenes".
+        $("#tiles").empty();
+        style.remove();
+        addMore();
 
         if(window.archiveMax && (window.archiveMax > window.max)) {
             const loadmore = createLoadMoreButton();
