@@ -1935,6 +1935,7 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
 
         _gallery_commonOverrides();
 
+        window.min = 1;
         window.max = window.customMax || window.max;
         window.archiveMax = null;
         window.current = null;
