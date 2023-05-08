@@ -1213,6 +1213,8 @@ function createPreferencesUI() {
             <div class="preference">
                 <label for="saveascanvas">Save sketches in canvas quality:</label>
                 <input type="checkbox" id="saveascanvas">
+                <br>
+                <i>(useful if you don't like how screentones look in saves)</i>
             </div>
         </fieldset>
         <fieldset id="preferences-advanced">
