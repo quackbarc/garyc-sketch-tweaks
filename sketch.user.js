@@ -59,7 +59,6 @@ purgeIntervals();
 
 function _getSettings() {
     let defaultSettings = {
-        changeHashOnNav: true,
         cacheSize: 100,
         theme: "auto",
         noAnimation: false,
@@ -1218,12 +1217,6 @@ function createPreferencesUI() {
                 <input type="number" id="cachesize" min="0">
             </div>
             <div class="preference">
-                <label for="hashnav">Update URL from arrow key navigation:</label>
-                <input type="checkbox" id="hashnav">
-                <br>
-                <i>(useful to turn off to reduce browser history clutter)</i>
-            </div>
-            <div class="preference">
                 <label for="relativetimestamps">Show sketch timestamps as relative:</label>
                 <input type="checkbox" id="relativetimestamps">
             </div>
@@ -1236,7 +1229,6 @@ function createPreferencesUI() {
     preferences.find("#cachesize").val(settings.cacheSize);
     preferences.find("#skipanimation").prop("checked", settings.noAnimation);
     preferences.find("#doreplay").prop("checked", settings.doReplay);
-    preferences.find("#hashnav").prop("checked", settings.changeHashOnNav);
     preferences.find("#thumbquality").val(settings.thumbQuality);
     preferences.find("#sketchquality").val(settings.sketchQuality);
     preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
@@ -1245,10 +1237,6 @@ function createPreferencesUI() {
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
-        _saveSettings();
-    });
-    preferences.find("#hashnav").change(function(e) {
-        settings.changeHashOnNav = e.target.checked;
         _saveSettings();
     });
     preferences.find("#skipanimation").change(function(e) {
