@@ -1220,7 +1220,7 @@ function createPreferencesUI() {
         <fieldset id="preferences-advanced">
             <legend>Advanced</legend>
             <div class="preference">
-                <label for="cachesize">Cache size:</label>
+                <label for="cachesize">Sketch cache size:</label>
                 <input type="number" id="cachesize" min="0">
             </div>
             <div class="preference">
