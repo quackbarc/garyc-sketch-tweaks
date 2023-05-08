@@ -220,6 +220,25 @@ function toSVG(dat, linejoin="round") {
 
 // UI and public API methods
 
+function _tileAnchorOverride(event) {
+    event.preventDefault();
+
+    const a = event.currentTarget;
+    const idMatch = a.href.match(/#(\d+)/)
+    const [hashID, id] = idMatch;
+    window.history.pushState(window.history.state, "", hashID);
+    show(parseInt(id));
+}
+
+function _navAnchorOverride(event) {
+    event.preventDefault();
+
+    const a = event.currentTarget;
+    const idMatch = a.href.match(/#(\d+)/)
+    const id = parseInt(idMatch[1]);
+    show(id);
+}
+
 function _getThumbSize(qualityName) {
     switch(qualityName) {
         case "oldDefault":
@@ -307,14 +326,17 @@ function getTile(id) {
         imgURL = `https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
     }
 
-    return $([
-        `<a href="#${id}" onclick="show(${id});">`,
+    const tile = $([
+        `<a href="#${id}">`,
         `<img src="${imgURL}" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
         `"></a>`,
     ].join(""));
+    tile.click(_tileAnchorOverride);
+
+    return tile;
 }
 
 function createDateCard(dt) {
@@ -767,11 +789,17 @@ function show(id) {
     // prevents showing the same sketch again.
     if(id == window.current) return;
 
-    window.current = id;
-
-    if(settings.changeHashOnNav) {
-        window.location.hash = id;
+    const hashID = `#${id}`
+    const historyState = window.history.state;
+    const showingFromHash = window.location.hash == hashID;
+    if(window.current == null && !showingFromHash) {
+        window.history.pushState(historyState, "", hashID);
     }
+    else {
+        window.history.replaceState(historyState, "", hashID);
+    }
+
+    window.current = id;
 
     // html building
     // TODO: don't rebuild this everytime this function's called
@@ -795,9 +823,9 @@ function show(id) {
     let rightID = Math.min(window.max, id - 1);
 
     var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
-    var leftReg = `<a href="#${leftID}" onclick="show(${leftID})" class="left">${leftAsset}</a>`;
+    var leftReg = `<a href="#${leftID}" class="left">${leftAsset}</a>`;
     var leftMax = `<div class="left"></div>`;
-    var rightReg = `<a href="#${rightID}" onclick="show(${rightID})" class="right">${rightAsset}</a>`;
+    var rightReg = `<a href="#${rightID}" class="right">${rightAsset}</a>`;
     var rightMin = `<div class="right"></div>`;
     var left = id >= window.max ? leftMax : leftReg;
     var right = id <= window.min ? rightMin : rightReg;
@@ -845,6 +873,8 @@ function show(id) {
     $("#holder").append([top, left, sketch, right, bottom, saves]);
     $("#tiles").css({opacity: "75%"});
 
+    $("a.left").click(_navAnchorOverride);
+    $("a.right").click(_navAnchorOverride);
     if(settings.saveAsCanvas) {
         $(".save").click(() => saveCanvas());
     }
