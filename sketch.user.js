@@ -911,6 +911,7 @@ function hide() {
     window.details = null;
     reset();
 
+    // Prevent back-forward soft-lock from navigating to gallery.php (w/o hash)
     const firedFromHash = (!window.location.hash || window.location.hash == "#0");
     if(!firedFromHash) {
         window.history.pushState(window.history.state, "", "#0");
