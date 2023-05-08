@@ -791,10 +791,13 @@ function show(id) {
         }
     }
 
+    let leftID = Math.max(window.min, id + 1);
+    let rightID = Math.min(window.max, id - 1);
+
     var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
-    var leftReg = `<a href="#${id+1}" onclick="show(${id+1})" class="left">${leftAsset}</a>`;
+    var leftReg = `<a href="#${leftID}" onclick="show(${leftID})" class="left">${leftAsset}</a>`;
     var leftMax = `<div class="left"></div>`;
-    var rightReg = `<a href="#${id-1}" onclick="show(${id-1})" class="right">${rightAsset}</a>`;
+    var rightReg = `<a href="#${rightID}" onclick="show(${rightID})" class="right">${rightAsset}</a>`;
     var rightMin = `<div class="right"></div>`;
     var left = id >= window.max ? leftMax : leftReg;
     var right = id <= window.min ? rightMin : rightReg;
@@ -1658,18 +1661,22 @@ function _gallery_commonOverrides() {
             case "ArrowLeft": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
                 if(window.current == null) return;
-                if(window.current == window.max) return;
+                if(window.current >= window.max) return;
+                if(window.current < window.min) {
+                    show(window.min);
+                    return false;
+                }
                 show(window.current + 1);
                 return false;
             }
 
             case "ArrowRight": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
-                if(window.current == null) {
+                if(window.current == null || window.current > window.max) {
                     show(window.max);
                     return false;
                 }
-                if(window.current == window.min) return;
+                if(window.current <= window.min) return;
                 show(window.current - 1);
                 return false;
             }
