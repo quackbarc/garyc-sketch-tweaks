@@ -1201,7 +1201,7 @@ function createPreferencesUI() {
                 <label for="doreplay">Enable sketch animation replay:</label>
                 <input type="checkbox" id="doreplay">
                 <br>
-                <i>(by clicking on the canvas or pressing Space)</i>
+                <i>(by clicking on the sketch player or pressing Space)</i>
             </div>
             <div class="preference">
                 <label for="sketchquality">Sketch quality:</label>
@@ -1211,7 +1211,7 @@ function createPreferencesUI() {
                 </select>
             </div>
             <div class="preference">
-                <label for="saveascanvas">Save sketches in canvas quality:</label>
+                <label for="saveascanvas">Save sketches in sketch player quality:</label>
                 <input type="checkbox" id="saveascanvas">
                 <br>
                 <i>(useful if you don't like how screentones look in saves)</i>
