@@ -79,8 +79,13 @@ function _getSettings() {
         };
     }
 
+    let settings = {};
     let storedSettings = JSON.parse(localStorage.getItem("settings_sketch")) || {};
-    return {...defaultSettings, ...storedSettings};
+    for(const [setting, defaultValue] of Object.entries(defaultSettings)) {
+        settings[setting] = storedSettings[setting] ?? defaultValue;
+    }
+
+    return settings;
 }
 
 function _saveSettings() {
