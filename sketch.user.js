@@ -404,7 +404,7 @@ function updateDetails(options={}) {
     );
     elems.push(url);
 
-    const hasSketchDetails = window.details.origin && window.details.timestamp;
+    const hasSketchDetails = window.details.origin || (window.details.timestamp != null);  // for timestamp=0 ig
     if(hasSketchDetails) {
         let origin = window.details.origin;
         let date = new Date(window.details.timestamp * 1000);
