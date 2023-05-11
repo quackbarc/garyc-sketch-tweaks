@@ -1001,7 +1001,7 @@ async function addDateCards(last, size) {
             continue;
         }
 
-        const a = $(`a[href='#${id}']`);
+        const a = $(`#tiles a[href='#${id}']`);
         if(a.length > 0) {
             a.before(datecard);
             datecardDates.set(date, id);
