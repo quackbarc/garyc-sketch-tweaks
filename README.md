@@ -25,6 +25,15 @@ onto the browser.
 Updates to the userscript are regularly checked and handled by the extension,
 so re-installing it just to update won't be very necessary.
 
+> **Note:**
+> Installing the userscript as a file URL on a Chromium/Chrome browser might raise an "Invalid script header" warning on the browser.
+> This is because Chrome tried to install the userscript on its own, not the userscript extension.
+> If this ever happens:
+>
+> 1. Go to your extension's settings in chrome://extensions.
+> 2. Check "Allow access to file URLs". This should let the extension handle userscripts from file URLs.
+> 3. Try reinstalling the userscript.
+
 -----
 
 A complete list of changes by the script is listed below.
