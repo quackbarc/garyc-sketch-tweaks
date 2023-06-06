@@ -192,6 +192,14 @@ let cachedCanvasBlob = null;
 let datecardDates = new Map();
 window.details = null;
 
+// enums
+
+const BooruPostState = {
+    POSTED: 1,
+    ALREADY_POSTED: 2,
+    PARSING_ERROR: 3,
+}
+
 // miscellaneous methods
 
 function toSVG(dat, linejoin="round") {
@@ -515,6 +523,9 @@ function updateStats(json) {
 function saveBooruChanges(id, form) {
     if(!booruStates.hasOwnProperty(id)) {
         booruStates[id] = {
+            booruPostID: null,
+            booruPostStatus: null,
+            uploading: false,
             tags: null,
             rating: null,
         };
@@ -1146,9 +1157,50 @@ function createBooruFormUI(id) {
     const ratingSelect = form.find("select#rating");
 
     const booruState = booruStates[id];
-    if(booruState) {
+    if(booruState && booruState.booruPostStatus) {
+        const otherFormElements = form.children(`*:not(#booruButtons)`);
+        const otherButtons = form.find(`#booruButtons *:not(#hideBooru)`);
+        otherFormElements.remove();
+        otherButtons.remove();
+
+        const postURL = `https://noz.rip/booru/post/view/${booruState.booruPostID}`;
+        const postIDHTML = [
+            `<a href=${postURL} target="_blank">`,
+                `/${booruState.booruPostID}`,
+            `</a>`
+        ].join("");
+
+        let uploadedText, uploadedHTML;
+        switch(booruState.booruPostStatus) {
+            case BooruPostState.POSTED: {
+                uploadedText = "sketch uploaded:";
+                uploadedHTML = $(`<span>${uploadedText} ${postIDHTML}</span>`);
+                break;
+            }
+            case BooruPostState.ALREADY_POSTED: {
+                uploadedText = "sketch was already uploaded!";
+                uploadedHTML = $(`<span>${uploadedText} ${postIDHTML}</span>`);
+                break;
+            }
+
+            default: {
+                console.error("Unexpected booru post state:", booruState.booruPostStatus);
+            }
+            case BooruPostState.PARSING_ERROR: {
+                uploadedText = "something went wrong! check console for details.";
+                uploadedHTML = $(`<span>${uploadedText}</span>`);
+                break;
+            }
+        }
+
+        form.prepend(uploadedHTML);
+    }
+    else if(booruState) {
         tagsBar.val(booruState.tags);
         ratingSelect.val(booruState.rating);
+
+        const formInputs = form.find(`input, button, select`);
+        formInputs.prop("disabled", booruState.uploading);
     }
 
     function toggleFormAndSettings(showing){
@@ -1172,7 +1224,9 @@ function createBooruFormUI(id) {
     const sourceField = form.find("input[name='source']");
     sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
 
-    form.submit(function(event) {
+    form.submit(async function(event) {
+        event.preventDefault();
+
         const form = $(this);
         const ratingSelect = form.find("select");
         const rating = ratingSelect.val();
@@ -1181,6 +1235,56 @@ function createBooruFormUI(id) {
         let tags = tagsBar.val();
         let newtags = tags.replace(/\s?rating:./gi, "") + ` rating:${rating}`;
         tagsBar.val(newtags.trim());
+
+        // Form can only be serialized before it gets disabled.
+        const formSerial = form.serialize();
+
+        saveBooruChanges(id, form);
+        const booruState = booruStates[id];
+
+        booruState.uploading = true;
+        updateDetails();
+
+        let resp = await fetch(
+            "/booru/upload",
+            {
+                method: "POST",
+                body: new URLSearchParams(formSerial),
+            }
+        );
+
+        const uploadSuccessful = resp.redirected;
+        if(uploadSuccessful) {
+            const match = resp.url.match(/\/view\/(\d+)/);
+            const postID = parseInt(match[1]);
+            booruState.booruPostID = postID;
+            booruState.booruPostStatus = BooruPostState.POSTED;
+        }
+        else {
+            // Until I find a way to properly check for duplicates through the wire,
+            // this will have to do.
+
+            const idPattern = /data-post-id='(\d+)'/;
+
+            // todo: handle authentication errors
+            // todo: handle x-empty errors
+
+            const text = await resp.text();
+            const match = text.match(idPattern);
+            if(!match) {
+                const doc = new DOMParser().parseFromString(text, "text/html");
+                console.error("Unexpected response from Shimmie: doesn't have an 'a[data-post-id]' anywhere", doc);
+                booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
+            }
+            else {
+                const postID = parseInt(match[1]);
+                booruState.booruPostID = postID;
+                booruState.booruPostStatus = BooruPostState.ALREADY_POSTED;
+            }
+        }
+
+        booruState.uploading = false;
+        updateDetails();
     });
 
     if(settings.showingBooruMenu) {
@@ -1858,6 +1962,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            text-align: right;
         }
 
         #details form input[type="text"] {
