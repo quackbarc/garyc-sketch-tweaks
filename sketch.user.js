@@ -185,6 +185,7 @@ if(window.location.pathname.startsWith("/sketch")) {
 
 /* /sketch/gallery.php */
 
+const booruStates = {};
 const cache = {};
 let lastAlertPromise = null;
 let cachedCanvasBlob = null;
@@ -509,6 +510,22 @@ function updateStats(json) {
         + `<b>${artists}</b> ${different_artists}. There ${were} also `
         + `<b>${peekers}</b> ${people} who only peeked.`
     );
+}
+
+function saveBooruChanges(id, form) {
+    if(!booruStates.hasOwnProperty(id)) {
+        booruStates[id] = {
+            tags: null,
+            rating: null,
+        };
+    }
+
+    const tagsBar = form.find("input[name='tags']");
+    const ratingSelect = form.find("select#rating");
+
+    const state = booruStates[id];
+    state.tags = tagsBar.val();
+    state.rating = ratingSelect.val();
 }
 
 async function getDateCards(endID, size) {
@@ -1125,6 +1142,15 @@ function createBooruFormUI(id) {
         </form>
     `);
 
+    const tagsBar = form.find("input[name='tags']");
+    const ratingSelect = form.find("select#rating");
+
+    const booruState = booruStates[id];
+    if(booruState) {
+        tagsBar.val(booruState.tags);
+        ratingSelect.val(booruState.rating);
+    }
+
     function toggleFormAndSettings(showing){
         settings.showingBooruMenu = showing;
         _saveSettings();
@@ -1139,6 +1165,9 @@ function createBooruFormUI(id) {
     const hideButton = form.find("#booruButtons #hideBooru");
     showButton.click(() => toggleFormAndSettings(true));
     hideButton.click(() => toggleFormAndSettings(false));
+
+    tagsBar.on("change", () => saveBooruChanges(id, form));
+    ratingSelect.on("change", () => saveBooruChanges(id, form));
 
     const sourceField = form.find("input[name='source']");
     sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
