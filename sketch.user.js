@@ -675,6 +675,84 @@ function saveSVG() {
   URL.revokeObjectURL(url);
 }
 
+// POST methods
+
+async function selfUploadToBooru(id, form) {
+    // Form can only be serialized before it gets disabled.
+    const formSerial = form.serialize();
+
+    saveBooruChanges(id, form);
+    const booruState = booruStates[id];
+
+    booruState.uploading = true;
+    updateDetails();
+
+    let resp = await fetch(
+        "/booru/upload",
+        {
+            method: "POST",
+            body: new URLSearchParams(formSerial),
+        }
+    );
+
+    const uploadSuccessful = resp.redirected;
+    const loggedOut = resp.status == 403;
+
+    if(loggedOut) {
+        booruState.uploading = false;
+        detailsAlert("can't upload; logged out of booru");
+        return;
+    }
+
+    if(uploadSuccessful) {
+        const match = resp.url.match(/\/view\/(\d+)/);
+        const postID = parseInt(match[1]);
+        booruState.booruPostID = postID;
+        booruState.booruPostStatus = BooruPostState.POSTED;
+    }
+    else {
+        // Until I find a way to properly check for errors and hash duplicates through the wire,
+        // this will have to do.
+
+        const idPattern = /data-post-id='(\d+)'/;
+
+        const text = await resp.text();
+        const match = text.match(idPattern);
+        if(!match) {
+            const doc = new DOMParser().parseFromString(text, "text/html");
+
+            const xEmptyErrorElem = $(doc).find("section[id^=Error_with] .blockbody");
+            const generalErrorElem = $(doc).find("section[id^=Error] .blockbody");
+
+            const isXEmptyError = xEmptyErrorElem.length > 0;
+            const isGeneralError = generalErrorElem.length > 0;
+            if(isXEmptyError) {
+                booruState.uploading = false;
+                detailsAlert("can't upload; unavailable sketch");
+                return;
+            }
+            else if(isGeneralError) {
+                const errorMessage = generalErrorElem.text();
+
+                booruState.uploading = false;
+                detailsAlert(`booru error: ${errorMessage}`);
+                return;
+            }
+            else {
+                console.error("Unexpected response from Shimmie:", doc);
+                booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
+            }
+        }
+        else {
+            const postID = parseInt(match[1]);
+            booruState.booruPostID = postID;
+            booruState.booruPostStatus = BooruPostState.ALREADY_POSTED;
+        }
+    }
+
+    booruState.uploading = false;
+    updateDetails();
+}
 
 // overrides
 
@@ -1256,86 +1334,10 @@ function createBooruFormUI(id) {
         let newtags = tags.replace(/\s?rating:./gi, "") + ` rating:${rating}`;
         tagsBar.val(newtags.trim());
 
-        if(!settings.samePageBooru) {
-            return;
+        if(settings.samePageBooru) {
+            event.preventDefault();
+            selfUploadToBooru(id, form);
         }
-
-        event.preventDefault();
-
-        // Form can only be serialized before it gets disabled.
-        const formSerial = form.serialize();
-
-        saveBooruChanges(id, form);
-        const booruState = booruStates[id];
-
-        booruState.uploading = true;
-        updateDetails();
-
-        let resp = await fetch(
-            "/booru/upload",
-            {
-                method: "POST",
-                body: new URLSearchParams(formSerial),
-            }
-        );
-
-        const uploadSuccessful = resp.redirected;
-        const loggedOut = resp.status == 403;
-
-        if(loggedOut) {
-            booruState.uploading = false;
-            detailsAlert("can't upload; logged out of booru");
-            return;
-        }
-
-        if(uploadSuccessful) {
-            const match = resp.url.match(/\/view\/(\d+)/);
-            const postID = parseInt(match[1]);
-            booruState.booruPostID = postID;
-            booruState.booruPostStatus = BooruPostState.POSTED;
-        }
-        else {
-            // Until I find a way to properly check for errors and hash duplicates through the wire,
-            // this will have to do.
-
-            const idPattern = /data-post-id='(\d+)'/;
-
-            const text = await resp.text();
-            const match = text.match(idPattern);
-            if(!match) {
-                const doc = new DOMParser().parseFromString(text, "text/html");
-
-                const xEmptyErrorElem = $(doc).find("section[id^=Error_with] .blockbody");
-                const generalErrorElem = $(doc).find("section[id^=Error] .blockbody");
-
-                const isXEmptyError = xEmptyErrorElem.length > 0;
-                const isGeneralError = generalErrorElem.length > 0;
-                if(isXEmptyError) {
-                    booruState.uploading = false;
-                    detailsAlert("can't upload; unavailable sketch");
-                    return;
-                }
-                else if(isGeneralError) {
-                    const errorMessage = generalErrorElem.text();
-
-                    booruState.uploading = false;
-                    detailsAlert(`booru error: ${errorMessage}`);
-                    return;
-                }
-                else {
-                    console.error("Unexpected response from Shimmie:", doc);
-                    booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
-                }
-            }
-            else {
-                const postID = parseInt(match[1]);
-                booruState.booruPostID = postID;
-                booruState.booruPostStatus = BooruPostState.ALREADY_POSTED;
-            }
-        }
-
-        booruState.uploading = false;
-        updateDetails();
     });
 
     if(settings.showingBooruMenu) {
