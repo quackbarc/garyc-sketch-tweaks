@@ -603,7 +603,7 @@ async function getDateCards(endID, size) {
         let html = await fetch(`https://garyc.me/sketch/getMore.php?start=${fetchID}&db=${db || ""}`)
             .then(r => r.text());
 
-        // Parsing HTML with regex instead of making a document dragment,
+        // Parsing HTML with regex instead of making a document fragment,
         // since one, it's cleaner to write than the alternative, and two,
         // we won't get 404s from thumbnails of sketches that don't exist.
 
