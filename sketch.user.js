@@ -73,6 +73,7 @@ function _getSettings() {
         defaultSettings = {
             ...defaultSettings,
             useArchiveAsBooruSource: true,
+            samePageBooru: true,
             showingBooruMenu: false,
             // noz.rip has its own cache with a limited size; gotta be faithful with it.
             cacheSize: 10,
@@ -674,6 +675,7 @@ function saveSVG() {
   URL.revokeObjectURL(url);
 }
 
+
 // overrides
 
 function gallery_update() {
@@ -1177,7 +1179,7 @@ function createBooruFormUI(id) {
     const ratingSelect = form.find("select#rating");
 
     const booruState = booruStates[id];
-    if(booruState && booruState.booruPostStatus) {
+    if(booruState && booruState.booruPostStatus && settings.samePageBooru) {
         const otherFormElements = form.children(`*:not(#booruButtons)`);
         const otherButtons = form.find(`#booruButtons *:not(#hideBooru)`);
         otherFormElements.remove();
@@ -1245,8 +1247,6 @@ function createBooruFormUI(id) {
     sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
 
     form.submit(async function(event) {
-        event.preventDefault();
-
         const form = $(this);
         const ratingSelect = form.find("select");
         const rating = ratingSelect.val();
@@ -1255,6 +1255,12 @@ function createBooruFormUI(id) {
         let tags = tagsBar.val();
         let newtags = tags.replace(/\s?rating:./gi, "") + ` rating:${rating}`;
         tagsBar.val(newtags.trim());
+
+        if(!settings.samePageBooru) {
+            return;
+        }
+
+        event.preventDefault();
 
         // Form can only be serialized before it gets disabled.
         const formSerial = form.serialize();
@@ -1495,13 +1501,28 @@ function applyNozPreferences(preferences) {
     const preferencesSketches = preferences.find("#preferences-sketches");
     preferencesSketches.append(`
         <div class="preference">
+            <label for="samepagebooru">Post to booru without opening a new tab:</label>
+            <input type="checkbox" id="samepagebooru">
+        </div>
+        <div class="preference">
             <label for="archiveassource">Add archive link as booru source:</label>
             <input type="checkbox" id="archiveassource">
         </div>
     `);
 
+    preferences.find("#samepagebooru").prop("checked", settings.samePageBooru);
     preferences.find("#archiveassource").prop("checked", settings.useArchiveAsBooruSource);
 
+    preferences.find("#samepagebooru").change(function(e) {
+        settings.samePageBooru = e.target.checked;
+
+        // Updates the booru menu
+        if(window.current != null) {
+            updateDetails();
+        }
+
+        _saveSettings();
+    });
     preferences.find("#archiveassource").change(function(e) {
         settings.useArchiveAsBooruSource = e.target.checked;
         _saveSettings();
