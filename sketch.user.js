@@ -254,6 +254,8 @@ function _navAnchorOverride(event) {
 
 function _getThumbSize(qualityName) {
     switch(qualityName) {
+        case "awful":
+            return 4;
         case "oldDefault":
             return 20;
         case "raster":
@@ -1350,6 +1352,7 @@ function createPreferencesUI() {
                     <option value="hq">Downscaled</option>
                     <option value="raster">Rasterized</option>
                     <option value="oldDefault">Old default</option>
+                    <option value="awful">What</option>
                 </select>
             </div>
             <div class="preference">
