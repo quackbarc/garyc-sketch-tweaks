@@ -690,27 +690,6 @@ function gallery_update() {
     }
 }
 
-function addLeftButton() {
-    let leftAsset;
-    switch(window.location.hostname) {
-        case "noz.rip": {
-            leftAsset = _getNozSVGAsset("left");
-            break;
-        }
-        default: {
-            leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
-        }
-    }
-
-    let cur = window.current;
-    let left = [
-        `<a href="#${cur+1}" onclick="show(${cur+1})" class="left">`,
-            leftAsset,
-        `</a>`,
-    ].join("");
-    $(".left").replaceWith(left);
-}
-
 async function refresh() {
     $("#refresh").prop("disabled", true);
     $("#refresh").val("checking...");
@@ -725,7 +704,6 @@ async function refresh() {
         dataType: "json",
         success: function(json) {
             updateStats(json);
-
             const newMax = json.maxID;
 
             // noz.rip: `window.max` can be fetched from a $.ajax() on init,
@@ -765,12 +743,14 @@ async function refresh() {
                 }
             }
 
-            if(window.current == window.max) {
-                addLeftButton();
-            }
-
+            const viewingLatestSketch = window.current == window.max;
             window.max = newMax;
             window.min = json.minID;
+
+            if(viewingLatestSketch) {
+                updateGalleryButtons();
+            }
+
             enableRefresh();
         },
         error: function(req) {
@@ -809,11 +789,13 @@ async function nozBunker_refresh() {
                 );
             }
 
-            if(window.current == window.max) {
-                addLeftButton();
+            const viewingLatestSketch = window.current == window.max;
+            window.max = newMax;
+
+            if(viewingLatestSketch) {
+                updateGalleryButtons();
             }
 
-            window.max = newMax;
             enableRefresh();
         },
         error: function(req) {
@@ -1116,8 +1098,10 @@ function addMoreTop(n=100) {
     if(target == window.archiveMax) {
         $("#loadmore").prop("disabled", true);
     }
-    if(window.current == last) {
-        addLeftButton();
+
+    const viewingLatestSketch = window.current == last;
+    if(viewingLatestSketch) {
+        updateGalleryButtons();
     }
 }
 
