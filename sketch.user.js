@@ -1111,6 +1111,12 @@ function createBooruFormUI(id) {
         return [null, null];
     }
 
+    const sketch = cache["#" + id];
+    const unavailable = (sketch.data == "wait" || sketch.data == "wait ");  // thanks drawData();
+    if(unavailable) {
+        return [null, null];
+    }
+
     if(window.db) {
         const warning = $(
             `<button disabled>
