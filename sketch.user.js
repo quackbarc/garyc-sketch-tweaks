@@ -1028,8 +1028,17 @@ async function get(id) {
 async function addDateCards(last, size) {
     for(const [timestamp, datecard, id] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
-        if((datecardDates.get(date) ?? -Infinity) >= id) {
-            continue;
+
+        if(datecardDates.has(date)) {
+            const datecardID = datecardDates.get(date);
+            const datecardNeedsUpdate = id > datecardID;
+            if(!datecardNeedsUpdate) {
+                continue;
+            }
+
+            const a = $(`#tiles a[href='#${datecardID}']`);
+            const oldDatecard = a.prev();
+            oldDatecard.remove();
         }
 
         const a = $(`#tiles a[href='#${id}']`);
