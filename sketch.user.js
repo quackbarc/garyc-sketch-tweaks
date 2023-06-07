@@ -1254,6 +1254,14 @@ function createBooruFormUI(id) {
         );
 
         const uploadSuccessful = resp.redirected;
+        const loggedOut = resp.status == 403;
+
+        if(loggedOut) {
+            booruState.uploading = false;
+            detailsAlert("can't upload; logged out of booru");
+            return;
+        }
+
         if(uploadSuccessful) {
             const match = resp.url.match(/\/view\/(\d+)/);
             const postID = parseInt(match[1]);
@@ -1266,7 +1274,6 @@ function createBooruFormUI(id) {
 
             const idPattern = /data-post-id='(\d+)'/;
 
-            // todo: handle authentication errors
             // todo: handle x-empty errors
 
             const text = await resp.text();
