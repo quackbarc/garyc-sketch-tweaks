@@ -1501,16 +1501,20 @@ function createPreferencesUI() {
 
 function applyNozPreferences(preferences) {
     const preferencesSketches = preferences.find("#preferences-sketches");
-    preferencesSketches.append(`
-        <div class="preference">
-            <label for="samepagebooru">Post to booru without opening a new tab:</label>
-            <input type="checkbox" id="samepagebooru">
-        </div>
-        <div class="preference">
-            <label for="archiveassource">Add archive link as booru source:</label>
-            <input type="checkbox" id="archiveassource">
-        </div>
+    const preferencesBooru = $(`
+        <fieldset id="preferencesBooru">
+            <legend>Booru</legend>
+            <div class="preference">
+                <label for="samepagebooru">Post to booru without opening a new tab:</label>
+                <input type="checkbox" id="samepagebooru">
+            </div>
+            <div class="preference">
+                <label for="archiveassource">Add archive link as booru source:</label>
+                <input type="checkbox" id="archiveassource">
+            </div>
+        </fieldset>
     `);
+    preferencesSketches.after(preferencesBooru);
 
     preferences.find("#samepagebooru").prop("checked", settings.samePageBooru);
     preferences.find("#archiveassource").prop("checked", settings.useArchiveAsBooruSource);
