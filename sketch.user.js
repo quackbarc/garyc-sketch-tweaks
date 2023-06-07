@@ -734,11 +734,9 @@ async function refresh() {
 
             const init = window.max == null || typeof window.max == "string";
             if(init) {
-                if(window.current < newMax) {
-                    addLeftButton();
-                }
                 window.max = newMax;
                 window.min = json.minID;
+                updateGalleryButtons();
                 return enableRefresh();
             }
 
