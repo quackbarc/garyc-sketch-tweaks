@@ -1269,19 +1269,37 @@ function createBooruFormUI(id) {
             booruState.booruPostStatus = BooruPostState.POSTED;
         }
         else {
-            // Until I find a way to properly check for duplicates through the wire,
+            // Until I find a way to properly check for errors and hash duplicates through the wire,
             // this will have to do.
 
             const idPattern = /data-post-id='(\d+)'/;
-
-            // todo: handle x-empty errors
 
             const text = await resp.text();
             const match = text.match(idPattern);
             if(!match) {
                 const doc = new DOMParser().parseFromString(text, "text/html");
-                console.error("Unexpected response from Shimmie: doesn't have an 'a[data-post-id]' anywhere", doc);
-                booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
+
+                const xEmptyErrorElem = $(doc).find("section[id^=Error_with] .blockbody");
+                const generalErrorElem = $(doc).find("section[id^=Error] .blockbody");
+
+                const isXEmptyError = xEmptyErrorElem.length > 0;
+                const isGeneralError = generalErrorElem.length > 0;
+                if(isXEmptyError) {
+                    booruState.uploading = false;
+                    detailsAlert("can't upload; unavailable sketch");
+                    return;
+                }
+                else if(isGeneralError) {
+                    const errorMessage = generalErrorElem.text();
+
+                    booruState.uploading = false;
+                    detailsAlert(`booru error: ${errorMessage}`);
+                    return;
+                }
+                else {
+                    console.error("Unexpected response from Shimmie:", doc);
+                    booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
+                }
             }
             else {
                 const postID = parseInt(match[1]);
