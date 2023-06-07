@@ -520,6 +520,51 @@ function updateStats(json) {
     );
 }
 
+function createGalleryButtons(id) {
+    let topAsset, leftAsset, rightAsset;
+    switch(window.location.hostname) {
+        case "noz.rip": {
+            topAsset = _getNozSVGAsset("top");
+            leftAsset = _getNozSVGAsset("left");
+            rightAsset = _getNozSVGAsset("right");
+            break;
+        }
+        default: {
+            topAsset = `<img src="https://garyc.me/sketch/top.png">`;
+            leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
+            rightAsset = `<img src="https://garyc.me/sketch/right.png">`;
+        }
+    }
+
+    let leftID = Math.max(window.min, id + 1);
+    let rightID = Math.min(window.max, id - 1);
+
+    var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
+    var leftReg = `<a href="#${leftID}" class="left">${leftAsset}</a>`;
+    var leftMax = `<div class="left"></div>`;
+    var rightReg = `<a href="#${rightID}" class="right">${rightAsset}</a>`;
+    var rightMin = `<div class="right"></div>`;
+    var left = id >= window.max ? leftMax : leftReg;
+    var right = id <= window.min ? rightMin : rightReg;
+
+    return {
+        top: top,
+        left: left,
+        right: right,
+    };
+}
+
+function updateGalleryButtons() {
+    if(window.current == null) {
+        return;
+    }
+
+    const {top, left, right} = createGalleryButtons(window.current);
+    $(".top").replaceWith(top);
+    $(".left").replaceWith(left);
+    $(".right").replaceWith(right);
+}
+
 function saveBooruChanges(id, form) {
     if(!booruStates.hasOwnProperty(id)) {
         booruStates[id] = {
@@ -836,31 +881,7 @@ function show(id) {
     // html building
     // TODO: don't rebuild this everytime this function's called
 
-    let topAsset, leftAsset, rightAsset;
-    switch(window.location.hostname) {
-        case "noz.rip": {
-            topAsset = _getNozSVGAsset("top");
-            leftAsset = _getNozSVGAsset("left");
-            rightAsset = _getNozSVGAsset("right");
-            break;
-        }
-        default: {
-            topAsset = `<img src="https://garyc.me/sketch/top.png">`;
-            leftAsset = `<img src="https://garyc.me/sketch/left.png">`;
-            rightAsset = `<img src="https://garyc.me/sketch/right.png">`;
-        }
-    }
-
-    let leftID = Math.max(window.min, id + 1);
-    let rightID = Math.min(window.max, id - 1);
-
-    var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
-    var leftReg = `<a href="#${leftID}" class="left">${leftAsset}</a>`;
-    var leftMax = `<div class="left"></div>`;
-    var rightReg = `<a href="#${rightID}" class="right">${rightAsset}</a>`;
-    var rightMin = `<div class="right"></div>`;
-    var left = id >= window.max ? leftMax : leftReg;
-    var right = id <= window.min ? rightMin : rightReg;
+    const {top, left, right} = createGalleryButtons(id);
 
     let saveParts = [];
     let saveSVGParts = [];
