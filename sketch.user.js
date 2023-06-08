@@ -201,6 +201,11 @@ const BooruPostState = {
     PARSING_ERROR: 3,
 }
 
+const FooterState = {
+    NORMAL: 0,
+    END_OF_GALLERY: 1,
+};
+
 // miscellaneous methods
 
 function toSVG(dat, linejoin="round") {
@@ -1150,15 +1155,12 @@ async function addMore(n=100) {
         newtiles.push(getTile(id));
     }
 
-    if((target == limit) && !document.querySelector("#tilesEnd")) {
-        const tilesEnd = $(`
-            <div id="tilesEnd">
-                and then there were none.
-                <button>back to top</button>
-            </div>
-        `);
-        $("#tiles").after(tilesEnd);
-        $("#tilesEnd button").on("click", () => document.documentElement.scrollIntoView());
+    const footerState = target == limit
+        ? FooterState.END_OF_GALLERY
+        : FooterState.NORMAL;
+    if(footerState == FooterState.END_OF_GALLERY && !(last == target)) {
+        const tilesEnd = createGalleryFooter(footerState);
+        $("#tilesEnd").replaceWith(tilesEnd);
     }
 
     $("#tiles").append(newtiles);
@@ -1543,6 +1545,32 @@ function applyBunkerPreferences(preferences) {
     for(const pref of toremove) {
         pref.parent().remove();
     }
+}
+
+function createGalleryFooter(footerState=FooterState.NORMAL) {
+    const tilesEnd = $(`<footer id="tilesEnd"></footer>`);
+
+    switch(footerState) {
+        case FooterState.END_OF_GALLERY: {
+            tilesEnd.html(`
+                and then there were none.
+                <button>back to top</button>
+            `);
+            tilesEnd.find("button").on("click", () => document.documentElement.scrollIntoView());
+            break;
+        }
+
+        case FooterState.NORMAL:
+        default: {
+            tilesEnd.html(`
+                <button>load more</button>
+            `);
+            tilesEnd.find("button").on("click", () => addMore(100));
+            break;
+        }
+    }
+
+    return tilesEnd;
 }
 
 function createLoadMoreButton() {
@@ -1942,6 +1970,9 @@ function _gallery_commonDOMOverrides() {
     const [button, preferences] = createPreferencesUI();
     $("input[type=submit]:last-of-type").after(button);
     $("#tiles").before(preferences);
+
+    const tilesEnd = createGalleryFooter();
+    $("#tiles").after(tilesEnd);
 }
 
 
