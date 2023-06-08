@@ -1189,7 +1189,7 @@ function addMoreTop(n=100) {
     $("#tiles").prepend(newtiles);
     $("#status").html(`Showing sketches up to #${target}`);
     if(target == window.archiveMax) {
-        $("#loadmore").prop("disabled", true);
+        $("#loadmoretop").prop("disabled", true);
     }
 
     const viewingLatestSketch = window.current == last;
@@ -1573,8 +1573,8 @@ function createGalleryFooter(footerState=FooterState.NORMAL) {
     return tilesEnd;
 }
 
-function createLoadMoreButton() {
-    const button = $(`<button id="loadmore">load more</button>`);
+function createLoadMoreTopButton() {
+    const button = $(`<button id="loadmoretop">load more</button>`);
 
     button.click(() => addMoreTop(100));
     return button;
@@ -2214,12 +2214,12 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         addMore();
 
         if(window.archiveMax && (window.archiveMax > window.max)) {
-            const loadmore = createLoadMoreButton();
+            const loadmoreTop = createLoadMoreTopButton();
             const status = createBunkerStatus();
 
             const preferencesButton = $("button + #holder").prev();
             preferencesButton.after(status);
-            $("#refresh").after(loadmore);
+            $("#refresh").after(loadmoreTop);
             $("#refresh").hide();
 
             status.html(`Showing sketches up to #${window.max}`);
