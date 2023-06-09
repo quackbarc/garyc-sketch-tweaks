@@ -2373,7 +2373,7 @@ function sketch_setData(data) {
 }
 
 function noz_sketch_setData(arrdata) {
-    window.arrdat = arrdata.filter((part) => part != "");
+    window.arrdat = arrdata = arrdata.filter((part) => part != "");
 
     // using normal reset() would've left the wrong buttons enabled
     // every time as if ink really was 0%.
@@ -2381,7 +2381,7 @@ function noz_sketch_setData(arrdata) {
     resetUI();
 
     for(var h = 0; h < arrdata.length; h++) {
-        const arrpart = arrdat[h];
+        const arrpart = arrdata[h];
         const parts = arrpart.split(" ");
         for(var i = 0; i < parts.length; i++) {
             let part = parts[i];
