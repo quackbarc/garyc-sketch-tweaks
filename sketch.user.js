@@ -756,7 +756,9 @@ async function selfUploadToBooru(id, form) {
     }
 
     booruState.uploading = false;
-    updateDetails();
+    if(window.current == id) {
+        updateDetails();
+    }
 }
 
 // overrides
