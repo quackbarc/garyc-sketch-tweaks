@@ -1335,7 +1335,10 @@ function createBooruFormUI(id) {
 
         const tagsBar = form.find("input[name='tags']");
         let tags = tagsBar.val();
-        let newtags = tags.replace(/\s?rating:./gi, "") + ` rating:${rating}`;
+        let newtags = tags
+            .replace(/\s?rating:./gi, "")
+            .replace(/\s+$/gi, "")
+            + ` rating:${rating}`;
         tagsBar.val(newtags.trim());
 
         if(settings.samePageBooru) {
