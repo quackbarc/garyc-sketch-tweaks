@@ -173,6 +173,17 @@ function main() {
         :root[theme="dark"] #holder svg {
             stroke: #e5e5e5;
         }
+
+        /* userscript-created elements */
+        :root {
+            --z-index-dropdown: 10;
+            --background-tag-suggestions: #fff;
+            --background-tag-suggestions-selected: #eee;
+        }
+        :root[theme="dark"] {
+            --background-tag-suggestions: #111;
+            --background-tag-suggestions-selected: #222;
+        }
     `);
     _updateTheme();
 }
@@ -189,6 +200,8 @@ if(window.location.pathname.startsWith("/sketch")) {
 const booruStates = {};
 const cache = {};
 let lastAlertPromise = null;
+let lastAutocompletePromise = null;
+let autocompleteSelected = null;
 let cachedCanvasBlob = null;
 let datecardDates = new Map();
 window.details = null;
@@ -680,7 +693,7 @@ function saveSVG() {
     URL.revokeObjectURL(url);
 }
 
-// POST methods
+// Booru and tag autocomplete methods (for noz.rip/booru)
 
 async function selfUploadToBooru(id, form) {
     // Form can only be serialized before it gets disabled.
@@ -759,6 +772,113 @@ async function selfUploadToBooru(id, form) {
     if(window.current == id) {
         updateDetails();
     }
+}
+
+// todo: improve autocomplete caching
+
+async function autocompleteError(response) {
+    $("#tagSuggestions").show();
+    $("#tagSuggestions").html(`
+        <tr role="option" class="tagInfo">
+            <td colspan="2">
+                (something went wrong: ${response.status} ${response.statusText})
+            </td>
+        </tr>
+    `);
+}
+
+async function autocompleteDropdown(json, query) {
+    const tagElements = [];
+    let tags = Object.entries(json);
+    if(json instanceof Array) {
+        // For queries with zero results. Damn this API is terrible
+        tags = json;
+    }
+
+    if(tags.length == 0) {
+        const element = $(`
+            <tr role="option" class="tagInfo">
+                <td colspan="2">
+                    (new tag: ${query})
+                </td>
+            </tr>
+        `);
+        tagElements.push(element);
+        $("#tagSuggestions").show();
+        $("#tagSuggestions").html(tagElements);
+    }
+
+    const lastSelectedIndex = tags.findIndex(([name, count]) => name == autocompleteSelected);
+    const selectedIsKept = lastSelectedIndex >= 0;
+
+    if(tags.length >= 1 && selectedIsKept) {
+        autocompleteSelected = autocompleteSelected;
+    }
+    else if(tags.length >= 1 && !selectedIsKept) {
+        autocompleteSelected = tags[0][0];
+    }
+    else if(tags.length == 0) {
+        autocompleteSelected = null;
+    }
+
+    const maxTagCount = 20;
+    for(let i = 0; i < Math.min(tags.length, maxTagCount); i++) {
+        const [name, count] = tags[i];
+        const element = $(`
+            <tr role="option" name="${name}">
+                <td class="tagName">${name}</td>
+                <td class="tagCount">${count}</td>
+            </tr>
+        `);
+
+        element.on("click", () => addTag(name, query));
+        element.on("pointerover", () => autocompleteSelect(name));
+        element.attr("aria-selected", (name == autocompleteSelected).toString());
+        tagElements.push(element);
+    }
+
+    if(tags.length > maxTagCount) {
+        const remainingTags = tags.slice(maxTagCount);
+        const element = $(`
+            <tr role="option" class="tagInfo">
+                <td colspan="2">
+                    (${remainingTags.length} more...)
+                </td>
+            </tr>
+        `);
+        tagElements.push(element);
+    }
+
+    $("#tagSuggestions").show();
+    $("#tagSuggestions").html(tagElements);
+}
+
+function autocompleteSelect(name) {
+    const option = $(`#tagSuggestions [name="${name}"]`);
+    const optionExists = option.length >= 1;
+    if(!optionExists) {
+        console.debug(`"${name}" doesn't exist in visible tags, ignoring that`);
+        return;
+    }
+
+    const optionLast = $(`#tagSuggestions [aria-selected]`);
+    optionLast.attr("aria-selected", "false");
+    option.attr("aria-selected", "true");
+
+    autocompleteSelected = name;
+}
+
+function addTag(name, query) {
+    const tagsBar = $("#booruForm input[name=tags]");
+    const rawTags = tagsBar.val();
+    const newTags = rawTags.replace(new RegExp(query + "$"), name + " ");
+    tagsBar.prop("value", newTags);
+
+    $("#tagSuggestions").hide();
+    tagsBar.focus();
+
+    lastAutocompletePromise = null;
+    autocompleteSelected = null;
 }
 
 // overrides
@@ -935,6 +1055,13 @@ function show(id) {
     // prevents showing the same sketch again.
     if(id == window.current) return;
 
+    const client = window.location.hostname + window.location.pathname;
+    const nozClient = client == "noz.rip/sketch/gallery.php";
+    if(nozClient) {
+        lastAutocompletePromise = null;
+        autocompleteSelected = null;
+    }
+
     const hashID = `#${id}`
     const historyState = window.history.state;
     const showingFromHash = window.location.hash == hashID;
@@ -977,8 +1104,6 @@ function show(id) {
         `</a>`,
     );
 
-    const client = window.location.hostname + window.location.pathname;
-    const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
         saveSVGParts.push(
             '<a class="saveSVG" title="Save (SVG)">',
@@ -1033,6 +1158,13 @@ function hide() {
     const firedFromHash = (!window.location.hash || window.location.hash == "#0");
     if(!firedFromHash) {
         window.history.pushState(window.history.state, "", "#0");
+    }
+
+    const client = window.location.hostname + window.location.pathname;
+    const nozClient = client == "noz.rip/sketch/gallery.php";
+    if(nozClient) {
+        lastAutocompletePromise = null;
+        autocompleteSelected = null;
     }
 }
 
@@ -1235,13 +1367,16 @@ function createBooruFormUI(id) {
             style="display: none;">
             <input type="hidden" name="sketchid" value="${id}">
             <input type="hidden" name="source" value="${currentArchiveURL()}">
-            <input
-                type="text"
-                name="tags"
-                required
-                placeholder="tagme"
-                autocomplete="off"
-                class="autocomplete_tags">
+            <div id="tagsContainer">
+                <table id="tagSuggestions" role="listbox"></table>
+                <input
+                    type="text"
+                    name="tags"
+                    required
+                    placeholder="tagme"
+                    autocomplete="off"
+                    class="autocomplete_tags">
+            </div>
             <div id="booruButtons">
                 <!-- Select isn't natively part of the form; post-processing is done to make
                      ratings actually get sent. -->
@@ -1317,6 +1452,115 @@ function createBooruFormUI(id) {
         form.toggle();
         showButton.toggle();
     }
+
+    const tagSuggestions = form.find("#tagSuggestions");
+    tagSuggestions.hide();
+    tagsBar.on("input", async function() {
+        const tags = this.value.split(" ");
+        const lastTag = tags.at(-1);
+
+        if(!lastTag) {
+            $("#tagSuggestions").hide();
+            lastAutocompletePromise = null;
+            autocompleteSelected = null;
+            return;
+        }
+
+        let autocompletePromise = lastAutocompletePromise = _sleep(200);
+        await autocompletePromise;
+        if(autocompletePromise !== lastAutocompletePromise) {
+            return;
+        }
+
+        const baseURL = "https://noz.rip/booru/api/internal/autocomplete";
+        const url = baseURL + "?s=" + lastTag;
+        // Endpoint doesn't send caching instructions;
+        // we're on our own here
+        const cacheType = "reload";
+
+        let p = fetch(url, {cache: cacheType}).catch(err => err);
+        let fetchPromise = lastAutocompletePromise = p;
+        const resp = await fetchPromise;
+        if(fetchPromise !== lastAutocompletePromise) {
+            return;
+        }
+        lastAutocompletePromise = null;
+
+        // Network issue; ignore
+        if(resp instanceof TypeError) {
+            return;
+        }
+
+        if(!resp.ok) {
+            await autocompleteError(resp);
+            return;
+        }
+
+        const json = await resp.json();
+        await autocompleteDropdown(json, lastTag);
+    });
+    tagsBar.on("keydown", function(event) {
+        switch(event.key) {
+            case "Tab":
+            case "Enter": {
+                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                const hasModifiers = (
+                    event.ctrlKey
+                    || event.altKey
+                    || event.metaKey
+                    || event.shiftKey
+                );
+                if(dropdownClosed || hasModifiers) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const tags = this.value.split(" ");
+                const lastTag = tags.at(-1);
+
+                $("#tagSuggestions").hide();
+                if(autocompleteSelected) {
+                    addTag(autocompleteSelected, lastTag);
+                }
+                else {
+                    addTag(lastTag, lastTag);
+                }
+
+                break;
+            }
+
+            case "ArrowUp":
+            case "ArrowDown": {
+                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                if(dropdownClosed) {
+                    return;
+                }
+
+                const visibleTagElems = $("#tagSuggestions").children(":not(.tagInfo)");
+                const visibleTags = Array.from(visibleTagElems).map(
+                    (element) => element.querySelector(".tagName").innerHTML
+                );
+                if(visibleTags.length == 0 || visibleTags.length == 1) {
+                    return;
+                }
+
+                let selectedIndex = visibleTags.findIndex((tag) => tag == autocompleteSelected);
+                if(selectedIndex == -1) {
+                    selectedIndex = 0;
+                }
+
+                const dir = event.key == "ArrowUp" ? -1 : 1;
+                const ind = selectedIndex;
+                const length = visibleTagElems.length;
+                const selectedIndexNew = (((ind + dir) % length) + length) % length;
+                const selectedNew = visibleTags[selectedIndexNew];
+                autocompleteSelect(selectedNew);
+
+                break;
+            }
+        }
+    });
 
     const hideButton = form.find("#booruButtons #hideBooru");
     showButton.click(() => toggleFormAndSettings(true));
@@ -2081,6 +2325,67 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             height: 2em;
             padding: 0px 5px;
             box-sizing: border-box;
+        }
+
+        /* tag autocomplete styles */
+
+        #details {
+            overflow: visible;
+        }
+
+        #tagsContainer {
+            width: 100%;
+            max-width: 400px;
+
+            /* Position #tagSuggestions' parent so #tagSuggestions can be
+            absolutely positioned to it */
+            position: relative;
+        }
+
+        #tagSuggestions {
+            position: absolute;
+            right: calc(100% + 10px);
+            bottom: 0px;
+
+            display: block;
+            user-select: none;
+            z-index: var(--z-index-dropdown);
+            background-color: var(--background-tag-suggestions);
+            box-shadow: 0px 0px 10px #00000077;
+            margin: 0;
+            padding: 10px;
+            width: max-content;
+
+            /* Ditch default border spacing */
+            border-spacing: 0;
+        }
+
+        #tagSuggestions td {
+            /* Alternative to border-spacing in #tagSuggestions where the <tr>
+            background would actually fill in the spacing gaps */
+            padding: 0 5px;
+        }
+
+        #tagSuggestions tr[aria-selected="true"] {
+            background-color: var(--background-tag-suggestions-selected);
+            text-decoration: underline;
+        }
+
+        #tagSuggestions tr.tagInfo {
+            text-align: center;
+            font-style: italic;
+        }
+        #tagSuggestions tr:not(.tagInfo) + tr.tagInfo td,
+        #tagSuggestions tr.tagInfo + tr:not(.tagInfo) td {
+            padding: 5px;
+        }
+        #tagSuggestions .tagName {
+            text-align: right;
+        }
+        #tagSuggestions .tagCount {
+            text-align: left;
+            font-style: italic;
+            opacity: 50%;
         }
     `);
 
