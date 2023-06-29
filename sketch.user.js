@@ -221,6 +221,23 @@ const FooterState = {
 
 // miscellaneous methods
 
+function _getCurrentTag(tagsBar) {
+    const cursorPos = tagsBar.selectionStart;
+    // Match everything from the beginning of the tags value to the nth
+    // character, and any word/part of word that comes immediately after it.
+    // Using [^ \n] instead of just [^ ] just to match with what . captures.
+    // Using {0,n} instead of {n} because I don't want match breakage
+    //   (from an n that's bigger than the search string).
+    const pattern = new RegExp(`^.{0,${cursorPos}}[^ \n]*`);
+
+    const rawTags = tagsBar.value;
+    const [rawTagsShort,] = rawTags.match(pattern);
+    const tags = rawTagsShort.split(" ");
+    const currentTag = tags.at(-1);
+
+    return currentTag;
+}
+
 function toSVG(dat, linejoin="round") {
     const commands = [];
     for(const line of dat.split(" ")) {
@@ -871,8 +888,12 @@ function autocompleteSelect(name) {
 function addTag(name, query) {
     const tagsBar = $("#booruForm input[name=tags]");
     const rawTags = tagsBar.val();
-    const newTags = rawTags.replace(new RegExp(query + "$"), name + " ");
+    const newTags = rawTags.replace(new RegExp(query + " ?"), name + " ");
     tagsBar.prop("value", newTags);
+
+    // - L891 should be replacing the correct instance of the query
+    // - auto-update dropdown on cursor move? or maybe just hide it?
+    // - fix dropdown causing the tags input bar to blur out of focus
 
     $("#tagSuggestions").hide();
     tagsBar.focus();
@@ -1456,10 +1477,8 @@ function createBooruFormUI(id) {
     const tagSuggestions = form.find("#tagSuggestions");
     tagSuggestions.hide();
     tagsBar.on("input", async function() {
-        const tags = this.value.split(" ");
-        const lastTag = tags.at(-1);
-
-        if(!lastTag) {
+        const currentTag = _getCurrentTag(this);
+        if(!currentTag) {
             $("#tagSuggestions").hide();
             lastAutocompletePromise = null;
             autocompleteSelected = null;
@@ -1473,7 +1492,7 @@ function createBooruFormUI(id) {
         }
 
         const baseURL = "https://noz.rip/booru/api/internal/autocomplete";
-        const url = baseURL + "?s=" + lastTag;
+        const url = baseURL + "?s=" + currentTag;
         // Endpoint doesn't send caching instructions;
         // we're on our own here
         const cacheType = "reload";
@@ -1497,7 +1516,7 @@ function createBooruFormUI(id) {
         }
 
         const json = await resp.json();
-        await autocompleteDropdown(json, lastTag);
+        await autocompleteDropdown(json, currentTag);
     });
     tagsBar.on("keydown", function(event) {
         switch(event.key) {
@@ -1516,15 +1535,14 @@ function createBooruFormUI(id) {
 
                 event.preventDefault();
 
-                const tags = this.value.split(" ");
-                const lastTag = tags.at(-1);
+                const currentTag = _getCurrentTag(this);
 
                 $("#tagSuggestions").hide();
                 if(autocompleteSelected) {
-                    addTag(autocompleteSelected, lastTag);
+                    addTag(autocompleteSelected, currentTag);
                 }
                 else {
-                    addTag(lastTag, lastTag);
+                    addTag(currentTag, currentTag);
                 }
 
                 break;
