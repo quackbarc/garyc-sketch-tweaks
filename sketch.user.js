@@ -1564,6 +1564,9 @@ function createBooruFormUI(id) {
                     return;
                 }
 
+                // Prevent text caret from moving to the beginning/end of the tags bar
+                event.preventDefault();
+
                 const visibleTagElems = $("#tagSuggestions").children(":not(.tagInfo)");
                 const visibleTags = Array.from(visibleTagElems).map(
                     (element) => element.querySelector(".tagName").innerHTML
