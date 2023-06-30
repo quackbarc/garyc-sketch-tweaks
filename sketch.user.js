@@ -888,10 +888,19 @@ function autocompleteSelect(name) {
 function addTag(name, query) {
     const tagsBar = $("#booruForm input[name=tags]");
     const rawTags = tagsBar.val();
-    const newTags = rawTags.replace(new RegExp(query + " ?"), name + " ");
-    tagsBar.prop("value", newTags);
+    const index = tagsBar.prop("selectionStart");
 
-    // - L891 should be replacing the correct instance of the query
+    const [section,] = rawTags.match(new RegExp(`.{0,${index}}[^ ]*`));
+    let sectionTags = section.split(" ");
+    sectionTags[sectionTags.length - 1] = name;
+    sectionTags = sectionTags.join(" ");
+
+    const newIndex = sectionTags.length + 1;
+    const newTags = sectionTags + " " + rawTags.slice(section.length).trimLeft(" ");
+    tagsBar.prop("value", newTags);
+    tagsBar.prop("selectionStart", newIndex);
+    tagsBar.prop("selectionEnd", newIndex);
+
     // - auto-update dropdown on cursor move? or maybe just hide it?
     // - fix dropdown causing the tags input bar to blur out of focus
 
