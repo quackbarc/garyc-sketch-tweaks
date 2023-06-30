@@ -1609,6 +1609,12 @@ function createBooruFormUI(id) {
             }
         }
     });
+    tagsBar.on("blur", function(event) {
+        tagSuggestions.hide();
+        lastAutocompletePromise = null;
+        lastAutocompleteQuery = null;
+        autocompleteSelected = null;
+    });
     $(document).on("selectionchange", function() {
         if(!tagsBar.is(":focus")) {
             return;
