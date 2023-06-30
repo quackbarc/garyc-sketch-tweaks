@@ -899,7 +899,13 @@ async function autocompleteDropdown(json, query) {
             </tr>
         `);
 
-        element.on("click", () => addTag(name, query));
+        // Don't lose focus off the tags bar.
+        element.on("pointerdown", function(event) {
+            const focusingTagsBar = $("input[name='tags']").has(":focus");
+            return !focusingTagsBar;
+        });
+        element.on("pointerup", () => addTag(name, query));
+
         element.on("pointerover", () => autocompleteSelect(name));
         element.attr("aria-selected", (name == autocompleteSelected).toString());
         tagElements.push(element);
@@ -951,8 +957,6 @@ function addTag(name, query) {
     tagsBar.prop("value", newTags);
     tagsBar.prop("selectionStart", newIndex);
     tagsBar.prop("selectionEnd", newIndex);
-
-    // - fix dropdown causing the tags input bar to blur out of focus
 
     $("#tagSuggestions").hide();
     tagsBar.focus();
