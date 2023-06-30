@@ -201,6 +201,8 @@ const booruStates = {};
 const cache = {};
 let lastAlertPromise = null;
 let lastAutocompletePromise = null;
+let lastAutocompleteQuery = null;
+let lastTagsValue = null;
 let autocompleteSelected = null;
 let cachedCanvasBlob = null;
 let datecardDates = new Map();
@@ -793,6 +795,55 @@ async function selfUploadToBooru(id, form) {
 
 // todo: improve autocomplete caching
 
+async function updateTagSuggestions() {
+    const tagsBar = $("input[name='tags']");
+    const tagsBarElement = tagsBar[0];
+
+    const currentTag = _getCurrentTag(tagsBarElement);
+    if(!currentTag) {
+        $("#tagSuggestions").hide();
+        lastAutocompletePromise = null;
+        lastAutocompleteQuery = null;
+        autocompleteSelected = null;
+        return;
+    }
+
+    $("#tagSuggestions").hide();
+
+    let autocompletePromise = lastAutocompletePromise = _sleep(200);
+    await autocompletePromise;
+    if(autocompletePromise !== lastAutocompletePromise) {
+        return;
+    }
+
+    const baseURL = "https://noz.rip/booru/api/internal/autocomplete";
+    const url = baseURL + "?s=" + currentTag;
+    // Endpoint doesn't send caching instructions;
+    // we're on our own here
+    const cacheType = "reload";
+
+    let p = fetch(url, {cache: cacheType}).catch(err => err);
+    let fetchPromise = lastAutocompletePromise = p;
+    const resp = await fetchPromise;
+    if(fetchPromise !== lastAutocompletePromise) {
+        return;
+    }
+    lastAutocompletePromise = null;
+
+    // Network issue; ignore
+    if(resp instanceof TypeError) {
+        return;
+    }
+
+    if(!resp.ok) {
+        await autocompleteError(resp);
+        return;
+    }
+
+    const json = await resp.json();
+    await autocompleteDropdown(json, currentTag);
+}
+
 async function autocompleteError(response) {
     $("#tagSuggestions").show();
     $("#tagSuggestions").html(`
@@ -901,13 +952,13 @@ function addTag(name, query) {
     tagsBar.prop("selectionStart", newIndex);
     tagsBar.prop("selectionEnd", newIndex);
 
-    // - auto-update dropdown on cursor move? or maybe just hide it?
     // - fix dropdown causing the tags input bar to blur out of focus
 
     $("#tagSuggestions").hide();
     tagsBar.focus();
 
     lastAutocompletePromise = null;
+    lastAutocompleteQuery = null;
     autocompleteSelected = null;
 }
 
@@ -1089,6 +1140,7 @@ function show(id) {
     const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
         lastAutocompletePromise = null;
+        lastAutocompleteQuery = null;
         autocompleteSelected = null;
     }
 
@@ -1194,6 +1246,7 @@ function hide() {
     const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
         lastAutocompletePromise = null;
+        lastAutocompleteQuery = null;
         autocompleteSelected = null;
     }
 }
@@ -1485,47 +1538,8 @@ function createBooruFormUI(id) {
 
     const tagSuggestions = form.find("#tagSuggestions");
     tagSuggestions.hide();
-    tagsBar.on("input", async function() {
-        const currentTag = _getCurrentTag(this);
-        if(!currentTag) {
-            $("#tagSuggestions").hide();
-            lastAutocompletePromise = null;
-            autocompleteSelected = null;
-            return;
-        }
-
-        let autocompletePromise = lastAutocompletePromise = _sleep(200);
-        await autocompletePromise;
-        if(autocompletePromise !== lastAutocompletePromise) {
-            return;
-        }
-
-        const baseURL = "https://noz.rip/booru/api/internal/autocomplete";
-        const url = baseURL + "?s=" + currentTag;
-        // Endpoint doesn't send caching instructions;
-        // we're on our own here
-        const cacheType = "reload";
-
-        let p = fetch(url, {cache: cacheType}).catch(err => err);
-        let fetchPromise = lastAutocompletePromise = p;
-        const resp = await fetchPromise;
-        if(fetchPromise !== lastAutocompletePromise) {
-            return;
-        }
-        lastAutocompletePromise = null;
-
-        // Network issue; ignore
-        if(resp instanceof TypeError) {
-            return;
-        }
-
-        if(!resp.ok) {
-            await autocompleteError(resp);
-            return;
-        }
-
-        const json = await resp.json();
-        await autocompleteDropdown(json, currentTag);
+    tagsBar.on("input", function() {
+        updateTagSuggestions();
     });
     tagsBar.on("keydown", function(event) {
         switch(event.key) {
@@ -1589,6 +1603,30 @@ function createBooruFormUI(id) {
 
                 break;
             }
+        }
+    });
+    $(document).on("selectionchange", function() {
+        if(!tagsBar.is(":focus")) {
+            return;
+        }
+
+        const tagsBarElement = tagsBar[0];
+
+        // Don't catch text caret movements from text input.
+        const tagsValue = tagsBar.val();
+        const tagsValueChanged = lastTagsValue != tagsValue;
+        if(tagsValueChanged) {
+            const currentTag = _getCurrentTag(tagsBarElement);
+            lastTagsValue = tagsValue;
+            lastAutocompleteQuery = currentTag;
+            return;
+        }
+
+        const currentTag = _getCurrentTag(tagsBarElement);
+        const currentTagChanged = lastAutocompleteQuery != currentTag;
+        if(currentTagChanged) {
+            lastAutocompleteQuery = currentTag;
+            updateTagSuggestions();
         }
     });
 
