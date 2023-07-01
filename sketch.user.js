@@ -2479,8 +2479,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             text-align: center;
             font-style: italic;
         }
-        #tagSuggestions tr:not(.tagInfo) + tr.tagInfo td,
-        #tagSuggestions tr.tagInfo + tr:not(.tagInfo) td {
+        #tagSuggestions tr.tagInfo:not(:only-child) td {
             padding: 5px;
         }
         #tagSuggestions .tagName {
