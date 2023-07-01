@@ -1632,6 +1632,18 @@ function createBooruFormUI(id) {
             return;
         }
 
+        // Text selections should hide #tagSuggestions (we're only catching text caret movement).
+        const selectionStart = $("#booruForm input[name=tags]").prop("selectionStart");
+        const selectionEnd = $("#booruForm input[name=tags]").prop("selectionEnd");
+        const selectingText = selectionStart != selectionEnd;
+        if(selectingText) {
+            tagSuggestions.hide();
+            lastAutocompletePromise = null;
+            lastAutocompleteQuery = null;
+            autocompleteSelected = null;
+            return;
+        }
+
         const currentTag = _getCurrentTag(tagsBarElement);
         const currentTagChanged = lastAutocompleteQuery != currentTag;
         if(currentTagChanged) {
