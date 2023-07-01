@@ -1607,6 +1607,20 @@ function createBooruFormUI(id) {
 
                 break;
             }
+
+            case "Escape": {
+                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                if(dropdownClosed) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                tagSuggestions.hide();
+                lastAutocompletePromise = null;
+                lastAutocompleteQuery = null;
+                autocompleteSelected = null;
+            }
         }
     });
     tagsBar.on("blur", function(event) {
