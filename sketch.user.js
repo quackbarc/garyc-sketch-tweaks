@@ -19,6 +19,7 @@
 
 /* TODO:
     - animation speed setting..?
+    - improve tag autocomplete caching..?
     - narrow down purgeIntervals() to just the necessary intervals?
       cuz it might consequently affect other extensions.
 
@@ -792,8 +793,6 @@ async function selfUploadToBooru(id, form) {
         updateDetails();
     }
 }
-
-// todo: improve autocomplete caching
 
 async function hideTagSuggestions() {
     $("#tagSuggestions").hide();
