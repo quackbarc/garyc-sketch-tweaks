@@ -795,16 +795,20 @@ async function selfUploadToBooru(id, form) {
 
 // todo: improve autocomplete caching
 
+async function hideTagSuggestions() {
+    $("#tagSuggestions").hide();
+    lastAutocompletePromise = null;
+    lastAutocompleteQuery = null;
+    autocompleteSelected = null;
+}
+
 async function updateTagSuggestions() {
     const tagsBar = $("input[name='tags']");
     const tagsBarElement = tagsBar[0];
 
     const currentTag = _getCurrentTag(tagsBarElement);
     if(!currentTag) {
-        $("#tagSuggestions").hide();
-        lastAutocompletePromise = null;
-        lastAutocompleteQuery = null;
-        autocompleteSelected = null;
+        hideTagSuggestions();
         return;
     }
 
@@ -958,12 +962,8 @@ function addTag(name, query) {
     tagsBar.prop("selectionStart", newIndex);
     tagsBar.prop("selectionEnd", newIndex);
 
-    $("#tagSuggestions").hide();
     tagsBar.focus();
-
-    lastAutocompletePromise = null;
-    lastAutocompleteQuery = null;
-    autocompleteSelected = null;
+    hideTagSuggestions();
 }
 
 // overrides
@@ -1143,9 +1143,7 @@ function show(id) {
     const client = window.location.hostname + window.location.pathname;
     const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
-        lastAutocompletePromise = null;
-        lastAutocompleteQuery = null;
-        autocompleteSelected = null;
+        hideTagSuggestions();
     }
 
     const hashID = `#${id}`
@@ -1249,9 +1247,7 @@ function hide() {
     const client = window.location.hostname + window.location.pathname;
     const nozClient = client == "noz.rip/sketch/gallery.php";
     if(nozClient) {
-        lastAutocompletePromise = null;
-        lastAutocompleteQuery = null;
-        autocompleteSelected = null;
+        hideTagSuggestions();
     }
 }
 
@@ -1616,18 +1612,12 @@ function createBooruFormUI(id) {
 
                 event.preventDefault();
 
-                tagSuggestions.hide();
-                lastAutocompletePromise = null;
-                lastAutocompleteQuery = null;
-                autocompleteSelected = null;
+                hideTagSuggestions();
             }
         }
     });
     tagsBar.on("blur", function(event) {
-        tagSuggestions.hide();
-        lastAutocompletePromise = null;
-        lastAutocompleteQuery = null;
-        autocompleteSelected = null;
+        hideTagSuggestions();
     });
     $(document).on("selectionchange", function() {
         if(!tagsBar.is(":focus")) {
@@ -1651,10 +1641,7 @@ function createBooruFormUI(id) {
         const selectionEnd = $("#booruForm input[name=tags]").prop("selectionEnd");
         const selectingText = selectionStart != selectionEnd;
         if(selectingText) {
-            tagSuggestions.hide();
-            lastAutocompletePromise = null;
-            lastAutocompleteQuery = null;
-            autocompleteSelected = null;
+            hideTagSuggestions();
             return;
         }
 
