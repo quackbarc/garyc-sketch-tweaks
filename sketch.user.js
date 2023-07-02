@@ -1475,14 +1475,24 @@ function createBooruFormUI(id) {
         </form>
     `);
 
+    // UI and property assignment
+
     const tagsBar = form.find("input[name='tags']");
     const ratingSelect = form.find("select#rating");
-
     const postStatus = form.find("#postStatus");
-    postStatus.hide();
+    const sourceField = form.find("input[name='source']");
 
     const booruState = booruStates[id];
-    if(booruState && booruState.booruPostStatus && settings.samePageBooru) {
+    if(booruState) {
+        tagsBar.val(booruState.tags);
+        ratingSelect.val(booruState.rating);
+
+        const formInputs = form.find(`input, button, select`);
+        formInputs.prop("disabled", booruState.uploading);
+    }
+
+    const booruPostStatus =  settings.samePageBooru && booruState && booruState.booruPostStatus;
+    if(booruPostStatus) {
         const otherFormElements = form.children(`*:not(#booruButtons, #postStatus)`);
         const otherButtons = form.find(`#booruButtons *:not(#hideBooru)`);
         otherFormElements.hide();
@@ -1520,24 +1530,16 @@ function createBooruFormUI(id) {
 
         postStatus.show();
     }
-    else if(booruState) {
-        tagsBar.val(booruState.tags);
-        ratingSelect.val(booruState.rating);
 
-        const formInputs = form.find(`input, button, select`);
-        formInputs.prop("disabled", booruState.uploading);
+    postStatus.hide();
+    sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
+
+    if(settings.showingBooruMenu) {
+        form.show();
+        showButton.hide();
     }
 
-    function toggleFormAndSettings(showing){
-        settings.showingBooruMenu = showing;
-        _saveSettings();
-        toggleForm();
-    }
-
-    function toggleForm() {
-        form.toggle();
-        showButton.toggle();
-    }
+    // Autocomplete-related
 
     const tagSuggestions = form.find("#tagSuggestions");
     tagSuggestions.hide();
@@ -1548,7 +1550,7 @@ function createBooruFormUI(id) {
         switch(event.key) {
             case "Tab":
             case "Enter": {
-                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                const dropdownClosed = tagSuggestions.is(":hidden");
                 const hasModifiers = (
                     event.ctrlKey
                     || event.altKey
@@ -1559,24 +1561,21 @@ function createBooruFormUI(id) {
                     return;
                 }
 
+                // Prevent form submission or loss of tags bar focus
                 event.preventDefault();
 
-                const currentTag = _getCurrentTag(this);
+                tagSuggestions.hide();
 
-                $("#tagSuggestions").hide();
-                if(autocompleteSelected) {
-                    addTag(autocompleteSelected, currentTag);
-                }
-                else {
-                    addTag(currentTag, currentTag);
-                }
+                const currentTag = _getCurrentTag(this);
+                const newTag = autocompleteSelected || currentTag;
+                addTag(newTag, currentTag);
 
                 break;
             }
 
             case "ArrowUp":
             case "ArrowDown": {
-                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                const dropdownClosed = tagSuggestions.is(":hidden");
                 if(dropdownClosed) {
                     return;
                 }
@@ -1584,7 +1583,7 @@ function createBooruFormUI(id) {
                 // Prevent text caret from moving to the beginning/end of the tags bar
                 event.preventDefault();
 
-                const visibleTagElems = $("#tagSuggestions").children(":not(.tagInfo)");
+                const visibleTagElems = tagSuggestions.children(":not(.tagInfo)");
                 const visibleTags = Array.from(visibleTagElems).map(
                     (element) => element.querySelector(".tagName").innerHTML
                 );
@@ -1608,11 +1607,13 @@ function createBooruFormUI(id) {
             }
 
             case "Escape": {
-                const dropdownClosed = $("#tagSuggestions").is(":hidden");
+                const dropdownClosed = tagSuggestions.is(":hidden");
                 if(dropdownClosed) {
                     return;
                 }
 
+                // Don't know what this should be preventing specifically, but
+                // just in case
                 event.preventDefault();
 
                 hideTagSuggestions();
@@ -1656,15 +1657,21 @@ function createBooruFormUI(id) {
         }
     });
 
+    // Event listeners
+
+    function toggleForm(showing){
+        settings.showingBooruMenu = showing;
+        form.toggle(showing);
+        showButton.toggle(!showing);
+        _saveSettings();
+    }
+
     const hideButton = form.find("#booruButtons #hideBooru");
-    showButton.click(() => toggleFormAndSettings(true));
-    hideButton.click(() => toggleFormAndSettings(false));
+    showButton.click(() => toggleForm(true));
+    hideButton.click(() => toggleForm(false));
 
     tagsBar.on("change", () => saveBooruChanges(id, form));
     ratingSelect.on("change", () => saveBooruChanges(id, form));
-
-    const sourceField = form.find("input[name='source']");
-    sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
 
     form.submit(async function(event) {
         const form = $(this);
@@ -1690,10 +1697,6 @@ function createBooruFormUI(id) {
             selfUploadToBooru(id, form);
         }
     });
-
-    if(settings.showingBooruMenu) {
-        toggleForm();
-    }
 
     return [form, showButton];
 }
