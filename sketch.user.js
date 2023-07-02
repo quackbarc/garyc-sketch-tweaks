@@ -1449,6 +1449,7 @@ function createBooruFormUI(id) {
             style="display: none;">
             <input type="hidden" name="sketchid" value="${id}">
             <input type="hidden" name="source" value="${currentArchiveURL()}">
+            <span id="postStatus"></span>
             <div id="tagsContainer">
                 <table id="tagSuggestions" role="listbox"></table>
                 <input
@@ -1477,12 +1478,15 @@ function createBooruFormUI(id) {
     const tagsBar = form.find("input[name='tags']");
     const ratingSelect = form.find("select#rating");
 
+    const postStatus = form.find("#postStatus");
+    postStatus.hide();
+
     const booruState = booruStates[id];
     if(booruState && booruState.booruPostStatus && settings.samePageBooru) {
-        const otherFormElements = form.children(`*:not(#booruButtons)`);
+        const otherFormElements = form.children(`*:not(#booruButtons, #postStatus)`);
         const otherButtons = form.find(`#booruButtons *:not(#hideBooru)`);
-        otherFormElements.remove();
-        otherButtons.remove();
+        otherFormElements.hide();
+        otherButtons.hide();
 
         const postURL = `https://noz.rip/booru/post/view/${booruState.booruPostID}`;
         const postIDHTML = [
@@ -1491,16 +1495,13 @@ function createBooruFormUI(id) {
             `</a>`
         ].join("");
 
-        let uploadedText, uploadedHTML;
         switch(booruState.booruPostStatus) {
             case BooruPostState.POSTED: {
-                uploadedText = "sketch uploaded:";
-                uploadedHTML = $(`<span>${uploadedText} ${postIDHTML}</span>`);
+                postStatus.html(`sketch uploaded: ${postIDHTML}`);
                 break;
             }
             case BooruPostState.ALREADY_POSTED: {
-                uploadedText = "sketch was already uploaded!";
-                uploadedHTML = $(`<span>${uploadedText} ${postIDHTML}</span>`);
+                postStatus.html(`sketch was already uploaded! ${postIDHTML}`);
                 break;
             }
 
@@ -1508,13 +1509,16 @@ function createBooruFormUI(id) {
                 console.error("Unexpected booru post state:", booruState.booruPostStatus);
             }
             case BooruPostState.PARSING_ERROR: {
-                uploadedText = "something went wrong! check console for details.";
-                uploadedHTML = $(`<span>${uploadedText}</span>`);
+                postStatus.html(`something went wrong! check console for details.`);
+
+                const submit = form.find("button[type=submit]");
+                submit.html("try again");
+                submit.show();
                 break;
             }
         }
 
-        form.prepend(uploadedHTML);
+        postStatus.show();
     }
     else if(booruState) {
         tagsBar.val(booruState.tags);
@@ -1677,6 +1681,12 @@ function createBooruFormUI(id) {
 
         if(settings.samePageBooru) {
             event.preventDefault();
+
+            // In the case of retries, clear the existing post status.
+            if(booruState && booruState.booruPostStatus) {
+                booruState.booruPostStatus = null;
+            }
+
             selfUploadToBooru(id, form);
         }
     });
