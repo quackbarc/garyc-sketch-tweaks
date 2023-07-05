@@ -1482,6 +1482,9 @@ function createBooruFormUI(id) {
     const postStatus = form.find("#postStatus");
     const sourceField = form.find("input[name='source']");
 
+    postStatus.hide();
+    sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
+
     const booruState = booruStates[id];
     if(booruState) {
         tagsBar.val(booruState.tags);
@@ -1530,9 +1533,6 @@ function createBooruFormUI(id) {
 
         postStatus.show();
     }
-
-    postStatus.hide();
-    sourceField.prop("disabled", !settings.useArchiveAsBooruSource);
 
     if(settings.showingBooruMenu) {
         form.show();
