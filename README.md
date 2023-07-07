@@ -33,7 +33,8 @@ Just a handful of visual tweaks and a plethora of bug fixes.
 2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js) on the browser.
 3. The extension should automatically prompt to install the userscript.
 
-Updates the userscript are automatically installed by the userscript extension whenever there's a version bump. If you ever want to update it anyway, opening the userscript again always works.
+Updates on the userscript are automatically installed by the userscript extension whenever there's a version bump.
+If you ever want to update it anyway, opening the userscript again always works.
 
 > **Note for development**:
 > Installing the userscript as a file URL on a Chromium/Chrome browser might raise an "Invalid script header" warning on the browser.
