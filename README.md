@@ -10,22 +10,26 @@
 A personal userscript for garyc.me/sketch.
 Nothing too game-changing, like extra tools on the drawing client.
 Just a handful of visual tweaks and a plethora of bug fixes.
-<!-- you know, I think that's starting to become a lie -->
 
-This script is currently not compatible with older browsers that don't support
-`async`/`await` syntax, the Fetch API, or CSS grid, e.g. IE.
+## Main features
+
+* Dark theme, automatically detected or manually set.
+* Drawing client redesigned to imitate the old Flash UI.
+* A slightly better-looking sketch viewer, with extra details like "ink used".
+* Optional auto-skipping and replay of sketch animations in the gallery.
+* Optional spiky line style for sketches.
+* Support for [noz.rip/sketch](https://noz.rip/sketch/) and [noz.rip/sketch_bunker](https://noz.rip/sketch_bunker/).
+* Additional tools for noz.rip's booru uploader, like tag autocompletion or /sketch_bunker links as sources.
 
 ## Installation
 
 1. Install Violentmonkey, Tampermonkey, or any other userscript extension onto your browser.
-2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js)
-onto the browser.
+2. Open up [sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js) on the browser.
 3. The extension should automatically prompt to install the userscript.
 
-Updates to the userscript are regularly checked and handled by the extension,
-so re-installing it just to update won't be very necessary.
+Updates the userscript are automatically installed by the userscript extension whenever there's a version bump. If you ever want to update it anyway, opening the userscript again always works.
 
-> **Note:**
+> **Note for development**:
 > Installing the userscript as a file URL on a Chromium/Chrome browser might raise an "Invalid script header" warning on the browser.
 > This is because Chrome tried to install the userscript on its own, not the userscript extension.
 > If this ever happens:
@@ -37,15 +41,6 @@ so re-installing it just to update won't be very necessary.
 -----
 
 A complete list of changes by the script is listed below.
-
-## Main features
-
-* Dark theme, automatically detected or manually set.
-* Drawing client redesigned to imitate the old Flash UI.
-* A slightly better-looking sketch viewer, with extra details like "ink used".
-* Optional auto-skipping and replay of sketch animations in the gallery.
-* Optional spiky line style for sketches.
-* Support for [noz.rip/sketch](https://noz.rip/sketch/) and [noz.rip/sketch_bunker](https://noz.rip/sketch_bunker/).
 
 ## Tweaks and bug fixes
 
@@ -78,13 +73,13 @@ A complete list of changes by the script is listed below.
     * This was the old scrolling behavior; not a huge fan of the new one that adds sketches midway through the page.
       This was probably done for mobile support, which I'll get to working on sometime in the future.
 
-##### noz.rip
+#### noz.rip
 
 * Fixed canvas' box shadow causing a white border around it.
 
-#### Very technical tweaks
+### Very technical tweaks
 
-* Sketches are cached to a configurable limit.
+* Sketches in the gallery are cached to a configurable limit.
 * Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of having its HTML purged.
@@ -93,7 +88,7 @@ A complete list of changes by the script is listed below.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
 * `show()` ignores non-numerical IDs.
 
-##### noz.rip
+#### noz.rip
 * Viewer canvas is centered with `place-self` instead of `position: absolute`.
 * Viewer button SVGs are recreated due to how large their codes are.
 
