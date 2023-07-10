@@ -1,6 +1,6 @@
 
 <div align="center">
-    <img src="https://github.com/quackbarc/garyc-sketch-tweaks/assets/49148994/55692218-8d93-4049-beb1-95b6af147ca0">
+    <img src="https://github.com/quackbarc/garyc-sketch-tweaks/assets/49148994/c5f410cf-c71b-4b1a-8348-6ccee2899ed6">
     <br>
     <i>Featured sketch drawn by <a href="https://twitter.com/CheepThePeanut">@CheepThePeanut</a>.</i>
     <br>
