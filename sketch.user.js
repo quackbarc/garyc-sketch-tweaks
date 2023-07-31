@@ -69,6 +69,7 @@ function _getSettings() {
         relativeTimestamps: true,
         showDatecards: true,    // on the UI, these would be called "time cards"
         saveAsCanvas: false,
+        sketchSaveResolution: 1,
     };
     if(window.location.hostname == "noz.rip") {
         defaultSettings = {
@@ -681,19 +682,30 @@ async function saveCanvas() {
         return;
     }
 
+    // Render the entire sketch first before saving
     window.setData(window.dat);
+
+    const scale = settings.sketchSaveResolution;
+    await scaleCanvas(scale);
 
     const sketch = window.sketch[0];
     let blob = await new Promise((res, rej) => sketch.toBlob(blob => res(blob)));
     let url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
+
     let downloadFn = window.db == null ? `${window.current}` : `${window.db}#${window.current}`;
+    if(scale != 1) {
+        downloadFn = `${downloadFn}_${scale}x`
+    }
+
     a.href = url;
     a.download = downloadFn;
     a.click();
 
     URL.revokeObjectURL(url);
+
+    await scaleCanvas(1);
 }
 
 function saveSVG() {
@@ -711,6 +723,23 @@ function saveSVG() {
     a.href = url;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+async function scaleCanvas(size) {
+    const width = (800 * size) | 0;
+    const height = (600 * size) | 0;
+
+    $("#sketch").attr({
+        width: `${width}px`,
+        height: `${height}px`
+    });
+    graphics.setTransform(0, 0, size, size);
+
+    // For some reason, the lineJoin would revert itself back to "miter", the default.
+    _updateSketchQuality(settings.sketchQuality);
+
+    // Give the canvas some time to do the resize before we return
+    await new Promise((res, rej) => window.requestAnimationFrame(res));
 }
 
 // Booru and tag autocomplete methods (for noz.rip/booru)
@@ -1169,11 +1198,12 @@ function show(id) {
     if(settings.saveAsCanvas) {
         saveAnchorStart = '<a class="save" title="Save (PNG)">'
     } else {
+        let sizeParam = settings.sketchSaveResolution * 100;
         let dbParam = window.db != null ? `&db=${window.db}` : "";
         let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
         saveAnchorStart = [
             `<a`,
-                ` href="${baseURL}/getIMG.php?format=png${dbParam}&id=${id}"`,
+                ` href="${baseURL}/getIMG.php?format=png${dbParam}&id=${id}&size=${sizeParam}"`,
                 ` download="${downloadFn}.png"`,
                 ` class="save"`,
                 ` title="Save (PNG)"`,
@@ -1753,6 +1783,16 @@ function createPreferencesUI() {
                 </select>
             </div>
             <div class="preference">
+                <label for="sketchsaveresolution">Sketch save resolution:</label>
+                <select id="sketchsaveresolution" name="sketchsaveresolution">
+                    <option value="1" selected>1x</option>
+                    <option value="2">2x</option>
+                    <option value="4">4x</option>
+                </select>
+                <br>
+                <i>(only works for sketch player quality saves)</i>
+            </div>
+            <div class="preference">
                 <label for="saveascanvas">Save sketches in sketch player quality:</label>
                 <input type="checkbox" id="saveascanvas">
                 <br>
@@ -1783,6 +1823,7 @@ function createPreferencesUI() {
     preferences.find("#relativetimestamps").prop("checked", settings.relativeTimestamps);
     preferences.find("#showdatecards").prop("checked", settings.showDatecards);
     preferences.find("#saveascanvas").prop("checked", settings.saveAsCanvas);
+    preferences.find("#sketchsaveresolution").val(settings.sketchSaveResolution);
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -1835,6 +1876,10 @@ function createPreferencesUI() {
     });
     preferences.find("#saveascanvas").change(function(e) {
         settings.saveAsCanvas = e.target.checked;
+        _saveSettings();
+    });
+    preferences.find("#sketchsaveresolution").change(function(e) {
+        settings.sketchSaveResolution = parseInt(e.target.value);
         _saveSettings();
     });
 
@@ -2380,6 +2425,11 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             width: "800px",
             height: "600px",
         });
+        $("#sketch").css({
+            // constrain actual size to 800x600 in case the canvas gets scaled up
+            width: "800px",
+            height: "600px",
+        });
 
         _updateSketchQuality(settings.sketchQuality);
     });
@@ -2546,10 +2596,15 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             // replace box-shadow with border; caused dark mode to show
             // white edges around the canvas
             boxShadow: "",
+            // constrain actual size to 800x600 in case the canvas gets scaled up
+            width: "800px",
+            height: "600px",
         });
 
         $("#sketch").attr({
             tabindex: "0",
+            width: "800px",
+            height: "600px",
         });
 
         _updateSketchQuality(settings.sketchQuality);
@@ -2646,8 +2701,16 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
             display: "",
         });
 
+        $("#sketch").css({
+            // constrain actual size to 800x600 in case the canvas gets scaled up
+            width: "800px",
+            height: "600px",
+        });
+
         $("#sketch").attr({
             tabindex: "0",
+            width: "800px",
+            height: "600px",
         });
 
         $("#refresh").prop("disabled", !!window.customMax);
