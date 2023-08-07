@@ -1786,7 +1786,8 @@ function createPreferencesUI() {
                 <label for="sketchsaveresolution">Sketch save resolution:</label>
                 <select id="sketchsaveresolution" name="sketchsaveresolution">
                     <option value="1" selected>1x</option>
-                    <option value="2">2x</option>
+                    <option value="2" title="haha, kinda like the artist">2x</option>
+                    <!-- There's an artist in GaryC that usually goes by "2x". -->
                     <option value="4">4x</option>
                 </select>
                 <br>
