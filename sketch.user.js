@@ -1389,7 +1389,7 @@ async function addMore(n=100) {
         limit = 1;
     } else {
         const hardLimit = 1;
-        const lastPossible = Math.max(hardLimit, (Math.floor(window.max / 1000) - 5) * 1000 + 1);
+        const lastPossible = Math.max(hardLimit, window.min);
         limit = lastPossible;
     }
 
