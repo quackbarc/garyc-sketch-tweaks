@@ -2290,7 +2290,7 @@ function _gallery_commonOverrides() {
     $(window).on("scroll", function(e) {
         let pageHeight = document.documentElement.scrollHeight;
         let pageScroll = window.scrollY + window.innerHeight;
-        let bottom = pageHeight - pageScroll < 1;
+        let bottom = pageHeight - pageScroll <= 1;  // == 1 is for garyc.me
         if(bottom) {
             addMore(100);
         }
