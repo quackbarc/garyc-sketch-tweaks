@@ -491,6 +491,18 @@ function updateDetails(options={}) {
             timestamp = timestamp
                 .replace(today.toLocaleString("default", dateOptions), "Today")
                 .replace(yesterday.toLocaleString("default", dateOptions), "Yesterday");
+
+            const weekdayMin = new Date();
+            weekdayMin.setDate(today.getDate() - 6);
+            weekdayMin.setHours(0, 0, 0, 0);
+
+            if(date >= weekdayMin) {
+                timestamp = timestamp
+                    .replace(
+                        date.toLocaleString("default", dateOptions),
+                        date.toLocaleString("default", {weekday: "long"})
+                    );
+            }
         }
 
         let timestampHTML = `<span title="${timestampTooltip}">${timestamp}</span>`;
