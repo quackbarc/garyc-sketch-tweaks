@@ -37,13 +37,8 @@ Updates on the userscript are automatically installed by the userscript extensio
 If you ever want to update it anyway, opening the userscript again always works.
 
 > **Note for development**:
-> Installing the userscript as a file URL on a Chromium/Chrome browser might raise an "Invalid script header" warning on the browser.
-> This is because Chrome tried to install the userscript on its own, not the userscript extension.
-> If this ever happens:
->
-> 1. Go to your extension's settings in chrome://extensions.
-> 2. Check "Allow access to file URLs". This should let the extension handle userscripts from file URLs.
-> 3. Try reinstalling the userscript.
+> If you ever run into issues with installing the userscript as a file URL on Chrome,
+> check [this gist](https://gist.github.com/quackbarc/2b11ad902eb60f56fb14dadcef8754b2).
 
 -----
 
