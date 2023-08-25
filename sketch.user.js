@@ -559,6 +559,11 @@ async function detailsFullTimestamp() {
     }
 }
 
+function createStats() {
+    const stats = $(`<span id="stats">...</span>`);
+    return stats;
+}
+
 function updateStats(json) {
     const {sketches, artists, peekers} = json;
     let es_were = sketches == 1 ? " was" : "es were";
@@ -2596,6 +2601,14 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         }
 
         _gallery_commonDOMOverrides();
+
+        const stats = $("#stats");
+        const statsExists = stats.length >= 1;
+        if(!statsExists) {
+            const preferencesButton = $("button + a").prev();
+            const stats = createStats();
+            preferencesButton.after(stats);
+        }
 
         // remove inline css for the style overrides
         $("#holder").css({
