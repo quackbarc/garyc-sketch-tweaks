@@ -1917,7 +1917,7 @@ function createPreferencesUI() {
 function applyNozPreferences(preferences) {
     const preferencesSketches = preferences.find("#preferences-sketches");
     const preferencesBooru = $(`
-        <fieldset id="preferencesBooru">
+        <fieldset id="preferences-booru">
             <legend>Booru</legend>
             <div class="preference">
                 <label for="samepagebooru">Post to booru without opening a new tab:</label>
