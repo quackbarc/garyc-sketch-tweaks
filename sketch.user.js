@@ -1369,6 +1369,10 @@ async function get(id) {
 }
 
 async function addDateCards(last, size) {
+    if(!settings.showDatecards) {
+        return;
+    }
+
     for(const [timestamp, datecard, id] of await getDateCards(last, size)) {
         let date = timestamp.toDateString();
 
