@@ -70,6 +70,7 @@ function _getSettings() {
         showDatecards: true,    // on the UI, these would be called "time cards"
         saveAsCanvas: false,
         sketchSaveResolution: 1,
+        showStats: true,
     };
     if(window.location.hostname == "noz.rip") {
         defaultSettings = {
@@ -1781,6 +1782,10 @@ function createPreferencesUI() {
                 </select>
             </div>
             <div class="preference">
+                <label for="showstats">Show the "past 5 minutes" stats bar:</label>
+                <input type="checkbox" id="showstats">
+            </div>
+            <div class="preference">
                 <label for="showdatecards">Show time cards:</label>
                 <input type="checkbox" id="showdatecards">
                 <br>
@@ -1849,6 +1854,7 @@ function createPreferencesUI() {
     preferences.find("#showdatecards").prop("checked", settings.showDatecards);
     preferences.find("#saveascanvas").prop("checked", settings.saveAsCanvas);
     preferences.find("#sketchsaveresolution").val(settings.sketchSaveResolution);
+    preferences.find("#showstats").prop("checked", settings.showStats);
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -1907,6 +1913,12 @@ function createPreferencesUI() {
         settings.sketchSaveResolution = parseInt(e.target.value);
         _saveSettings();
     });
+    preferences.find("#showstats").change(function(e) {
+        settings.showStats = e.target.checked;
+        _saveSettings();
+
+        $("#stats").toggle(settings.showStats);
+    });
 
     const client = window.location.hostname + window.location.pathname;
     switch(client) {
@@ -1963,6 +1975,7 @@ function applyBunkerPreferences(preferences) {
     const toremove = [
         preferences.find("#thumbquality"),
         preferences.find("#showdatecards"),
+        preferences.find("#showstats"),
     ];
     for(const pref of toremove) {
         pref.parent().remove();
@@ -2607,6 +2620,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         if(!statsExists) {
             const preferencesButton = $("button + a").prev();
             const stats = createStats();
+            stats.toggle(settings.showStats);
             preferencesButton.after(stats);
         }
 
