@@ -30,7 +30,7 @@ Just a handful of visual tweaks and a plethora of bug fixes.
 ## Installation
 
 1. Install Violentmonkey, Tampermonkey, or any other userscript extension onto your browser.
-2. Open up the [latest version of sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/v1.6.0/sketch.user.js) on the browser.
+2. Open up the [latest version of sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/v1.6.1/sketch.user.js) on the browser.
 3. The extension should automatically prompt to install the userscript.
 
 Updates on the userscript are automatically installed by the userscript extension whenever there's a version bump.
@@ -78,6 +78,7 @@ A complete list of changes by the script is listed below.
 
 #### noz.rip
 
+* Added garyc.me's stats bar at the top of the gallery (optional).
 * Fixed canvas' box shadow causing a white border around it.
 * The booru form's tags and ratings for a sketch would be kept, even if you switch out of the sketch.
 * The booru form won't be shown on unavailable sketches.
@@ -114,7 +115,7 @@ A complete list of changes by the script is listed below.
     * `ctrl`-`S` to save a sketch;
     * `ctrl`-`C` to copy the sketch URL; and
     * `ctrl`-`shift`-`C` to copy the sketch canvas.
-* Sketch timestamps may show dates as "Today" or "Yesterday".
+* Sketch timestamps may show relative dates such as "Today", "Yesterday", or "Monday".
     * This can be toggled off, mainly because localization of those words can be an issue.
 * Hovering or clicking/tapping on sketch timestamps will show their full date and time.
 
