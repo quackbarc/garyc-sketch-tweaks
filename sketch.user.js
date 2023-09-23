@@ -32,31 +32,30 @@
       - having the viewer open takes up a lot of CPU for some reason; i'm blaming pixi.
 */
 
+/* / */
+
 var settings = {};
-
-async function _sleep(ms) {
-    return new Promise(res => setTimeout(res, ms));
-}
-
-/* base URL guessing */
 
 var baseURL = "https://garyc.me/sketch";
 if(window.location.pathname.startsWith("/sketch_bunker/") && window.location.hostname == "noz.rip") {
     baseURL = "https://noz.rip/sketch_bunker";
 }
 
-/* interval purging */
+if(window.location.pathname.startsWith("/sketch")) {
+    let db = new URLSearchParams(window.location.search).get("db");
+    window.db = db && parseInt(db);    // db can be `null`
+}
 
-function purgeIntervals() {
+async function _sleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
+}
+
+function _purgeIntervals() {
     const lastInterval = setTimeout(() => void 0, 0) - 1;
     for(let int = 0; int <= lastInterval; int++) {
         clearInterval(int);
     }
 }
-
-purgeIntervals();
-
-/* / */
 
 function _getSettings() {
     let defaultSettings = {
@@ -134,7 +133,10 @@ function currentClient() {
     return window.location.hostname + window.location.pathname;
 }
 
+/* /: Main */
+
 function main() {
+    _purgeIntervals();
     settings = _getSettings();
 
     GM_addStyle(`
@@ -192,11 +194,6 @@ function main() {
 }
 
 main();
-
-if(window.location.pathname.startsWith("/sketch")) {
-    let db = new URLSearchParams(window.location.search).get("db");
-    window.db = db && parseInt(db);    // db can be `null`
-}
 
 /* /sketch/gallery.php */
 
