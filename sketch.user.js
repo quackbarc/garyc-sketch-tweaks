@@ -20,7 +20,7 @@
 /* TODO:
     - animation speed setting..?
     - improve tag autocomplete caching..?
-    - narrow down purgeIntervals() to just the necessary intervals?
+    - narrow down _purgeIntervals() to just the necessary intervals?
       cuz it might consequently affect other extensions.
 
     - sketch: update():
@@ -2601,7 +2601,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     // One of these days, I'm just gonna snap.
 
     document.addEventListener("DOMContentLoaded", function() {
-        purgeIntervals();
+        _purgeIntervals();
 
         // noz.rip doesn't have a stats bar but this works surprisingly fine.
         window.refresh = refresh;
@@ -2700,7 +2700,7 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
     // There will be bloodshed.
 
     document.addEventListener("DOMContentLoaded", function() {
-        purgeIntervals();
+        _purgeIntervals();
 
         window.refresh = nozBunker_refresh;
         setInterval(window.refresh, 15000);
