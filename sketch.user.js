@@ -5,7 +5,7 @@
 // @description QoL tweaks and personal mods for garyc.me/sketch
 // @homepage    https://github.com/quackbarc/garyc-sketch-tweaks
 // @author      quac
-// @version     1.6.2
+// @version     1.6.3
 // @match       https://garyc.me/sketch/*
 // @match       http*://noz.rip/sketch/*
 // @match       http*://noz.rip/sketch_bunker/*
