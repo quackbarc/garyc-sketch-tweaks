@@ -14,7 +14,6 @@
 // @updateURL   https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
 // @run-at      document-body
 // @grant       none
-// @require     https://gist.githubusercontent.com/arantius/3123124/raw/grant-none-shim.js
 // ==/UserScript==
 
 /* TODO:
@@ -44,6 +43,25 @@ if(window.location.pathname.startsWith("/sketch_bunker/") && window.location.hos
 if(window.location.pathname.startsWith("/sketch")) {
     let db = new URLSearchParams(window.location.search).get("db");
     window.db = db && parseInt(db);    // db can be `null`
+}
+
+// Using a custom implementation of GM_addStyle instead of giving a @grant GM_addstyle;
+// the latter limits our access to `window` properties very greatly.
+// Implementation gracefully snagged from https://gist.github.com/arantius/3123124/ (MIT).
+/**
+ * @param {string} aCss The CSS to append to the page, specifically <head\>.
+ */
+function GM_addStyle(aCss) {
+  'use strict';
+  let head = document.getElementsByTagName('head')[0];
+  if (head) {
+    let style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.textContent = aCss;
+    head.appendChild(style);
+    return style;
+  }
+  return null;
 }
 
 async function _sleep(ms) {
