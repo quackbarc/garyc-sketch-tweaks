@@ -12,6 +12,7 @@
 // @icon        https://raw.githubusercontent.com/quackbarc/garyc-sketch-tweaks/master/crunge.png
 // @downloadURL https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
 // @updateURL   https://github.com/quackbarc/garyc-sketch-tweaks/raw/master/sketch.user.js
+// @license     MIT
 // @run-at      document-body
 // @grant       none
 // ==/UserScript==
