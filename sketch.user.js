@@ -89,6 +89,7 @@ function _getSettings() {
         saveAsCanvas: false,
         sketchSaveResolution: 1,
         showStats: true,
+        supportApril2023: true,
     };
     if(window.location.hostname == "noz.rip") {
         defaultSettings = {
@@ -1211,7 +1212,7 @@ function gallery_reset() {
     let fillColor = 0xFFFFFF;
 
     // April Fools' 2023 color support
-    if(window.details) {
+    if(settings.supportApril2023 && window.details) {
         const {id, timestamp} = window.details;
         const aprilFools2023 = (timestamp >= 1680332400) && (timestamp < 1680418800);
         if(aprilFools2023) {
@@ -1898,6 +1899,10 @@ function createPreferencesUI() {
                 <label for="relativetimestamps">Show sketch timestamps as relative:</label>
                 <input type="checkbox" id="relativetimestamps">
             </div>
+            <div class="preference">
+                <label for="supportapril2023">Add color to sketches from April Fools' 2023:</label>
+                <input type="checkbox" id="supportapril2023">
+            </div>
         </fieldset>
     `);
 
@@ -1914,6 +1919,7 @@ function createPreferencesUI() {
     preferences.find("#saveascanvas").prop("checked", settings.saveAsCanvas);
     preferences.find("#sketchsaveresolution").val(settings.sketchSaveResolution);
     preferences.find("#showstats").prop("checked", settings.showStats);
+    preferences.find("#supportapril2023").prop("checked", settings.supportApril2023);
 
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
@@ -1977,6 +1983,10 @@ function createPreferencesUI() {
         _saveSettings();
 
         $("#stats").toggle(settings.showStats);
+    });
+    preferences.find("#supportapril2023").change(function(e) {
+        settings.supportApril2023 = e.target.checked;
+        _saveSettings();
     });
 
     const client = window.location.hostname + window.location.pathname;
