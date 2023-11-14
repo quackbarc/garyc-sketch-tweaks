@@ -1162,6 +1162,19 @@ async function nozBunker_refresh() {
     });
 }
 
+function _getAprilFoolsColor(id) {
+    const index = [
+        "#4B0082",  // purple
+        "#0000FF",  // blue
+        "#008000",  // dark green
+        "#FFFF00",  // yellow
+        "#FFA500",  // orange
+        "#FF0000",  // red
+    ];
+
+    return index[id % 6];
+}
+
 function gallery_drawData(data) {
     reset();
 
@@ -1192,6 +1205,34 @@ function gallery_drawData(data) {
     window.dat = data.trim() + " ";
 
     autodrawpos = 0;
+}
+
+function gallery_reset() {
+    let fillColor = 0xFFFFFF;
+
+    // April Fools' 2023 color support
+    if(window.details) {
+        const {id, timestamp} = window.details;
+        const aprilFools2023 = (timestamp >= 1680332400) && (timestamp < 1680418800);
+        if(aprilFools2023) {
+            const color = _getAprilFoolsColor(id);
+            const colorInt = parseInt(color.slice(1), 16);
+            fillColor = colorInt;
+        }
+    }
+
+    graphics.clear();
+
+    graphics.beginFill(fillColor);
+    graphics.drawRect(0, 0, 800, 600);
+    graphics.endFill();
+
+    graphics.lineStyle(3, 0x000000);
+    graphics.moveTo(0,0);
+
+    dat = "";
+    lines = [];
+    autodrawpos = -1;
 }
 
 function show(id) {
@@ -2437,6 +2478,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     setInterval(window.update, 1000/30);
     setInterval(window.refresh, 15000);
 
+    window.reset = gallery_reset;
     window.drawData = gallery_drawData;
     window.show = show;
     window.hide = hide;
@@ -2609,6 +2651,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         window.refresh = refresh;
         setInterval(window.refresh, 15000);
 
+        window.reset = gallery_reset;
         window.show = show;
         window.hide = hide;
         window.get = get;
@@ -2707,6 +2750,7 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         window.refresh = nozBunker_refresh;
         setInterval(window.refresh, 15000);
 
+        window.reset = gallery_reset;
         window.show = show;
         window.hide = hide;
         window.get = get;
