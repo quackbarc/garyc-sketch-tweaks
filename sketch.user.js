@@ -960,7 +960,8 @@ async function autocompleteDropdown(json, query) {
 
     const maxTagCount = 20;
     for(let i = 0; i < Math.min(tags.length, maxTagCount); i++) {
-        const [name, count] = tags[i];
+        const [name, result] = tags[i];
+        const {count} = result;
         const element = $(`
             <tr role="option" name="${name}">
                 <td class="tagName">${name}</td>
