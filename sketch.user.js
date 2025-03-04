@@ -34,12 +34,16 @@
 
 /* / */
 
-var settings = {};
+const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
+const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
+const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
 
-var baseURL = "https://garyc.me/sketch";
-if(window.location.pathname.startsWith("/sketch_bunker/") && window.location.hostname == "noz.rip") {
-    baseURL = "https://noz.rip/sketch_bunker";
-}
+const client = window.location.hostname + window.location.pathname;
+const baseURL = client.startsWith("noz.rip/sketch_bunker/")
+    ? "https://noz.rip/sketch_bunker"
+    : "https://garyc.me/sketch";
+
+var settings = {};
 
 if(window.location.pathname.startsWith("/sketch")) {
     let db = new URLSearchParams(window.location.search).get("db");
@@ -147,10 +151,6 @@ function _updateSketchQuality(quality) {
             break;
         }
     }
-}
-
-function currentClient() {
-    return window.location.hostname + window.location.pathname;
 }
 
 /* /: Main */
@@ -389,9 +389,8 @@ function _getNozSVGAsset(type) {
 }
 
 function getTile(id) {
-    const client = currentClient();
     let imgURL;
-    if(client == "noz.rip/sketch_bunker/gallery.php") {
+    if(client == NOZBUNKER_GALLERY_CLIENT) {
         imgURL = `getIMG.php?id=${id}`;
     } else {
         let size = _getThumbSize(settings.thumbQuality);
@@ -537,8 +536,8 @@ function updateDetails(options={}) {
         elems.push(detailsHTML);
     }
 
-    switch(window.location.hostname + window.location.pathname) {
-        case "noz.rip/sketch/gallery.php": {
+    switch(client) {
+        case NOZ_GALLERY_CLIENT: {
             const left = $(`<div id="details-left"></div>`);
             const right = $(`<div id="details-right"></div>`);
 
@@ -1247,9 +1246,7 @@ function show(id) {
     // prevents showing the same sketch again.
     if(id == window.current) return;
 
-    const client = window.location.hostname + window.location.pathname;
-    const nozClient = client == "noz.rip/sketch/gallery.php";
-    if(nozClient) {
+    if(client == NOZ_GALLERY_CLIENT) {
         hideTagSuggestions();
     }
 
@@ -1296,7 +1293,7 @@ function show(id) {
         `</a>`,
     );
 
-    if(nozClient) {
+    if(client == NOZ_GALLERY_CLIENT) {
         saveSVGParts.push(
             '<a class="saveSVG" title="Save (SVG)">',
             `<img src="svg.png" style="width: 25px; height: 25px; position: relative;">`,
@@ -1352,9 +1349,7 @@ function hide() {
         window.history.pushState(window.history.state, "", "#0");
     }
 
-    const client = window.location.hostname + window.location.pathname;
-    const nozClient = client == "noz.rip/sketch/gallery.php";
-    if(nozClient) {
+    if(client == NOZ_GALLERY_CLIENT) {
         hideTagSuggestions();
     }
 }
@@ -1464,11 +1459,8 @@ async function addDateCards(last, size) {
 }
 
 async function addMore(n=100) {
-    const client = window.location.hostname + window.location.pathname;
-    const bunkerClient = client == "noz.rip/sketch_bunker/gallery.php";
-
     let limit;
-    if(bunkerClient) {
+    if(client == NOZBUNKER_GALLERY_CLIENT) {
         limit = 1;
     } else {
         const hardLimit = 1;
@@ -1494,15 +1486,13 @@ async function addMore(n=100) {
 
     $("#tiles").append(newtiles);
 
-    if(!bunkerClient) {
+    if(client != NOZBUNKER_GALLERY_CLIENT) {
         addDateCards(last - 1, n);
     }
 }
 
 function addMoreTop(n=100) {
-    const client = window.location.hostname + window.location.pathname;
-    const bunkerClient = client == "noz.rip/sketch_bunker/gallery.php";
-    if(!bunkerClient) {
+    if(client != NOZBUNKER_GALLERY_CLIENT) {
         return;
     }
 
@@ -1990,13 +1980,12 @@ function createPreferencesUI() {
         _saveSettings();
     });
 
-    const client = window.location.hostname + window.location.pathname;
     switch(client) {
-        case "noz.rip/sketch/gallery.php": {
+        case NOZ_GALLERY_CLIENT: {
             applyNozPreferences(preferences);
             break;
         }
-        case "noz.rip/sketch_bunker/gallery.php": {
+        case NOZBUNKER_GALLERY_CLIENT: {
             applyBunkerPreferences(preferences);
             break;
         }
