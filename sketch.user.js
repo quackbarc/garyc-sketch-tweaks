@@ -1237,6 +1237,7 @@ function gallery_reset() {
 
     dat = "";
     lines = [];
+    cachedCanvasBlob = null;
 
     if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
         window.autodraw = false;
@@ -1330,9 +1331,6 @@ function show(id) {
 
     // clear alerts and other cached properties from the last shown sketch
     lastAlertPromise = null;
-    // clearing the cached blob is better done on reset() but i don't wanna
-    // monkeypatch that method right now just for this
-    cachedCanvasBlob = null;
 
     sketch.show();
     sketch.on("click", () => {
