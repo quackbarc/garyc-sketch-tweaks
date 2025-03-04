@@ -1233,7 +1233,13 @@ function gallery_reset() {
 
     dat = "";
     lines = [];
-    autodrawpos = -1;
+
+    if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
+        window.autodraw = false;
+    }
+    else {
+        window.autodrawpos = -1;
+    }
 }
 
 function show(id) {
@@ -1326,7 +1332,11 @@ function show(id) {
 
     sketch.show();
     sketch.on("click", () => {
-        if(autodrawpos == -1 && settings.doReplay) {
+        const animating = [NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)
+            ? window.autodraw
+            : window.autodrawpos >= 0;
+
+        if(!animating && settings.doReplay) {
             drawData(window.dat);
         } else {
             setData(window.dat);
@@ -1372,12 +1382,10 @@ async function get(id) {
         updateDetails();
 
         if(dat == "wait") return;
-        if(window.autodrawpos == -1) {
-            if(settings.noAnimation) {
-                setData(dat);
-            } else {
-                drawData(dat);
-            }
+        if(settings.noAnimation) {
+            setData(dat);
+        } else {
+            drawData(dat);
         }
     }
 
@@ -2092,11 +2100,7 @@ async function personalKeybinds(e) {
             // space -- skip/replay animation
             if(!(e.ctrlKey || e.altKey || e.metaKey || e.shiftKey)) {
                 e.preventDefault();
-                if(autodrawpos == -1 && settings.doReplay) {
-                    drawData(window.dat);
-                } else {
-                    setData(window.dat);
-                }
+                sketch.click();
             }
             break;
         }
@@ -2131,7 +2135,10 @@ async function personalKeybinds(e) {
                     document.querySelector("#sketch").toBlob(blob => resolve(blob))
                 });
 
-                if(autodrawpos == -1) {
+                const animating = [NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)
+                    ? window.autodraw
+                    : window.autodrawpos >= 0;
+                if(!animating) {
                     cachedCanvasBlob = blob;
                 }
 
