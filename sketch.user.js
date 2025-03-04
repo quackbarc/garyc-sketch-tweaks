@@ -441,6 +441,10 @@ function currentArchiveURL() {
 }
 
 function updateDetails(options={}) {
+    if(window.current == null) {
+        return;
+    }
+
     const defaultOptions = {
         message: null,
         showFullTimestamp: false,
