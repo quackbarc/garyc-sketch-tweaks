@@ -2820,6 +2820,14 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         });
 
         $("#sketch").css({
+            // remove absolute positioning of the canvas
+            position: "",
+            top: "",
+            left: "",
+            transform: "",
+            // replace box-shadow with border; caused dark mode to show
+            // white edges around the canvas
+            boxShadow: "",
             // constrain actual size to 800x600 in case the canvas gets scaled up
             width: "800px",
             height: "600px",
