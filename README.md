@@ -105,7 +105,9 @@ A complete list of changes by the script is listed below.
 * There's a "load more" button at the end of the gallery. Good for mobile browsers where for some reason sketches can't be added by scrolling to the bottom.
 * Pressing `right` in the gallery when no sketch is open shows the latest sketch.
 * Pressing `left`/`right` on an unavailable sketch would navigate to the next available sketch instead of just whatever's immediately before or after (which is likely also unavailable).
-* The save button in the gallery viewer can save sketches in either the `getIMG.php` quality or gallery-player quality.
+* The save button in the gallery viewer can save sketches in either `getIMG.php` quality or gallery-player quality.
+* When saving with gallery-player quality, sketches may be saved in 1x, 2x, or 4x resolutions.
+  * This used to be possible with `getIMG.php` saves, but Gary imposed an upper limit to it at one point.
 * Gallery thumbnails can be shown in different qualities: default, downscaled, rasterized, "awful", and the old default.
 * Gallery dims out when viewing sketches. Gary commented this out in his code and I thought it looked nice.
 * Gallery viewer has a box shadow so it visually stands out.
@@ -133,6 +135,8 @@ A complete list of changes by the script is listed below.
 
 #### noz.rip/sketch_bunker
 
+* Sketches made during the April Fools' 2023 event (e.g. 7270084) have partial support;
+  backgrounds would only visible when they're clicked on and viewed at the moment.
 * Added a button that would load sketches posted later after a `maxid`, if one was given in the URL.
   There's also a status bar on top of the page that tells which sketch ID you're on.
 
