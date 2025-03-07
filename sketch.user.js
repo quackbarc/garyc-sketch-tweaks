@@ -243,6 +243,19 @@ const FooterState = {
 
 // miscellaneous methods
 
+function _getAprilFoolsColor(id) {
+    const index = [
+        "#4B0082",  // purple
+        "#0000FF",  // blue
+        "#008000",  // dark green
+        "#FFFF00",  // yellow
+        "#FFA500",  // orange
+        "#FF0000",  // red
+    ];
+
+    return index[id % 6];
+}
+
 function _getCurrentTag(tagsBar) {
     const cursorPos = tagsBar.selectionStart;
     // Match everything from the beginning of the tags value to the nth
@@ -1165,19 +1178,6 @@ async function nozBunker_refresh() {
             enableRefresh();
         },
     });
-}
-
-function _getAprilFoolsColor(id) {
-    const index = [
-        "#4B0082",  // purple
-        "#0000FF",  // blue
-        "#008000",  // dark green
-        "#FFFF00",  // yellow
-        "#FFA500",  // orange
-        "#FF0000",  // red
-    ];
-
-    return index[id % 6];
 }
 
 function gallery_drawData(data) {
