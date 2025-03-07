@@ -2107,6 +2107,11 @@ async function personalKeybinds(e) {
             break;
         }
         case "c": {
+            const selection = document.getSelection();
+            if(selection) {
+                break;
+            }
+
             // ctrl+C -- copying URL to clipboard
             if(e.ctrlKey && !(e.altKey || e.metaKey || e.shiftKey)) {
                 e.preventDefault();
