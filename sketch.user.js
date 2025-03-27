@@ -3049,7 +3049,7 @@ function swap() {
         success: function(n) {
             n = parseInt(n);
             if(n < 0) {
-                alert(`On cooldown; please wait ${n} more seconds before swapping again.`);
+                alert(`On cooldown; please wait ${-n} more seconds before swapping again.`);
                 resetUI();
                 return;
             }
