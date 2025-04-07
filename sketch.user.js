@@ -741,11 +741,11 @@ async function saveCanvas() {
     let downloadFn = window.db == null
         ? `${window.current}`
         : `${window.db}#${window.current}`;
+
     if(scale != 1) {
         downloadFn = `${downloadFn}_${scale}x`
+        await scaleCanvas(scale);
     }
-
-    await scaleCanvas(scale);
 
     const sketch = window.sketch[0];
     let blob = await new Promise((res, rej) => sketch.toBlob(blob => res(blob)));
@@ -758,7 +758,9 @@ async function saveCanvas() {
 
     URL.revokeObjectURL(url);
 
-    await scaleCanvas(1);
+    if(scale != 1) {
+        await scaleCanvas(1);
+    }
 }
 
 function saveSVG() {
