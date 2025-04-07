@@ -791,8 +791,13 @@ async function scaleCanvas(size) {
     // For some reason, the lineJoin would revert itself back to "miter", the default.
     _updateSketchQuality(settings.sketchQuality);
 
-    // Give the canvas some time to do the resize before we return
-    await new Promise((res, rej) => window.requestAnimationFrame(res));
+    // Give PIXI some time to re-render the whole sketch before we return
+    await new Promise((res, rej) => {
+        app.ticker.addOnce(res);
+        // While the ticker already fires .update() under a clock,
+        // we still wanna try firing it ourselves just to be REALLY sure
+        app.ticker.update();
+    });
 }
 
 // Booru and tag autocomplete methods (for noz.rip/booru)
