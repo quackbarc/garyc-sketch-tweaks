@@ -2685,6 +2685,12 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             max-height: 100%;
         }
 
+        #details input,
+        #details button {
+            /* none of the default input spacings should apply here in #details */
+            margin: 0;
+        }
+
         #details #details-left {
             flex: 0 1 auto;
             overflow: auto;
@@ -2705,6 +2711,14 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
+
+            gap: 8px;
+        }
+
+        #details #booruButtons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         #details form input[type="text"] {
