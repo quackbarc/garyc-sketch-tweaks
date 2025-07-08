@@ -824,12 +824,18 @@ async function selfUploadToBooru(id, form) {
         }
     );
 
-    const uploadSuccessful = resp.redirected;
+    const uploadSuccessful = resp.redirected;  // not the best way of detecting this. try a URL regex?
     const loggedOut = resp.status == 403;
+    const booruServerError = resp.status >= 500 && resp.status <= 599;
 
     if(loggedOut) {
         booruState.uploading = false;
         detailsAlert("can't upload; logged out of booru");
+        return;
+    }
+    if(booruServerError) {
+        booruState.uploading = false;
+        detailsAlert("booru's having hiccups. try again later?");
         return;
     }
 
