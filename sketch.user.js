@@ -73,6 +73,16 @@ async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
 }
 
+async function _waitForPageRevisit() {
+    return new Promise(res => {
+        document.addEventListener("visibilitychange", () => {
+            if(document.visibilityState == "visible") {
+                res();
+            }
+        }, {once: true});
+    });
+}
+
 function _purgeIntervals() {
     const lastInterval = setTimeout(() => void 0, 0) - 1;
     for(let int = 0; int <= lastInterval; int++) {
@@ -576,6 +586,10 @@ function updateDetails(options={}) {
 }
 
 async function detailsAlert(msg) {
+    if(document.visibilityState == "hidden") {
+        await _waitForPageRevisit();
+    }
+
     updateDetails({message: msg});
     let alertPromise = lastAlertPromise = _sleep(3000);
     await alertPromise;
