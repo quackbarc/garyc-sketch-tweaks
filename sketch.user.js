@@ -110,6 +110,7 @@ function _getSettings() {
             ...defaultSettings,
             useArchiveAsBooruSource: true,
             samePageBooru: true,
+            showTagSuggestions: true,
             showingBooruMenu: false,
             // noz.rip has its own cache with a limited size; gotta be faithful with it.
             cacheSize: 10,
@@ -913,6 +914,11 @@ async function hideTagSuggestions() {
 }
 
 async function updateTagSuggestions() {
+    if(!settings.showTagSuggestions) {
+        hideTagSuggestions();
+        return;
+    }
+
     const tagsBar = $("input[name='tags']");
     const tagsBarElement = tagsBar[0];
 
@@ -2039,6 +2045,10 @@ function applyNozPreferences(preferences) {
         <fieldset id="preferences-booru">
             <legend>Booru</legend>
             <div class="preference">
+                <label for="showtagsuggestions">Show tag suggestions:</label>
+                <input type="checkbox" id="showtagsuggestions">
+            </div>
+            <div class="preference">
                 <label for="samepagebooru">Post to booru without opening a new tab:</label>
                 <input type="checkbox" id="samepagebooru">
             </div>
@@ -2050,9 +2060,16 @@ function applyNozPreferences(preferences) {
     `);
     preferencesSketches.after(preferencesBooru);
 
+    preferences.find("#showtagsuggestions").prop("checked", settings.showTagSuggestions);
     preferences.find("#samepagebooru").prop("checked", settings.samePageBooru);
     preferences.find("#archiveassource").prop("checked", settings.useArchiveAsBooruSource);
 
+    preferences.find("#showtagsuggestions").change(function(e) {
+        settings.showTagSuggestions = e.target.checked;
+        _saveSettings();
+
+        updateTagSuggestions();
+    });
     preferences.find("#samepagebooru").change(function(e) {
         settings.samePageBooru = e.target.checked;
 
