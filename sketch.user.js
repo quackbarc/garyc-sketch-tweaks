@@ -844,12 +844,12 @@ async function selfUploadToBooru(id, form) {
 
     if(loggedOut) {
         booruState.uploading = false;
-        detailsAlert("can't upload; logged out of booru");
+        updateDetails({message: "can't upload; logged out of booru"});
         return;
     }
     if(booruServerError) {
         booruState.uploading = false;
-        detailsAlert("booru's having hiccups. try again later?");
+        updateDetails({message: "booru's having hiccups. try again later?"});
         return;
     }
 
@@ -877,14 +877,14 @@ async function selfUploadToBooru(id, form) {
             const isGeneralError = generalErrorElem.length > 0;
             if(isXEmptyError) {
                 booruState.uploading = false;
-                detailsAlert("can't upload; unavailable sketch");
+                updateDetails({message: "can't upload; unavailable sketch"});
                 return;
             }
             else if(isGeneralError) {
                 const errorMessage = generalErrorElem.text();
 
                 booruState.uploading = false;
-                detailsAlert(`booru error: ${errorMessage}`);
+                updateDetails({message: `booru error: ${errorMessage}`});
                 return;
             }
             else {
