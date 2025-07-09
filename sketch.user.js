@@ -2137,7 +2137,8 @@ async function personalKeybinds(e) {
         }
         case "c": {
             const selection = document.getSelection();
-            if(selection) {
+            const selecting = selection.type == "Range";
+            if(selecting) {
                 break;
             }
 
