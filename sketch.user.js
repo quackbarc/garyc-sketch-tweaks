@@ -964,6 +964,14 @@ async function selfUploadToBooru(id, form) {
                 updateDetails({message: `booru error: ${errorMessage}`});
                 return;
             }
+            else if(isShimmieDoc) {
+                // Treat this as an isGeneralError but with the message
+                // coming from the header. I'm too uneducated with Shimmie
+                // to know what types of errors can fall under these two
+                booruState.uploading = false;
+                updateDetails({message: `booru error: ${headerText}`});
+                return;
+            }
             else {
                 console.error("Unexpected response from Shimmie:", doc);
                 booruState.booruPostStatus = BooruPostState.PARSING_ERROR;
