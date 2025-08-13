@@ -3334,22 +3334,12 @@ function _sketch_commonOverrides() {
         }
 
         /* progress bar */
-        td.swapContainer {
-            display: flex;
-            align-items: center;
-        }
-        td.swapContainer #swap {
-            flex: 2;
-            min-width: min-content;
-        }
-        td.swapContainer #progress {
-            flex: 3;
+        #progress {
             background-color: #f9f9f9;
             border: 1px solid #767676;
             border-radius: 4px;
+            min-width: 70px;
             height: 16px;
-            margin-top: 4px;
-            margin-left: 10px;
         }
         #progressBar {
             height: 100%;
@@ -3376,21 +3366,23 @@ function _sketch_commonOverrides() {
         window.attemptSwap = attemptSwap;
         window.getLatest = getLatest;
 
-        // mark parent of swap button and add progress bar
-        // don't wanna use native <progress> due to lack of its styling
-        // support on firefox
-        const container = $("#swap").parent();
-        container.addClass("swapContainer");
-        container.append(`
+        // Add progress bar.
+        // We're not using a native <progress> here due to its lack of
+        // styling support on Firefox; it's gotta look like the old Flash UI
+        const peekTD = $("#peek").parent();
+        const swapTD = $("#swap").parent();
+        const progressTD = $(`<td>
             <div id="progress"
-                 role="progressbar"
-                 aria-label="swap progress"
-                 aria-valuenow="0"
-                 aria-valuemin="0"
-                 aria-valuemax="3">
+                role="progressbar"
+                aria-label="swap progress"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="3">
                 <div id="progressBar" style="width: 0%"></div>
             </div>
-        `);
+        </td>`);
+        progressTD.insertAfter(swapTD);
+        peekTD.attr("colspan", 2);
 
         $("img[src='save.png']").css({
             left: "",
