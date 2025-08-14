@@ -2371,11 +2371,15 @@ function _gallery_commonStyles() {
 
         /* preferences */
         #preferences {
-            max-width: 350px;
+            display: flex;
+            flex-wrap: wrap;
+            width: fit-content;
             margin: 5px; /* match that of #tiles */
             font-family: monospace;
         }
         #preferences fieldset {
+            min-width: 250px;
+            flex: 1;
             border-left: none;
             border-right: none;
             border-bottom: none;
