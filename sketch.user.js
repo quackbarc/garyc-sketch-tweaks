@@ -843,14 +843,13 @@ async function saveCanvas() {
     window.setData(window.dat);
 
     const scale = settings.sketchSaveResolution;
+    await scaleCanvas(scale);
 
     let downloadFn = window.db == null
         ? `${window.current}`
         : `${window.db}#${window.current}`;
-
     if(scale != 1) {
         downloadFn = `${downloadFn}_${scale}x`
-        await scaleCanvas(scale);
     }
 
     const sketch = window.sketch[0];
@@ -862,11 +861,8 @@ async function saveCanvas() {
     a.download = downloadFn;
     a.click();
 
+    await scaleCanvas(1);
     URL.revokeObjectURL(url);
-
-    if(scale != 1) {
-        await scaleCanvas(1);
-    }
 }
 
 async function scaleCanvas(size) {
