@@ -1007,7 +1007,7 @@ async function updateTagSuggestions() {
     const tagsBarElement = tagsBar[0];
 
     const currentTag = _getCurrentTag(tagsBarElement);
-    if(!currentTag) {
+    if(!currentTag || currentTag.startsWith("rating:")) {
         hideTagSuggestions();
         return;
     }
