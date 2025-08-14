@@ -412,6 +412,16 @@ function toSVG(dat, linejoin="round") {
 
 // UI and public API methods
 
+async function _waitForPIXIFrame() {
+    // Render everything first, and return on the next PIXI tick.
+    //
+    // This could also be re-written to use PIXI's update priority
+    // feature, in case we ever wanna call update() just once.
+    // https://pixijs.download/v4.5.1/docs/PIXI.ticker.Ticker.html#addOnce
+    app.ticker.update();
+    await new Promise((res) => app.ticker.addOnce(res));
+}
+
 function _tileAnchorOverride(event) {
     event.preventDefault();
 
@@ -881,12 +891,7 @@ async function scaleCanvas(size) {
     _updateSketchQuality(settings.sketchQuality);
 
     // Give PIXI some time to re-render the whole sketch before we return
-    await new Promise((res, rej) => {
-        app.ticker.addOnce(res);
-        // While the ticker already fires .update() under a clock,
-        // we still wanna try firing it ourselves just to be REALLY sure
-        app.ticker.update();
-    });
+    await _waitForPIXIFrame();
 }
 
 // Booru and tag autocomplete methods (for noz.rip/booru)
