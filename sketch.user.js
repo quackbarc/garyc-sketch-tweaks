@@ -880,14 +880,14 @@ async function scaleCanvas(size) {
     const width = Math.round(800 * size);
     const height = Math.round(600 * size);
 
-    // Once the canvas has its width/height properties tampered with,
-    // everything about it would reset.
-    // Restore canvas state right after.
     $("#sketch").attr({
         width: `${width}px`,
         height: `${height}px`
     });
 
+    // Once the canvas has its width/height properties tampered with,
+    // everything about it would be reset.
+    // Restore canvas state right after.
     graphics.setTransform(0, 0, size, size);
     _updateSketchQuality(settings.sketchQuality);
 
