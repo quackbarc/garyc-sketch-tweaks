@@ -590,7 +590,7 @@ function updateDetails(options={}) {
         elems.push(inkText);
     }
 
-    // This build custom HTML for the URL, unlike currentURL(), which only
+    // This builds custom HTML for the URL, unlike currentURL(), which only
     // returns it as a string.
     let client = window.location.hostname + window.location.pathname;
     let current = `<span class="id">#${window.current}</span>`;
