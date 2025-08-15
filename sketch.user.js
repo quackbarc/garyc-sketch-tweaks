@@ -1327,6 +1327,37 @@ async function nozBunker_refresh() {
     });
 }
 
+function seekTo(position) {
+    const lines = window.dat.split(" ");
+    let curpos = [0, 0];
+    let acc = 0;
+
+    gallery_resetCanvas();
+
+    for(let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        for(let j = 0; j < line.length; j += 4) {
+            if(acc > position) {
+                break;
+            }
+
+            const x = dec(line.slice(j, j + 2));
+            const y = dec(line.slice(j + 2, j + 4));
+            if(j == 0) {
+                graphics.moveTo(x, y);
+            }
+            else {
+                graphics.lineTo(x, y);
+            }
+
+            curpos = [i, j];
+            acc += 4;
+        }
+    }
+
+    window.curpos = curpos;
+}
+
 function gallery_drawData(data) {
     reset();
 
@@ -1359,7 +1390,7 @@ function gallery_drawData(data) {
     autodrawpos = 0;
 }
 
-function gallery_reset() {
+function gallery_resetCanvas() {
     let fillColor = 0xFFFFFF;
 
     // April Fools' 2023 color support
@@ -1379,6 +1410,10 @@ function gallery_reset() {
 
     graphics.lineStyle(3, 0x000000);
     graphics.moveTo(0,0);
+}
+
+function gallery_reset() {
+    gallery_resetCanvas();
 
     dat = "";
     lines = [];
@@ -1675,7 +1710,7 @@ function createAnimationUI() {
     const showButton = $(`<button>show animation menu</button>`);
     const menu = $(`<div id="animation-menu">
         <button id="playpause">▶</button>
-        <input type="range" name="progress" id="progress">
+        <input type="range" name="progressbar" id="progressbar" min="0" max="1000">
         <button id="hide-animation">hide</button>
     </div>`);
 
@@ -1715,6 +1750,19 @@ function createAnimationUI() {
             window.autodraw = !window.autodraw;
         }
     })
+
+    const progress = menu.find("#progressbar");
+    progress.on("input", () => {
+        if(window.autodraw) {
+            window.autodraw = false;
+        }
+
+        const val = parseInt(progress.val());
+        const total = window.dat.replaceAll(" ", "").length;
+        const target = Math.floor(val * total / 1000);
+
+        seekTo(target);
+    });
 
     // Epilogue
 
@@ -2804,7 +2852,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             gap: 12px;
         }
 
-        #details #progress {
+        #details #progressbar {
             max-width: 200px;
             width: 100%;
         }
