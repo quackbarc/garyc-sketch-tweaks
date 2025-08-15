@@ -670,14 +670,15 @@ function updateDetails(options={}) {
             const left = $(`<div id="details-left"></div>`);
             const right = $(`<div id="details-right"></div>`);
 
+            const [animationMenu, animationToggle] = createAnimationUI();
             const [booruForm, booruToggle] = createBooruFormUI(window.current);
             const toggleMenu = createMenuSwitcher();
-            toggleMenu.append(booruToggle);
+            toggleMenu.append(animationToggle, booruToggle);
 
             $("#details").empty();
             $("#details").append(left, right);
             left.append(elems.join("<br>"));
-            right.append(booruForm, toggleMenu);
+            right.append(animationMenu, booruForm, toggleMenu);
 
             updateHolderMenu(settings.currentHolderMenu);
             break;
@@ -717,9 +718,11 @@ function updateHolderMenu(menutype="main") {
     const elemIDLookup = {
         "main": "toggle-menu",
         "booru": "booruForm",
+        "animation": "animation-menu",
     };
     const targetID = elemIDLookup[menutype];
     if(!targetID) {
+        console.warn(`unknown holder menu type: ${menutype}`);
         return;
     }
 
@@ -1665,6 +1668,21 @@ function addMoreTop(n=100) {
 function createMenuSwitcher() {
     const toggleMenu = $(`<div id="toggle-menu"></div>`);
     return toggleMenu;
+}
+
+function createAnimationUI() {
+    const showButton = $(`<button>show animation menu</button>`);
+    const menu = $(`<div id="animation-menu">
+        <button id="playpause">▶</button>
+        <input type="range" name="progress" id="progress">
+        <button id="hide-animation">hide</button>
+    </div>`);
+
+    const hideButton = menu.find("#hide-animation");
+    showButton.click(() => updateHolderMenu("animation"));
+    hideButton.click(() => updateHolderMenu("main"));
+
+    return [menu, showButton];
 }
 
 function createBooruFormUI(id) {
@@ -2725,9 +2743,29 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             flex: 1 0 auto;
 
             display: flex;
-            flex-direction: column;
             align-items: flex-end;
             justify-content: flex-end;
+        }
+
+        #details #toggle-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            gap: 8px;
+        }
+
+        #details #animation-menu {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+
+            gap: 12px;
+        }
+
+        #details #progress {
+            max-width: 200px;
+            width: 100%;
         }
 
         #details form {
