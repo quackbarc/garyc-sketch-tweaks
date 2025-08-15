@@ -353,12 +353,12 @@ const FooterState = {
 
 function _getAprilFoolsColor(id) {
     const index = [
-        "#4B0082",  // purple
-        "#0000FF",  // blue
-        "#008000",  // dark green
-        "#FFFF00",  // yellow
-        "#FFA500",  // orange
-        "#FF0000",  // red
+        0x4B0082,  // purple
+        0x0000FF,  // blue
+        0x008000,  // dark green
+        0xFFFF00,  // yellow
+        0xFFA500,  // orange
+        0xFF0000,  // red
     ];
 
     return index[id % 6];
@@ -1331,9 +1331,7 @@ function gallery_reset() {
         const {id, timestamp} = window.details;
         const aprilFools2023 = (timestamp >= 1680332400) && (timestamp < 1680418800);
         if(aprilFools2023) {
-            const color = _getAprilFoolsColor(id);
-            const colorInt = parseInt(color.slice(1), 16);
-            fillColor = colorInt;
+            fillColor = _getAprilFoolsColor(id);
         }
     }
 
