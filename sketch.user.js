@@ -1453,9 +1453,10 @@ function hide() {
     window.details = null;
     reset();
 
-    // Prevent back-forward soft-lock from navigating to gallery.php (w/o hash)
-    const firedFromHash = (!window.location.hash || window.location.hash == "#0");
-    if(!firedFromHash) {
+    const hiddenViaURL = (!window.location.hash || window.location.hash == "#0");
+    if(!hiddenViaURL) {
+        // Change the URL only if we've fired hide() via the close button,
+        // not via URL.
         window.history.pushState(window.history.state, "", "#0");
     }
 
