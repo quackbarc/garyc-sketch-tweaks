@@ -1362,11 +1362,17 @@ function show(id) {
     // show() via page init passes the ID as a string (from URL hash).
     // can't change that since it's fired from an event listener.
     id = parseInt(id);
-    if(Number.isNaN(id)) return;
 
-    if(id == 0) return;
-    // prevents showing the same sketch again.
-    if(id == window.current) return;
+    if(Number.isNaN(id)) {
+        return;
+    }
+    if(id == 0) {
+        return;
+    }
+    if(id == window.current) {
+        // prevents showing the same sketch again.
+        return;
+    }
 
     if(client == NOZ_GALLERY_CLIENT) {
         hideTagSuggestions();
@@ -1388,15 +1394,15 @@ function show(id) {
     // TODO: don't rebuild this everytime this function's called
 
     const {top, left, right} = createGalleryButtons(id);
-    let saveParts = [];
+    const saveParts = [];
 
     let saveAnchorStart;
     if(settings.saveAsCanvas) {
         saveAnchorStart = '<a class="save" title="Save (PNG)">'
     } else {
-        let imageSize = settings.sketchSaveResolution * 100;
-        let imageURL = _getTileImageURL(source, id, imageSize);
-        let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
+        const imageSize = settings.sketchSaveResolution * 100;
+        const imageURL = _getTileImageURL(source, id, imageSize);
+        const downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
         saveAnchorStart = [
             `<a`,
                 ` href="${imageURL}"`,
@@ -1413,8 +1419,8 @@ function show(id) {
         `</a>`,
     );
 
-    var saves = [`<div class="saves">`, ...saveParts, `</div>`].join("");
-    var bottom = `<div id="details">...</div>`;
+    const saves = [`<div class="saves">`, ...saveParts, `</div>`].join("");
+    const bottom = `<div id="details">...</div>`;
 
     $("#holder").addClass("active");
     $("#holder").empty();
