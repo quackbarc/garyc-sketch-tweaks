@@ -118,7 +118,7 @@ function _getSettings() {
             useArchiveAsBooruSource: true,
             samePageBooru: true,
             showTagSuggestions: true,
-            showingBooruMenu: false,
+            currentHolderMenu: "main",
             // noz.rip has its own cache with a limited size; gotta be faithful with it.
             cacheSize: 10,
         };
@@ -671,11 +671,15 @@ function updateDetails(options={}) {
             const right = $(`<div id="details-right"></div>`);
 
             const [booruForm, booruToggle] = createBooruFormUI(window.current);
+            const toggleMenu = createMenuSwitcher();
+            toggleMenu.append(booruToggle);
 
             $("#details").empty();
             $("#details").append(left, right);
             left.append(elems.join("<br>"));
-            right.append(booruForm, booruToggle);
+            right.append(booruForm, toggleMenu);
+
+            updateHolderMenu(settings.currentHolderMenu);
             break;
         }
         default: {
@@ -707,6 +711,26 @@ async function detailsFullTimestamp() {
     if(alertPromise === lastAlertPromise) {
         updateDetails();
     }
+}
+
+function updateHolderMenu(menutype="main") {
+    const elemIDLookup = {
+        "main": "toggle-menu",
+        "booru": "booruForm",
+    };
+    const targetID = elemIDLookup[menutype];
+    if(!targetID) {
+        return;
+    }
+
+    const menus = $("#details-right").children();
+    for(const menu of menus) {
+        const show = menu.id == targetID;
+        $(menu).toggle(show);
+    }
+
+    settings.currentHolderMenu = menutype;
+    _saveSettings();
 }
 
 function createStats() {
@@ -1638,6 +1662,11 @@ function addMoreTop(n=100) {
     }
 }
 
+function createMenuSwitcher() {
+    const toggleMenu = $(`<div id="toggle-menu"></div>`);
+    return toggleMenu;
+}
+
 function createBooruFormUI(id) {
     const cookies = document.cookie.split(";");
     const shimUser = cookies.some((c) => c.trim().startsWith("shm_user="));
@@ -1756,11 +1785,6 @@ function createBooruFormUI(id) {
         }
 
         postStatus.show();
-    }
-
-    if(settings.showingBooruMenu) {
-        form.show();
-        showButton.hide();
     }
 
     // Autocomplete-related
@@ -1883,16 +1907,9 @@ function createBooruFormUI(id) {
 
     // Event listeners
 
-    function toggleForm(showing){
-        settings.showingBooruMenu = showing;
-        form.toggle(showing);
-        showButton.toggle(!showing);
-        _saveSettings();
-    }
-
     const hideButton = form.find("#booruButtons #hideBooru");
-    showButton.click(() => toggleForm(true));
-    hideButton.click(() => toggleForm(false));
+    showButton.click(() => updateHolderMenu("booru"));
+    hideButton.click(() => updateHolderMenu("main"));
 
     tagsBar.on("change", () => saveBooruChanges(id, form));
     ratingSelect.on("change", () => saveBooruChanges(id, form));
