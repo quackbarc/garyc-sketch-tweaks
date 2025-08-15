@@ -1196,7 +1196,6 @@ async function refresh() {
             // noz.rip: `window.max` can be fetched from a $.ajax() on init,
             // but it's saved as a string. Firing this request a bit after
             // the $.ajax() call SHOULD fix that on time.
-
             const init = window.max == null || typeof window.max == "string";
             if(init) {
                 window.max = newMax;
@@ -1221,8 +1220,8 @@ async function refresh() {
                 // Max values are -1'd so that IDs ending with 00 are NOT
                 // equal to IDs ending with 01; the latter's where
                 // `addMore.php`'s thumbnails start.
-                let lastMax100 = Math.floor((window.max - 1) / 100);
-                let newMax100 = Math.floor((newMax - 1) / 100);
+                const lastMax100 = Math.floor((window.max - 1) / 100);
+                const newMax100 = Math.floor((newMax - 1) / 100);
                 if(newMax100 > lastMax100) {
                     // Size is +1'd so the previous sketch gets a datecard
                     // when the current day changes.
@@ -1264,6 +1263,7 @@ async function nozBunker_refresh() {
         dataType: "text",
         success: function(resp) {
             const newMax = parseInt(resp);
+
             if(window.max == newMax) {
                 return enableRefresh();
             }
