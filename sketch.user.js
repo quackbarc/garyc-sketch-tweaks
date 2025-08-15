@@ -717,7 +717,7 @@ async function detailsFullTimestamp() {
 function updateHolderMenu(menutype="main") {
     const elemIDLookup = {
         "main": "toggle-menu",
-        "booru": "booruForm",
+        "booru": "booru-form",
         "animation": "animation-menu",
     };
     const targetID = elemIDLookup[menutype];
@@ -1018,7 +1018,7 @@ async function selfUploadToBooru(id, form) {
 }
 
 async function hideTagSuggestions() {
-    $("#tagSuggestions").hide();
+    $("#tag-suggestions").hide();
     lastAutocompletePromise = null;
     lastAutocompleteQuery = null;
     autocompleteSelected = null;
@@ -1039,7 +1039,7 @@ async function updateTagSuggestions() {
         return;
     }
 
-    $("#tagSuggestions").hide();
+    $("#tag-suggestions").hide();
 
     let autocompletePromise = lastAutocompletePromise = _sleep(200);
     await autocompletePromise;
@@ -1076,9 +1076,9 @@ async function updateTagSuggestions() {
 }
 
 async function autocompleteError(response) {
-    $("#tagSuggestions").show();
-    $("#tagSuggestions").html(`
-        <tr role="option" class="tagInfo">
+    $("#tag-suggestions").show();
+    $("#tag-suggestions").html(`
+        <tr role="option" class="tag-info">
             <td colspan="2">
                 (something went wrong: ${response.status} ${response.statusText})
             </td>
@@ -1096,15 +1096,15 @@ async function autocompleteDropdown(json, query) {
 
     if(tags.length == 0) {
         const element = $(`
-            <tr role="option" class="tagInfo">
+            <tr role="option" class="tag-info">
                 <td colspan="2">
                     (new tag: ${query})
                 </td>
             </tr>
         `);
         tagElements.push(element);
-        $("#tagSuggestions").show();
-        $("#tagSuggestions").html(tagElements);
+        $("#tag-suggestions").show();
+        $("#tag-suggestions").html(tagElements);
     }
 
     const lastSelectedIndex = tags.findIndex(([name, count]) => name == autocompleteSelected);
@@ -1126,8 +1126,8 @@ async function autocompleteDropdown(json, query) {
         const {count} = result;
         const element = $(`
             <tr role="option" name="${name}">
-                <td class="tagName">${name}</td>
-                <td class="tagCount">${count}</td>
+                <td class="tag-name">${name}</td>
+                <td class="tag-count">${count}</td>
             </tr>
         `);
 
@@ -1146,7 +1146,7 @@ async function autocompleteDropdown(json, query) {
     if(tags.length > maxTagCount) {
         const remainingTags = tags.slice(maxTagCount);
         const element = $(`
-            <tr role="option" class="tagInfo">
+            <tr role="option" class="tag-info">
                 <td colspan="2">
                     (${remainingTags.length} more...)
                 </td>
@@ -1155,19 +1155,19 @@ async function autocompleteDropdown(json, query) {
         tagElements.push(element);
     }
 
-    $("#tagSuggestions").show();
-    $("#tagSuggestions").html(tagElements);
+    $("#tag-suggestions").show();
+    $("#tag-suggestions").html(tagElements);
 }
 
 function autocompleteSelect(name) {
-    const option = $(`#tagSuggestions [name="${name}"]`);
+    const option = $(`#tag-suggestions [name="${name}"]`);
     const optionExists = option.length >= 1;
     if(!optionExists) {
         console.debug(`"${name}" doesn't exist in visible tags, ignoring that`);
         return;
     }
 
-    const optionLast = $(`#tagSuggestions [aria-selected]`);
+    const optionLast = $(`#tag-suggestions [aria-selected]`);
     optionLast.attr("aria-selected", "false");
     option.attr("aria-selected", "true");
 
@@ -1175,7 +1175,7 @@ function autocompleteSelect(name) {
 }
 
 function addTag(name, query) {
-    const tagsBar = $("#booruForm input[name=tags]");
+    const tagsBar = $("#booru-form input[name=tags]");
     const rawTags = tagsBar.val();
     const index = tagsBar.prop("selectionStart");
 
@@ -1712,7 +1712,7 @@ function createBooruFormUI(id) {
     const showButton = $("<button>show booru menu</button>");
     const form = $(`
         <form
-            id="booruForm"
+            id="booru-form"
             target="_blank"
             action="/booru/upload"
             method="POST"
@@ -1720,9 +1720,9 @@ function createBooruFormUI(id) {
             style="display: none;">
             <input type="hidden" name="sketchid" value="${id}">
             <input type="hidden" name="source" value="${currentArchiveURL()}">
-            <span id="postStatus"></span>
-            <div id="tagsContainer">
-                <table id="tagSuggestions" role="listbox"></table>
+            <span id="post-status"></span>
+            <div id="tag-container">
+                <table id="tag-suggestions" role="listbox"></table>
                 <input
                     type="text"
                     name="tags"
@@ -1731,7 +1731,7 @@ function createBooruFormUI(id) {
                     autocomplete="off"
                     class="autocomplete_tags">
             </div>
-            <div id="booruButtons">
+            <div id="booru-buttons">
                 <!-- Select isn't natively part of the form; post-processing is done to make
                      ratings actually get sent. -->
                 <select id="rating">
@@ -1741,7 +1741,7 @@ function createBooruFormUI(id) {
                     <option value="e">Explicit</option>
                 </select>
                 <button type="submit">post to booru</button>
-                <button type="button" id="hideBooru">hide</button>
+                <button type="button" id="hide-booru">hide</button>
             </div>
         </form>
     `);
@@ -1750,7 +1750,7 @@ function createBooruFormUI(id) {
 
     const tagsBar = form.find("input[name='tags']");
     const ratingSelect = form.find("select#rating");
-    const postStatus = form.find("#postStatus");
+    const postStatus = form.find("#post-status");
     const sourceField = form.find("input[name='source']");
 
     postStatus.hide();
@@ -1767,8 +1767,8 @@ function createBooruFormUI(id) {
 
     const booruPostStatus =  settings.samePageBooru && booruState && booruState.booruPostStatus;
     if(booruPostStatus) {
-        const otherFormElements = form.children(`*:not(#booruButtons, #postStatus)`);
-        const otherButtons = form.find(`#booruButtons *:not(#hideBooru)`);
+        const otherFormElements = form.children(`*:not(#booru-buttons, #post-status)`);
+        const otherButtons = form.find(`#booru-buttons *:not(#hide-booru)`);
         otherFormElements.hide();
         otherButtons.hide();
 
@@ -1807,7 +1807,7 @@ function createBooruFormUI(id) {
 
     // Autocomplete-related
 
-    const tagSuggestions = form.find("#tagSuggestions");
+    const tagSuggestions = form.find("#tag-suggestions");
     tagSuggestions.hide();
     tagsBar.on("input", function() {
         updateTagSuggestions();
@@ -1849,9 +1849,9 @@ function createBooruFormUI(id) {
                 // Prevent text caret from moving to the beginning/end of the tags bar
                 event.preventDefault();
 
-                const visibleTagElems = tagSuggestions.children(":not(.tagInfo)");
+                const visibleTagElems = tagSuggestions.children(":not(.tag-info)");
                 const visibleTags = Array.from(visibleTagElems).map(
-                    (element) => element.querySelector(".tagName").innerHTML
+                    (element) => element.querySelector(".tag-name").innerHTML
                 );
                 if(visibleTags.length == 0 || visibleTags.length == 1) {
                     return;
@@ -1906,9 +1906,9 @@ function createBooruFormUI(id) {
             return;
         }
 
-        // Text selections should hide #tagSuggestions (we're only catching text caret movement).
-        const selectionStart = $("#booruForm input[name=tags]").prop("selectionStart");
-        const selectionEnd = $("#booruForm input[name=tags]").prop("selectionEnd");
+        // Text selections should hide #tag-suggestions (we're only catching text caret movement).
+        const selectionStart = $("#booru-form input[name=tags]").prop("selectionStart");
+        const selectionEnd = $("#booru-form input[name=tags]").prop("selectionEnd");
         const selectingText = selectionStart != selectionEnd;
         if(selectingText) {
             hideTagSuggestions();
@@ -1925,7 +1925,7 @@ function createBooruFormUI(id) {
 
     // Event listeners
 
-    const hideButton = form.find("#booruButtons #hideBooru");
+    const hideButton = form.find("#hide-booru");
     showButton.click(() => updateHolderMenu("booru"));
     hideButton.click(() => updateHolderMenu("main"));
 
@@ -2778,7 +2778,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             gap: 8px;
         }
 
-        #details #booruButtons {
+        #details #booru-buttons {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -2799,16 +2799,16 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             overflow: visible;
         }
 
-        #tagsContainer {
+        #tag-container {
             width: 100%;
             max-width: 400px;
 
-            /* Position #tagSuggestions' parent so #tagSuggestions can be
+            /* Position #tag-suggestions' parent so #tag-suggestions can be
             absolutely positioned to it */
             position: relative;
         }
 
-        #tagSuggestions {
+        #tag-suggestions {
             position: absolute;
             right: calc(100% + 10px);
             bottom: 0px;
@@ -2826,28 +2826,28 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
             border-spacing: 0;
         }
 
-        #tagSuggestions td {
-            /* Alternative to border-spacing in #tagSuggestions where the <tr>
+        #tag-suggestions td {
+            /* Alternative to border-spacing in #tag-uggestions where the <tr>
             background would actually fill in the spacing gaps */
             padding: 0 5px;
         }
 
-        #tagSuggestions tr[aria-selected="true"] {
+        #tag-suggestions tr[aria-selected="true"] {
             background-color: var(--background-tag-suggestions-selected);
             text-decoration: underline;
         }
 
-        #tagSuggestions tr.tagInfo {
+        #tag-suggestions tr.tag-info {
             text-align: center;
             font-style: italic;
         }
-        #tagSuggestions tr.tagInfo:not(:only-child) td {
+        #tag-suggestions tr.tag-info:not(:only-child) td {
             padding: 5px;
         }
-        #tagSuggestions .tagName {
+        #tag-suggestions .tag-name {
             text-align: right;
         }
-        #tagSuggestions .tagCount {
+        #tag-suggestions .tag-count {
             text-align: left;
             font-style: italic;
             opacity: 50%;
