@@ -333,6 +333,7 @@ let lastAutocompleteQuery = null;
 let lastTagsValue = null;
 let autocompleteSelected = null;
 let cachedCanvasBlob = null;
+let animationMenuRAF = null;
 let datecardDates = new Map();
 window.details = null;
 
@@ -1678,10 +1679,50 @@ function createAnimationUI() {
         <button id="hide-animation">hide</button>
     </div>`);
 
+    // Background property assignment
+
+    const cachedCurrent = window.current;
+    const playpause = menu.find("#playpause");
+
+    function animationMenuOverride() {
+        if(window.current !== cachedCurrent) {
+            return;
+        }
+
+        const playpauseIsPaused = playpause.text() == "▶";
+        if(window.autodraw && playpauseIsPaused) {
+            playpause.text("❚❚");
+        }
+        else if(!window.autodraw && !playpauseIsPaused) {
+            playpause.text("▶");
+        }
+
+        window.requestAnimationFrame(animationMenuOverride);
+    }
+
+    // Event listeners
+
     const hideButton = menu.find("#hide-animation");
     showButton.click(() => updateHolderMenu("animation"));
     hideButton.click(() => updateHolderMenu("main"));
 
+    playpause.click(() => {
+        const finished = $("#progressbar").val() == "1000";
+        if(finished) {
+            drawData(window.dat);
+        }
+        else {
+            window.autodraw = !window.autodraw;
+        }
+    })
+
+    // Epilogue
+
+    if(animationMenuRAF) {
+        window.cancelAnimationFrame(animationMenuRAF);
+    }
+
+    animationMenuRAF = window.requestAnimationFrame(animationMenuOverride);
     return [menu, showButton];
 }
 
