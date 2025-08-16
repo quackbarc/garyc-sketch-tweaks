@@ -1690,7 +1690,7 @@ async function addMore(n=100) {
         : FooterState.NORMAL;
     if(footerState == FooterState.END_OF_GALLERY && !(last == target)) {
         const tilesEnd = createGalleryFooter(footerState);
-        $("#tilesEnd").replaceWith(tilesEnd);
+        $("#tiles-end").replaceWith(tilesEnd);
     }
 
     $("#tiles").append(newtiles);
@@ -2338,7 +2338,7 @@ function applyBunkerPreferences(preferences) {
 }
 
 function createGalleryFooter(footerState=FooterState.NORMAL) {
-    const tilesEnd = $(`<footer id="tilesEnd"></footer>`);
+    const tilesEnd = $(`<footer id="tiles-end"></footer>`);
 
     switch(footerState) {
         case FooterState.END_OF_GALLERY: {
@@ -2540,7 +2540,7 @@ function _gallery_commonStyles() {
             user-select: none;
         }
 
-        #tilesEnd {
+        #tiles-end {
             padding: 10px;
             text-align: center;
             font-family: monospace;
@@ -3205,7 +3205,7 @@ function _setProgress(n) {
     n = Math.min(Math.max(n, 0), 3);
     let width = Math.round(n / 3 * 100);
     $("#progress").attr({"aria-valuenow": n});
-    $("#progressBar").width(`${width}%`);
+    $("#progress-bar").width(`${width}%`);
 }
 
 function updateUI(state) {
@@ -3558,7 +3558,7 @@ function _sketch_commonOverrides() {
             min-width: 70px;
             height: 16px;
         }
-        #progressBar {
+        #progress-bar {
             height: 100%;
             background-color: #a1ef55;
             border-radius: 3px;
@@ -3595,7 +3595,7 @@ function _sketch_commonOverrides() {
                 aria-valuenow="0"
                 aria-valuemin="0"
                 aria-valuemax="3">
-                <div id="progressBar" style="width: 0%"></div>
+                <div id="progress-bar" style="width: 0%"></div>
             </div>
         </td>`);
         progressTD.insertAfter(swapTD);
