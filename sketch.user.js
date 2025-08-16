@@ -1710,14 +1710,30 @@ function createAnimationUI() {
     const showButton = $(`<button>show animation menu</button>`);
     const menu = $(`<div id="animation-menu">
         <button id="playpause">▶</button>
-        <input type="range" name="progressbar" id="progressbar" min="0" max="1000">
+        <input type="range" name="progressbar" id="progressbar" value="0" min="0" max="1000">
         <button id="hide-animation">hide</button>
     </div>`);
+
+    // Property assignment
+
+    const playpause = menu.find("#playpause");
+    const playpauseText = window.autodraw ? "❚❚" : "▶";
+    playpause.text(playpauseText);
+
+    const progress = menu.find("#progressbar");
+    const lastProgress = $("#progressbar");
+    if(lastProgress.length >= 1) {
+        // We can't use the `curpos` for calculating the progress bar width;
+        // since conversion from progress -> `curpos` is clamped, converting
+        // from `curpos` -> progress would lose some of its original precision.
+        // It's like rounding 1.67 to 2; you can't un-round the 1.67 back.
+        const progPosition = lastProgress.val();
+        progress.val(progPosition);
+    }
 
     // Background property assignment
 
     const cachedCurrent = window.current;
-    const playpause = menu.find("#playpause");
 
     function animationMenuOverride() {
         if(window.current !== cachedCurrent) {
@@ -1751,7 +1767,6 @@ function createAnimationUI() {
         }
     })
 
-    const progress = menu.find("#progressbar");
     progress.on("input", () => {
         if(window.autodraw) {
             window.autodraw = false;
