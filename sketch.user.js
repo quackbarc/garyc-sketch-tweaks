@@ -1889,9 +1889,12 @@ function createBooruFormUI(id) {
     if(booruState) {
         tagsBar.val(booruState.tags);
         ratingSelect.val(booruState.rating);
+    }
 
+    const booruUploading = settings.samePageBooru && booruState && booruState.uploading;
+    if(booruUploading) {
         const formInputs = form.find(`input, button, select`);
-        formInputs.prop("disabled", booruState.uploading);
+        formInputs.prop("disabled", true);
     }
 
     const booruPostStatus =  settings.samePageBooru && booruState && booruState.booruPostStatus;
