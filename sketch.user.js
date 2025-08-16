@@ -1536,6 +1536,12 @@ function hide() {
     }
 
     if(client == NOZ_GALLERY_CLIENT) {
+        if(animationMenuRAF) {
+            window.cancelAnimationFrame(animationMenuRAF);
+            animationMenuRAF = null;
+        }
+
+        window.curpos = [0, 0];
         hideTagSuggestions();
     }
 }
