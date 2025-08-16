@@ -1507,15 +1507,34 @@ function show(id) {
 
     sketch.show();
     sketch.on("click", () => {
-        const animating = [NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)
-            ? window.autodraw
-            : window.autodrawpos >= 0;
+        switch(client) {
+            case NOZBUNKER_GALLERY_CLIENT:
+            case NOZ_GALLERY_CLIENT: {
+                const animating = window.autodraw;
+                const finished = $("#progressbar").val() == "1000";
 
-        if(!animating && settings.doReplay) {
-            drawData(window.dat);
-        } else {
-            setData(window.dat);
+                if(animating) {
+                    setData(window.dat);
+                }
+                else if(!animating && !finished) {
+                    window.autodraw = true;
+                }
+                else if(!animating && settings.doReplay) {
+                    drawData(window.dat);
+                }
+                break;
+            }
+
+            default: {
+                const animating = window.autodrawpos >= 0;
+                if(!animating && settings.doReplay) {
+                    drawData(window.dat);
+                } else {
+                    setData(window.dat);
+                }
+            }
         }
+
     });
     reset();
     get(id);
