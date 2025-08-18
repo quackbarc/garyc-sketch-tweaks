@@ -1897,7 +1897,7 @@ function createBooruFormUI(id) {
         formInputs.prop("disabled", true);
     }
 
-    const booruPostStatus =  settings.samePageBooru && booruState && booruState.booruPostStatus;
+    const booruPostStatus = settings.samePageBooru && booruState && booruState.booruPostStatus;
     if(booruPostStatus) {
         const otherFormElements = form.children(`*:not(#booru-buttons, #post-status)`);
         const otherButtons = form.find(`#booru-buttons *:not(#hide-booru)`);
