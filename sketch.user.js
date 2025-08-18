@@ -968,8 +968,7 @@ async function selfUploadToBooru(id, form) {
         // Until I find a way to properly check for errors and hash duplicates through the wire,
         // this will have to do.
 
-        const idPattern = /data-post-id='(\d+)'/;
-
+        const idPattern = /\/booru\/post\/view\/(\d+)(?:.+ already has hash .+)/;
         const text = await resp.text();
         const match = text.match(idPattern);
         if(!match) {
