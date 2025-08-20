@@ -342,7 +342,7 @@ const BooruPostState = {
     POSTED: 1,
     ALREADY_POSTED: 2,
     PARSING_ERROR: 3,
-}
+};
 
 const FooterState = {
     NORMAL: 0,
@@ -2991,7 +2991,7 @@ const SwapState = {
     WAITING_PEEK: 4,
     DONE_FROM_SWAP: 5,
     DONE: 6,
-}
+};
 
 const usingAltClient = window.location.pathname == "/sketch/alt.html";
 
