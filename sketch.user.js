@@ -45,6 +45,14 @@ function getBaseURL(client) {
     return "https://garyc.me/sketch";
 }
 
+/**@param {string} client */
+function getInkLimit(client) {
+    if(client.startsWith("noz.rip/sketch/")) {
+        return 131_071;
+    }
+    return 65_535;
+}
+
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
 const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
 const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
@@ -493,7 +501,8 @@ function updateDetails(options={}) {
     } else if(unavailable) {
         elems.push("(unavailable)");
     } else {
-        let ink = Math.floor(window.dat.length / 65535 * 100);
+        let inkLimit = getInkLimit(client);
+        let ink = Math.floor(window.dat.length / inkLimit * 100);
         let inkText = `${ink}% ink used`;
         elems.push(inkText);
     }
@@ -2930,7 +2939,8 @@ function updateUI(state) {
         dat = window.dat;
     }
 
-    const ink = Math.floor(dat.length / window.limit * 100);
+    const inkLimit = getInkLimit(client);
+    const ink = Math.floor(dat.length / inkLimit * 100);
 
     switch(state) {
         case SwapState.IDLE: {
