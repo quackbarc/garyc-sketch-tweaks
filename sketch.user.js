@@ -2548,7 +2548,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 
     _gallery_commonOverrides();
 
-    // garyc.me doesn't even HAVE a <body> tag;
+    // Note: garyc.me doesn't have a <body> tag.
     // DOM manipulation can only happen after DOMContentLoaded.
 
     // TODO: Further MV3 support. I know I wrote a draft for these garyc.me
@@ -2710,10 +2710,11 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         }
     `);
 
-    // noz.rip has the JS code AFTER the <body> tag.
-    // Same case with the jQuery import, so DOM manipulation
-    // can only be executed after DOMContentLoaded.
-    // One of these days, I'm just gonna snap.
+    // Firing these overrides after the DOM is fully rendered.
+    // noz.rip's <script> code happens AFTER the <body> tag,
+    // so these can only fired after the whole page has loaded,
+    // i.e. after `DOMContentLoaded`.
+    // Why.
 
     function DOMInit() {
         _purgeIntervals();
@@ -2819,8 +2820,9 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
     `);
     document.head.appendChild(style);
 
-    // noz.rip/sketch_bunker/ ALSO has the body after the JS tag.
-    // There will be bloodshed.
+    // Like noz.rip/sketch/gallery.php, the <script> code also happens
+    // AFTER the <body> tag. We're also firing this one after
+    // DOMContentLoaded. I'm going to throw hands.
 
     function DOMInit() {
         _purgeIntervals();
