@@ -787,23 +787,6 @@ async function saveCanvas() {
     }
 }
 
-function saveSVG() {
-    if(window.current == null) {
-        return;
-    }
-
-    const linejoin = settings.sketchQuality == "spiky" ? "miter" : "round";
-    const svg = toSVG(window.dat, linejoin);
-
-    const blob = new Blob([svg], {type: "image/svg+xml"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.download = `${window.current}.svg`;
-    a.href = url;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
 async function scaleCanvas(size) {
     const width = (800 * size) | 0;
     const height = (600 * size) | 0;
@@ -1321,9 +1304,7 @@ function show(id) {
     // TODO: don't rebuild this everytime this function's called
 
     const {top, left, right} = createGalleryButtons(id);
-
     let saveParts = [];
-    let saveSVGParts = [];
 
     let saveAnchorStart;
     if(settings.saveAsCanvas) {
@@ -1348,15 +1329,7 @@ function show(id) {
         `</a>`,
     );
 
-    if(client == NOZ_GALLERY_CLIENT) {
-        saveSVGParts.push(
-            '<a class="saveSVG" title="Save (SVG)">',
-            `<img src="svg.png" style="width: 25px; height: 25px; position: relative;">`,
-            '</a>',
-        );
-    }
-
-    var saves = [`<div class="saves">`, ...saveParts, ...saveSVGParts, `</div>`].join("");
+    var saves = [`<div class="saves">`, ...saveParts, `</div>`].join("");
     var bottom = `<div id="details">...</div>`;
 
     $("#holder").addClass("active");
@@ -1368,9 +1341,6 @@ function show(id) {
     $("a.right").click(_navAnchorOverride);
     if(settings.saveAsCanvas) {
         $(".save").click(() => saveCanvas());
-    }
-    if(window.location.hostname == "noz.rip") {
-        $(".saveSVG").click(() => saveSVG());
     }
 
     // clear alerts and other cached properties from the last shown sketch
