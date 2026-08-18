@@ -1510,7 +1510,7 @@ async function addMore(n=100) {
 
     $("#tiles").append(newtiles);
 
-    if(client != NOZBUNKER_GALLERY_CLIENT) {
+    if(client == GARYC_GALLERY_CLIENT) {
         addDateCards(last - 1, n);
     }
 }
