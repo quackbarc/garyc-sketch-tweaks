@@ -2551,7 +2551,10 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     // garyc.me doesn't even HAVE a <body> tag;
     // DOM manipulation can only happen after DOMContentLoaded.
 
-    document.addEventListener("DOMContentLoaded", function() {
+    // TODO: Further MV3 support. I know I wrote a draft for these garyc.me
+    // overrides like last year.
+
+    function DOMInit() {
         window.current = null;
 
         _gallery_commonDOMOverrides();
@@ -2573,7 +2576,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         $("#sketch").css({
             border: "",
         });
-    });
+    }
 
     // these are assigned on another `.ready` event;
     // overwrite them on another one
@@ -2592,6 +2595,13 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 
         _updateSketchQuality(settings.sketchQuality);
     });
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
@@ -2705,7 +2715,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     // can only be executed after DOMContentLoaded.
     // One of these days, I'm just gonna snap.
 
-    document.addEventListener("DOMContentLoaded", function() {
+    function DOMInit() {
         _purgeIntervals();
 
         // noz.rip doesn't have a stats bar but this works surprisingly fine.
@@ -2777,7 +2787,14 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         });
 
         _updateSketchQuality(settings.sketchQuality);
-    });
+    }
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
 
 if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.hostname == "noz.rip") {
@@ -2805,7 +2822,7 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
     // noz.rip/sketch_bunker/ ALSO has the body after the JS tag.
     // There will be bloodshed.
 
-    document.addEventListener("DOMContentLoaded", function() {
+    function DOMInit() {
         _purgeIntervals();
 
         window.refresh = nozBunker_refresh;
@@ -2894,7 +2911,14 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         $("#refresh").prop("disabled", !!window.customMax);
 
         _updateSketchQuality(settings.sketchQuality);
-    });
+    }
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
 
 
@@ -3257,7 +3281,7 @@ if(window.location.pathname == "/sketch/") {
     // both noz.rip and garyc.me's JS happen at the document body,
     // inject when that finishes loading
 
-    document.addEventListener("DOMContentLoaded", function() {
+    function DOMInit() {
         setInterval(window.getStats, 30000);
 
         window.reset = sketch_reset;
@@ -3291,17 +3315,31 @@ if(window.location.pathname == "/sketch/") {
         });
 
         _updateSketchQuality(settings.sketchQuality);
-    });
+    }
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.me") {
-    document.addEventListener("DOMContentLoaded", function() {
+    function DOMInit() {
         setInterval(window.update, 1000/30);
-    });
+    }
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.rip") {
-    document.addEventListener("DOMContentLoaded", function() {
+    function DOMInit() {
         // not sure how i'd monkeypatch update() here;
         // it uses requestAnimationFrame instead of setInterval
         setInterval(() => saveIncomplete(true), 10000);
@@ -3309,5 +3347,12 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.ri
         window.reset = noz_sketch_reset;
         window.setData = noz_sketch_setData;
         window.swap = noz_swap;
-    });
+    }
+
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", DOMInit);
+    }
+    else {
+        DOMInit();
+    }
 }
