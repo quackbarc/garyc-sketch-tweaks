@@ -34,14 +34,23 @@
 
 /* / */
 
+/**@param {string} client */
+function getBaseURL(client) {
+    if(client.startsWith("noz.rip/sketch/")) {
+        return "https://noz.rip/sketch";
+    }
+    else if(client.startsWith("noz.rip/sketch_bunker/")) {
+        return "https://noz.rip/sketch_bunker";
+    }
+    return "https://garyc.me/sketch";
+}
+
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
 const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
 const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
 
 const client = window.location.hostname + window.location.pathname;
-const baseURL = client.startsWith("noz.rip/sketch_bunker/")
-    ? "https://noz.rip/sketch_bunker"
-    : "https://garyc.me/sketch";
+const baseURL = getBaseURL(client);
 
 var settings = {};
 
@@ -419,7 +428,7 @@ function getTile(id) {
     } else {
         let size = _getThumbSize(settings.thumbQuality);
         let dbParam = window.db != null ? `&db=${window.db}` : "";
-        imgURL = `https://garyc.me/sketch/getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
+        imgURL = `${baseURL}/getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
     }
 
     const tile = $([
@@ -1111,7 +1120,7 @@ async function refresh() {
     }
 
     $.ajax({
-        url: `https://garyc.me/sketch/getStats.php?details&db=${db || ""}`,
+        url: `${baseURL}/getStats.php?details&db=${db || ""}`,
         dataType: "json",
         success: function(json) {
             updateStats(json);
@@ -3141,7 +3150,7 @@ function noz_swap() {
     let dat = window.arrdat.join(" ") + " ";
 
     $.ajax({
-        url: `https://garyc.me/sketch/swap.php?db=${db || ""}&v=32`,
+        url: `${baseURL}/swap.php?db=${db || ""}&v=32`,
         method: "POST",
         data: dat,
         error: function() {
@@ -3169,7 +3178,7 @@ function attemptSwap() {
     getStats();
 
     $.ajax({
-        url: `https://garyc.me/sketch/get.php?id=${swapID}&db=${db || ""}`,
+        url: `${baseURL}/get.php?id=${swapID}&db=${db || ""}`,
         method: "GET",
         error: function() {
             setTimeout(attemptSwap, 2000);
@@ -3200,7 +3209,7 @@ function getLatest() {
     window.locked = true;
 
     $.ajax({
-        url: `https://garyc.me/sketch/get.php?db=${db || ""}`,
+        url: `${baseURL}/get.php?db=${db || ""}`,
         method: "GET",
         error: function() {
             alert("There was an error getting the latest sketch.");
