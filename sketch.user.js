@@ -864,10 +864,10 @@ async function saveCanvas() {
     }
 
     const sketch = window.sketch[0];
-    let blob = await new Promise((res, rej) => sketch.toBlob(blob => res(blob)));
-    let url = URL.createObjectURL(blob);
-
+    const blob = await new Promise((res, rej) => sketch.toBlob(blob => res(blob)));
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+
     a.href = url;
     a.download = filename;
     a.click();
