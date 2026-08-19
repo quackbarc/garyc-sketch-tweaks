@@ -2982,6 +2982,8 @@ const SwapState = {
     DONE: 6,
 }
 
+const usingAltClient = window.location.pathname == "/sketch/alt.html";
+
 function _setProgress(n) {
     n = Math.min(Math.max(n, 0), 3);
     let width = Math.round(n / 3 * 100);
@@ -2991,7 +2993,7 @@ function _setProgress(n) {
 
 function updateUI(state) {
     let dat;
-    if(window.location.hostname == "noz.rip") {
+    if(usingAltClient) {
         dat = window.arrdat.join(" ");
     } else {
         dat = window.dat;
@@ -3098,7 +3100,7 @@ function sketch_setData(data) {
     }
 }
 
-function noz_sketch_setData(arrdata) {
+function noz_alt_sketch_setData(arrdata) {
     window.arrdat = arrdata = arrdata.filter((part) => part != "");
 
     // using normal reset() would've left the wrong buttons enabled
@@ -3132,7 +3134,14 @@ function sketch_reset() {
     resetUI();
 }
 
-function noz_sketch_reset(manual) {
+function noz_sketch_reset(manual=false) {
+    if(manual) {
+        saveIncomplete(false);
+    }
+    sketch_reset();
+}
+
+function noz_alt_sketch_reset(manual=false) {
     if(manual) {
         window.backupdat = {
             arrdat: window.arrdat,
@@ -3185,18 +3194,48 @@ function noz_swap() {
     updateUI(SwapState.SWAPPING);
     window.locked = true;
 
-    let dat = window.arrdat.join(" ") + " ";
+    getStats();
+
+    if(usingAltClient) {
+        window.dat = window.arrdat.join(" ") + " ";
+        window.lastsketch = arrdat;
+        localStorage.setItem('lastsketch', arrdat);
+    }
+
+    const dat = window.dat;
+    const phrase = $("#phrase")[0].value;
+    const postData = new FormData();
+    postData.append("data", dat);
+    postData.append("phrase", phrase);
 
     $.ajax({
         url: _getSwapURL(source),
         method: "POST",
-        data: dat,
+        data: postData,
+        processData: false,
+        contentType: false,
         error: function() {
             alert("There was an error swapping.");
             resetUI();
         },
-        success: function(n) {
-            n = parseInt(n);
+        success: function(result) {
+            const timestamp = new Date().getTime();
+            $("#captcha")[0].src = `captcha.php?${timestamp}`;
+
+            if(result == "fail") {
+                alert("Captcha was incorrect. Try again.");
+                $("#phrase")[0].value = "";
+                resetUI();
+                return;
+            }
+
+            n = parseInt(result);
+
+            if(Number.isNaN(n)) {
+                alert("There was an error swapping.");
+                resetUI();
+                return;
+            }
             if(n < 0) {
                 alert(`On cooldown; please wait ${n} more seconds before swapping again.`);
                 resetUI();
@@ -3228,14 +3267,13 @@ function attemptSwap() {
                 return;
             }
 
-            switch(window.location.hostname) {
-                case "noz.rip":
-                    drawData([result]);
-                    break;
-                default:
-                    drawData(result);
-                    break;
+            if(usingAltClient) {
+                drawData([result]);
             }
+            else {
+                drawData(result);
+            }
+
             getStats();
             updateUI(SwapState.DONE_FROM_SWAP);
         }
@@ -3254,14 +3292,13 @@ function getLatest() {
             resetUI();
         },
         success: function(result) {
-            switch(window.location.hostname) {
-                case "noz.rip":
-                    drawData([result]);
-                    break;
-                default:
-                    drawData(result);
-                    break;
+            if(usingAltClient) {
+                drawData([result]);
             }
+            else {
+                drawData(result);
+            }
+
             getStats();
             updateUI(SwapState.DONE);
         }
@@ -3269,7 +3306,7 @@ function getLatest() {
 }
 
 
-if(window.location.pathname == "/sketch/") {
+function _sketch_commonOverrides() {
     GM_addStyle(`
         /* save button */
         img[src="save.png"] {
@@ -3370,6 +3407,8 @@ if(window.location.pathname == "/sketch/") {
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.me") {
+    _sketch_commonOverrides();
+
     function DOMInit() {
         setInterval(window.update, 1000/30);
     }
@@ -3378,13 +3417,29 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.rip") {
+    _sketch_commonOverrides();
+
+    function DOMInit() {
+        setInterval(window.update, 1000/30);
+        setInterval(() => saveIncomplete(true), 10000);
+
+        window.reset = noz_sketch_reset;
+        window.swap = noz_swap;
+    }
+
+    _loadOnPageReady(DOMInit);
+}
+
+if(window.location.pathname == "/sketch/alt.html" && window.location.hostname == "noz.rip") {
+    _sketch_commonOverrides();
+
     function DOMInit() {
         // not sure how i'd monkeypatch update() here;
         // it uses requestAnimationFrame instead of setInterval
         setInterval(() => saveIncomplete(true), 10000);
 
-        window.reset = noz_sketch_reset;
-        window.setData = noz_sketch_setData;
+        window.reset = noz_alt_sketch_reset;
+        window.setData = noz_alt_sketch_setData;
         window.swap = noz_swap;
     }
 
