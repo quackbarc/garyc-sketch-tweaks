@@ -86,6 +86,16 @@ function GM_addStyle(aCss) {
   return null;
 }
 
+/** @param {function} initfunc */
+async function _loadOnPageReady(initfunc) {
+    if(document.readyState == "loading") {
+        document.addEventListener("DOMContentLoaded", initfunc);
+    }
+    else {
+        initfunc();
+    }
+}
+
 async function _sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
 }
@@ -2584,12 +2594,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         _updateSketchQuality(settings.sketchQuality);
     });
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit);
 }
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
@@ -2778,12 +2783,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         _updateSketchQuality(settings.sketchQuality);
     }
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit);
 }
 
 if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.hostname == "noz.rip") {
@@ -2903,12 +2903,7 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         _updateSketchQuality(settings.sketchQuality);
     }
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit);
 }
 
 
@@ -3308,12 +3303,7 @@ if(window.location.pathname == "/sketch/") {
         _updateSketchQuality(settings.sketchQuality);
     }
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit)
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.me") {
@@ -3321,12 +3311,7 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "garyc.
         setInterval(window.update, 1000/30);
     }
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit);
 }
 
 if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.rip") {
@@ -3340,10 +3325,5 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.ri
         window.swap = noz_swap;
     }
 
-    if(document.readyState == "loading") {
-        document.addEventListener("DOMContentLoaded", DOMInit);
-    }
-    else {
-        DOMInit();
-    }
+    _loadOnPageReady(DOMInit);
 }
