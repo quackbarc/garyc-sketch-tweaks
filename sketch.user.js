@@ -34,37 +34,17 @@
 
 /* / */
 
-/**@param {string} client */
-function getBaseURL(client) {
-    if(client.startsWith("noz.rip/sketch/")) {
-        return "https://noz.rip/sketch";
-    }
-    else if(client.startsWith("noz.rip/sketch_bunker/")) {
-        return "https://noz.rip/sketch_bunker";
-    }
-    return "https://garyc.me/sketch";
-}
-
-/**@param {string} client */
-function getInkLimit(client) {
-    if(client.startsWith("noz.rip/sketch/")) {
-        return 131_071;
-    }
-    return 65_535;
-}
-
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
 const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
 const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
 
 const client = window.location.hostname + window.location.pathname;
-const baseURL = getBaseURL(client);
+const source = _getGallerySource(client);
 
 var settings = {};
 
 if(window.location.pathname.startsWith("/sketch")) {
-    let db = new URLSearchParams(window.location.search).get("db");
-    window.db = db && parseInt(db);    // db can be `null`
+    window.db = _getDB();
 }
 
 // Using a custom implementation of GM_addStyle instead of giving a @grant GM_addstyle;
@@ -189,6 +169,96 @@ function _updateSketchQuality(quality) {
             break;
         }
     }
+}
+
+/* / (endpoints) */
+
+function _getDB() {
+    let db = new URLSearchParams(window.location.search).get("db");
+    if(!db) {
+        return null;
+    }
+    return parseInt(db);  // db can be `null`
+}
+
+/** @param {string} client */
+function _getGallerySource(client) {
+    if(client.startsWith("noz.rip/sketch/")) {
+        return "noz.rip/sketch/";
+    }
+    if(client.startsWith("noz.rip/sketch_bunker/")) {
+        return "noz.rip/sketch_bunker/";
+    }
+    return "garyc.me/sketch/";
+}
+
+/**
+ * @param {string} source
+ * @param {number} id
+ * @param {number?} size
+ */
+function _getTileImageURL(source, id, size=null) {
+    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
+        return `getIMG.php?id=${id}`;
+    }
+
+    const dbParam = window.db != null ? `&db=${window.db}` : "";
+    return `getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
+}
+
+/** @param {string} source */
+function _getStatsURL(source) {
+    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
+        return "getStats.php?details";
+    }
+    return `getStats.php?details&db=${window.db || ""}`;
+}
+
+/** @param {string} source */
+function _getSwapURL(source) {
+    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
+        return "swap.php";
+    }
+    return `swap.php?db=${window.db || ""}&v=32`;
+}
+
+/**
+ * @param {string} source
+ * @param {number?} id
+ * @param {boolean} details
+ */
+function _getSketchURL(source, id=null, details=false) {
+    const params = new URLSearchParams();
+
+    if(details) {
+        params.set("details", true);
+    }
+    if(id != null) {
+        params.set("id", id);
+    }
+    if(window.db != null) {
+        params.set("db", window.db.toString() || "");
+    }
+
+    if(params.size >= 1) {
+        // Truncating "details=true" to "details" like how noz.rip does it
+        // just to keep it one-to-one.
+        const paramStr = params
+            .toString()
+            .replace("details=true", "details");
+        return "get.php?" + paramStr;
+    }
+    else {
+        return "get.php";
+    }
+}
+
+/** @param {string} source */
+function _getInkLimit(source) {
+    if(source == "noz.rip/sketch/") {
+        return 131_071;
+    }
+    return 65_535;
 }
 
 /* /: Main */
@@ -440,15 +510,8 @@ function _getNozSVGAsset(type) {
 }
 
 function getTile(id) {
-    let imgURL;
-    if(client == NOZBUNKER_GALLERY_CLIENT) {
-        imgURL = `getIMG.php?id=${id}`;
-    } else {
-        let size = _getThumbSize(settings.thumbQuality);
-        let dbParam = window.db != null ? `&db=${window.db}` : "";
-        imgURL = `${baseURL}/getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
-    }
-
+    const size = _getThumbSize(settings.thumbQuality);
+    const imgURL = _getTileImageURL(source, id, size);
     const tile = $([
         `<a href="#${id}">`,
         `<img src="${imgURL}" style="`,
@@ -511,7 +574,7 @@ function updateDetails(options={}) {
     } else if(unavailable) {
         elems.push("(unavailable)");
     } else {
-        let inkLimit = getInkLimit(client);
+        let inkLimit = _getInkLimit(source);
         let ink = Math.floor(window.dat.length / inkLimit * 100);
         let inkText = `${ink}% ink used`;
         elems.push(inkText);
@@ -1122,7 +1185,7 @@ async function refresh() {
     }
 
     $.ajax({
-        url: `${baseURL}/getStats.php?details&db=${db || ""}`,
+        url: _getStatsURL(source),
         dataType: "json",
         success: function(json) {
             updateStats(json);
@@ -1329,12 +1392,12 @@ function show(id) {
     if(settings.saveAsCanvas) {
         saveAnchorStart = '<a class="save" title="Save (PNG)">'
     } else {
-        let sizeParam = settings.sketchSaveResolution * 100;
-        let dbParam = window.db != null ? `&db=${window.db}` : "";
+        let imageSize = settings.sketchSaveResolution * 100;
+        let imageURL = _getTileImageURL(source, id, imageSize);
         let downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
         saveAnchorStart = [
             `<a`,
-                ` href="${baseURL}/getIMG.php?format=png${dbParam}&id=${id}&size=${sizeParam}"`,
+                ` href="${imageURL}"`,
                 ` download="${downloadFn}.png"`,
                 ` class="save"`,
                 ` title="Save (PNG)"`,
@@ -1429,7 +1492,7 @@ async function get(id) {
     }
 
     $.ajax({
-        url: `${baseURL}/get.php?db=${db || ""}&id=${id}&details`,
+        url: _getSketchURL(source, id, true),
         dataType: "text",
         success: function(resp) {
             // Despite being a JSON endpoint, "wait" still gets sent as plain
@@ -2934,7 +2997,7 @@ function updateUI(state) {
         dat = window.dat;
     }
 
-    const inkLimit = getInkLimit(client);
+    const inkLimit = _getInkLimit(source);
     const ink = Math.floor(dat.length / inkLimit * 100);
 
     switch(state) {
@@ -3096,7 +3159,7 @@ function swap() {
     window.locked = true;
 
     $.ajax({
-        url: `swap.php?db=${db || ""}&v=32`,
+        url: _getSwapURL(source),
         method: "POST",
         data: window.dat,
         error: function() {
@@ -3125,7 +3188,7 @@ function noz_swap() {
     let dat = window.arrdat.join(" ") + " ";
 
     $.ajax({
-        url: `${baseURL}/swap.php?db=${db || ""}&v=32`,
+        url: _getSwapURL(source),
         method: "POST",
         data: dat,
         error: function() {
@@ -3153,7 +3216,7 @@ function attemptSwap() {
     getStats();
 
     $.ajax({
-        url: `${baseURL}/get.php?id=${swapID}&db=${db || ""}`,
+        url: _getSketchURL(source, swapID),
         method: "GET",
         error: function() {
             setTimeout(attemptSwap, 2000);
@@ -3184,7 +3247,7 @@ function getLatest() {
     window.locked = true;
 
     $.ajax({
-        url: `${baseURL}/get.php?db=${db || ""}`,
+        url: _getSketchURL(source, null),
         method: "GET",
         error: function() {
             alert("There was an error getting the latest sketch.");
