@@ -783,7 +783,7 @@ function createGalleryButtons(id) {
     let leftID = Math.max(window.min, id + 1);
     let rightID = Math.min(window.max, id - 1);
 
-    var top = `<a href="#0" onclick="hide()" class="top">${topAsset}</a>`;
+    var top = `<a onclick="hide()" class="top">${topAsset}</a>`;
     var leftReg = `<a href="#${leftID}" class="left">${leftAsset}</a>`;
     var leftMax = `<div class="left"></div>`;
     var rightReg = `<a href="#${rightID}" class="right">${rightAsset}</a>`;
@@ -1556,8 +1556,11 @@ function hide() {
     const hiddenViaURL = (!window.location.hash || window.location.hash == "#0");
     if(!hiddenViaURL) {
         // Change the URL only if we've fired hide() via the close button,
-        // not via URL.
-        window.history.pushState(window.history.state, "", "#0");
+        // not via URL. This new URL would have the hash fragment, plus the
+        // # symbol, taken out.
+        const hashlessURL = new URL(window.location);
+        hashlessURL.hash = "";
+        window.history.pushState(window.history.state, "", hashlessURL);
     }
 
     if(client == NOZ_GALLERY_CLIENT) {
