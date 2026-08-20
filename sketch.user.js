@@ -693,23 +693,33 @@ function updateDetails(options={}) {
     }
 
     switch(client) {
+        case NOZBUNKER_GALLERY_CLIENT:
         case NOZ_GALLERY_CLIENT: {
             const left = $(`<div id="details-left"></div>`);
             const right = $(`<div id="details-right"></div>`);
 
-            const [animationMenu, animationToggle] = createAnimationUI();
-            const [booruForm, booruToggle] = createBooruFormUI(window.current);
             const toggleMenu = createMenuSwitcher();
-            toggleMenu.append(animationToggle, booruToggle);
+            const menus = [];
+
+            const [animationMenu, animationToggle] = createAnimationUI();
+            toggleMenu.append(animationToggle);
+            menus.push(animationMenu);
+
+            if(client == NOZ_GALLERY_CLIENT) {
+                const [booruForm, booruToggle] = createBooruFormUI(window.current);
+                toggleMenu.append(booruToggle);
+                menus.push(booruForm);
+            }
 
             $("#details").empty();
             $("#details").append(left, right);
             left.append(elems.join("<br>"));
-            right.append(animationMenu, booruForm, toggleMenu);
+            right.append(...menus, toggleMenu);
 
             updateHolderMenu(settings.currentHolderMenu);
             break;
         }
+
         default: {
             $("#details").empty();
             $("#details").append(elems.join("<br>"));
@@ -2703,12 +2713,62 @@ function _gallery_commonNozStyles() {
             width: 60px;
         }
 
-        /* stylistic choices */
+        /* other #holder stylistic choices */
 
         #holder .top:hover,
         #holder .left:hover,
         #holder .right:hover {
             opacity: 80%;
+        }
+
+        /* #details styles */
+
+        #details {
+            display: flex;
+            gap: 30px;
+
+            height: min-content;
+            max-height: 100%;
+        }
+
+        #details input,
+        #details button {
+            /* none of the default input spacings should apply here in #details */
+            margin: 0;
+        }
+
+        #details #details-left {
+            flex: 0 1 auto;
+            overflow: auto;
+        }
+
+        #details #details-right {
+            flex: 1 0 auto;
+
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+        }
+
+        #details #toggle-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            gap: 8px;
+        }
+
+        #details #animation-menu {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+
+            gap: 12px;
+        }
+
+        #details #progressbar {
+            max-width: 200px;
+            width: 100%;
         }
     `);
 }
@@ -2878,55 +2938,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     _gallery_commonStyles();
     _gallery_commonNozStyles();
     GM_addStyle(`
-        /* noz.rip-specific #details styles */
-
-        #details {
-            display: flex;
-            gap: 30px;
-
-            height: min-content;
-            max-height: 100%;
-        }
-
-        #details input,
-        #details button {
-            /* none of the default input spacings should apply here in #details */
-            margin: 0;
-        }
-
-        #details #details-left {
-            flex: 0 1 auto;
-            overflow: auto;
-        }
-
-        #details #details-right {
-            flex: 1 0 auto;
-
-            display: flex;
-            align-items: flex-end;
-            justify-content: flex-end;
-        }
-
-        #details #toggle-menu {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-
-            gap: 8px;
-        }
-
-        #details #animation-menu {
-            display: flex;
-            justify-content: flex-end;
-            width: 100%;
-
-            gap: 12px;
-        }
-
-        #details #progressbar {
-            max-width: 200px;
-            width: 100%;
-        }
+        /* booru form styles */
 
         #details form {
             width: 100%;
