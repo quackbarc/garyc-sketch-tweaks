@@ -2340,13 +2340,12 @@ function applyNozPreferences(preferences) {
     });
     preferences.find("#samepagebooru").change(function(e) {
         settings.samePageBooru = e.target.checked;
+        _saveSettings();
 
         // Updates the booru menu
         if(window.current != null) {
             updateDetails();
         }
-
-        _saveSettings();
     });
     preferences.find("#archiveassource").change(function(e) {
         settings.useArchiveAsBooruSource = e.target.checked;
