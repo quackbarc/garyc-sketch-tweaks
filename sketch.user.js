@@ -178,7 +178,7 @@ function _getDB() {
     if(!db) {
         return null;
     }
-    return parseInt(db);  // db can be `null`
+    return parseInt(db);
 }
 
 /** @param {string} client */
