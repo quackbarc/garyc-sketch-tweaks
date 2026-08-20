@@ -411,6 +411,32 @@ function toSVG(dat, linejoin="round") {
     return xml;
 }
 
+function normalizeDetails(details) {
+    const normDetails = {...details};
+
+    // Unlike garyc.me, noz.rip/sketch/ and noz.rip/sketch_bunker/ both
+    // return strings on the numeric fields. On what would've been otherwise
+    // a primitive `null` on garyc.me, they're empty strings here.
+
+    const fields = ["id", "timestamp"];
+    for(const field of fields) {
+        if(typeof details[field] == "string") {
+            if(details[field] == "") {
+                normDetails[field] = null;
+                continue;
+            }
+            normDetails[field] = parseInt(details[field]);
+        }
+    }
+
+    // noz.rip/sketch_bunker/ saves the origin field as "null".
+    if(details.origin == "null") {
+        normDetails.origin = null;
+    }
+
+    return normDetails;
+}
+
 // UI and public API methods
 
 async function _waitForPIXIFrame() {
@@ -1620,6 +1646,9 @@ async function get(id) {
                         origin: null,
                     };
                 }
+
+                // Correct any incorrect primitives sent by noz.rip
+                details = normalizeDetails(details);
             }
 
             if(window.dat.trim() == details.data.trim()) {
