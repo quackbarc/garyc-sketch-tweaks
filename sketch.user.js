@@ -1258,7 +1258,7 @@ async function refresh() {
                 );
             }
 
-            if(settings.showDatecards) {
+            if(client == GARYC_GALLERY_CLIENT && settings.showDatecards) {
                 // Max values are -1'd so that IDs ending with 00 are NOT
                 // equal to IDs ending with 01; the latter's where
                 // `addMore.php`'s thumbnails start.
@@ -1652,6 +1652,9 @@ async function get(id) {
 }
 
 async function addDateCards(last, size) {
+    if(client != GARYC_GALLERY_CLIENT) {
+        return;
+    }
     if(!settings.showDatecards) {
         return;
     }
