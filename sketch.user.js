@@ -2298,6 +2298,16 @@ function createPreferencesUI() {
 }
 
 function applyNozPreferences(preferences) {
+    const toremove = [
+        preferences.find("#thumbquality"),
+        preferences.find("#showdatecards"),
+        preferences.find("#showstats"),
+        preferences.find("#supportapril2023"),
+    ];
+    for(const pref of toremove) {
+        pref.parent().remove();
+    }
+
     const preferencesSketches = preferences.find("#preferences-sketches");
     const preferencesBooru = $(`
         <fieldset id="preferences-booru">
