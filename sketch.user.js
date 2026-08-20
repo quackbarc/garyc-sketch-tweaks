@@ -382,35 +382,6 @@ function _getCurrentTag(tagsBar) {
     return currentTag;
 }
 
-function toSVG(dat, linejoin="round") {
-    const commands = [];
-    for(const line of dat.split(" ")) {
-        for(let ind = 0; ind + 4 <= line.length; ind += 4) {
-            const [x, y] = [
-                parseInt(line.slice(ind, ind+2), 36),
-                parseInt(line.slice(ind+2, ind+4), 36)
-            ];
-            const command = ind == 0 ? `M${x},${y}` : `L${x},${y}`;
-            commands.push(command);
-        }
-    }
-
-    const path = commands.join("");
-    const xml = [
-        '<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">',
-            '<path',
-            `d="${path}"`,
-            'fill="none"',
-            'stroke="black"',
-            'stroke-width="3px"',
-            'stroke-miterlimit="10"',
-            `stroke-linecap="butt"`,
-            `stroke-linejoin="${linejoin}"/>`,
-        '</svg>'
-    ].join("\n");
-    return xml;
-}
-
 function normalizeDetails(details) {
     const normDetails = {...details};
 
