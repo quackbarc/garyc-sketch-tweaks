@@ -2777,6 +2777,7 @@ function _gallery_commonOverrides() {
                     // The user only wants to exit the viewer in this case.
                     e.preventDefault();
                 }
+                return false;
             }
 
             // ArrowLeft and ArrowRight no longer
