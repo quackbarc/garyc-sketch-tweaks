@@ -3217,6 +3217,10 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
         $("#refresh").prop("disabled", !!window.customMax);
 
         _updateSketchQuality(settings.sketchQuality);
+
+        // DOM-related event listeners
+
+        $("#jump_value").on("change", window.jump_to);
     }
 
     _loadOnPageReady(DOMInit);
