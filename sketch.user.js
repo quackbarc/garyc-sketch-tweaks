@@ -530,7 +530,7 @@ function getTile(id) {
     const imgURL = _getTileImageURL(source, id, size);
     const tile = $([
         `<a href="#${id}">`,
-        `<img src="${imgURL}" style="`,
+        `<img src="${imgURL}" loading="lazy" style="`,
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
