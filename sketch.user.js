@@ -681,6 +681,10 @@ function updateDetails(options={}) {
                 const [booruForm, booruToggle] = createBooruFormUI(window.current);
                 toggleMenu.append(booruToggle);
                 menus.push(booruForm);
+
+                if(booruForm == null && settings.currentHolderMenu == "booru") {
+                    settings.currentHolderMenu = "main";
+                }
             }
 
             $("#details").empty();
