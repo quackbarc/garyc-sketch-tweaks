@@ -37,6 +37,7 @@
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
 const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
 const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
+const NOZ_ALT_SKETCH_CLIENT     = "noz.rip/sketch/alt.html";
 
 const client = window.location.hostname + window.location.pathname;
 const source = _getGallerySource(client);
@@ -3229,8 +3230,6 @@ const SwapState = {
     DONE: 6,
 };
 
-const usingAltClient = window.location.pathname == "/sketch/alt.html";
-
 function _setProgress(n) {
     n = Math.min(Math.max(n, 0), 3);
     let width = Math.round(n / 3 * 100);
@@ -3240,7 +3239,7 @@ function _setProgress(n) {
 
 function updateUI(state) {
     let dat;
-    if(usingAltClient) {
+    if(client == NOZ_ALT_SKETCH_CLIENT) {
         dat = window.arrdat.join(" ");
     } else {
         dat = window.dat;
@@ -3443,7 +3442,7 @@ function noz_swap() {
 
     getStats();
 
-    if(usingAltClient) {
+    if(client == NOZ_ALT_SKETCH_CLIENT) {
         window.dat = window.arrdat.join(" ") + " ";
         window.lastsketch = arrdat;
         localStorage.setItem('lastsketch', arrdat);
@@ -3514,7 +3513,7 @@ function attemptSwap() {
                 return;
             }
 
-            if(usingAltClient) {
+            if(client == NOZ_ALT_SKETCH_CLIENT) {
                 drawData([result]);
             }
             else {
@@ -3539,7 +3538,7 @@ function getLatest() {
             resetUI();
         },
         success: function(result) {
-            if(usingAltClient) {
+            if(client == NOZ_ALT_SKETCH_CLIENT) {
                 drawData([result]);
             }
             else {
