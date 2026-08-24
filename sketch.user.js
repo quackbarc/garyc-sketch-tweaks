@@ -36,7 +36,7 @@
 
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
 const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
-const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/gallery.php";
+const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/";
 const NOZ_ALT_SKETCH_CLIENT     = "noz.rip/sketch/alt.html";
 
 const client = window.location.hostname + window.location.pathname;
@@ -199,7 +199,10 @@ function _getGallerySource(client) {
  * @param {number?} size
  */
 function _getTileImageURL(source, id, size=null) {
-    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
+    if(source == "noz.rip/sketch_bunker/") {
+        return `image/${id}th.jpeg`;
+    }
+    if(source == "noz.rip/sketch/") {
         return `getIMG.php?id=${id}`;
     }
 
@@ -229,6 +232,10 @@ function _getSwapURL(source) {
  * @param {boolean} details
  */
 function _getSketchURL(source, id=null, details=false) {
+    if(source == "noz.rip/sketch_bunker/") {
+        return `data/${id}`;
+    }
+
     const params = new URLSearchParams();
 
     if(details) {
@@ -559,7 +566,7 @@ function currentArchiveURL() {
     if(window.db != null) {
         return null;
     } else {
-        return `https://noz.rip/sketch_bunker/gallery.php?maxid=${window.current}#${window.current}`;
+        return `https://noz.rip/sketch_bunker/?maxid=${window.current}#${window.current}`;
     }
 }
 
@@ -1287,52 +1294,6 @@ async function refresh() {
             const viewingLatestSketch = window.current == window.max;
             window.max = newMax;
             window.min = json.minID;
-
-            if(viewingLatestSketch) {
-                updateGalleryButtons();
-            }
-
-            enableRefresh();
-        },
-        error: function(req) {
-            enableRefresh();
-        },
-    });
-}
-
-async function nozBunker_refresh() {
-    if(window.customMax != null) {
-        return;
-    }
-
-    $("#refresh").prop("disabled", true);
-    $("#refresh").val("checking...");
-
-    function enableRefresh() {
-        $("#refresh").prop("disabled", false);
-        $("#refresh").val("refresh");
-    }
-
-    $.ajax({
-        url: `https://noz.rip/sketch_bunker/getMaxID.php`,
-        dataType: "text",
-        success: function(resp) {
-            const newMax = parseInt(resp);
-
-            if(window.max == newMax) {
-                return enableRefresh();
-            }
-
-            for(let id = window.max + 1; id <= newMax; id++) {
-                $("#tiles").prepend(
-                    $(getTile(id))
-                      .hide()
-                      .show(1000)
-                );
-            }
-
-            const viewingLatestSketch = window.current == window.max;
-            window.max = newMax;
 
             if(viewingLatestSketch) {
                 updateGalleryButtons();
@@ -2511,7 +2472,7 @@ function _gallery_commonStyles() {
             margin: 0px 4px;
         }
 
-        input[type=submit], button {
+        input[type=submit], input[type=number], button {
             margin: 5px 4px;
         }
 
@@ -2606,6 +2567,9 @@ function _gallery_commonStyles() {
         }
         #preferences .preference i {
             opacity: 50%;
+        }
+        #preferences .preference input[type=number] {
+            margin: unset;
         }
 
         /* grid styles for holder */
@@ -2850,12 +2814,16 @@ function _gallery_commonOverrides() {
 }
 
 function _gallery_commonDOMOverrides() {
-    // remove text nodes that causes buttons to be spaced out.
-    // the spacing will get re-added as css.
-    let text_nodes = Array
-        .from(document.body.childNodes)
-        .filter(e => e.nodeType == Node.TEXT_NODE);
-    $(text_nodes).remove();
+    // Remove text nodes that cause buttons to be unevenly spaced out.
+    // Spacing would get re-added as CSS.
+    const firstButton = $('input[type="submit"]');
+    const firstButtonParent = firstButton.parent();
+    if(firstButtonParent.length >= 1) {
+        const textNodes = Array
+            .from(firstButtonParent[0].childNodes)
+            .filter(e => e.nodeType == Node.TEXT_NODE);
+        $(textNodes).remove();
+    }
 
     const [button, preferences] = createPreferencesUI();
     $("input[type=submit]:last-of-type").after(button);
@@ -3143,9 +3111,18 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     _loadOnPageReady(DOMInit);
 }
 
-if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.hostname == "noz.rip") {
+if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == "noz.rip") {
     _gallery_commonStyles();
     _gallery_commonNozStyles();
+    GM_addStyle(`
+        #jump_value {
+            margin-left: 0px;
+        }
+
+        div:has(h4) {
+            align-items: center;
+        }
+    `);
 
     // Hide <tiles> for this site's addMore() monkeypatch
     const style = document.createElement("style");
@@ -3162,9 +3139,6 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
 
     function DOMInit() {
         _purgeIntervals();
-
-        window.refresh = nozBunker_refresh;
-        setInterval(window.refresh, 15000);
 
         window.reset = gallery_reset;
         window.show = show;
@@ -3206,6 +3180,10 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         $("#tiles").empty();
         style.remove();
         addMore();
+
+        const [button, preferences] = createPreferencesUI();
+        $("#jump_value").after(button);
+        $("#tiles").before(preferences);
 
         // remove inline css for the style overrides
         $("#holder").css({
