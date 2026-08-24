@@ -3076,21 +3076,14 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         _gallery_commonOverrides();
         _gallery_commonNozOverrides();
 
+        window.min = 1;
+        window.current = null;
+
         if(window.customMax != null) {
             window.max = window.customMax;
-            window.min = 1;
             window.sourceMax = null;
-            window.current = null;
             // Poll the refresh endpoint to get window.sourceMax and
             // enable the #loadmoretop button.
-            window.refresh();
-        }
-        else {
-            window.max = null;
-            window.min = null;
-            window.current = null;
-            // turn window.max into a Number;
-            // the window.max fetched via $.ajax() is saved as a string.
             window.refresh();
         }
 
