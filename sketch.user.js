@@ -1240,6 +1240,14 @@ async function refresh() {
             updateStats(json);
             const newMax = json.maxID;
 
+            if(window.customMax != null) {
+                window.sourceMax = newMax;
+                window.min = json.minID;
+
+                $("#loadmoretop").prop("disabled", window.max >= newMax);
+                return enableRefresh();
+            }
+
             // noz.rip: `window.max` can be fetched from a $.ajax() on init,
             // but it's saved as a string. Firing this request a bit after
             // the $.ajax() call SHOULD fix that on time.
@@ -1721,13 +1729,13 @@ async function addMore(n=100) {
 }
 
 function addMoreTop(n=100) {
-    if(client != NOZBUNKER_GALLERY_CLIENT) {
+    if(![NOZBUNKER_GALLERY_CLIENT, NOZ_GALLERY_CLIENT].includes(client)) {
         return;
     }
 
     let newtiles = [];
     let last = window.max;
-    let target = Math.min(last + n, window.archiveMax);
+    let target = Math.min(last + n, window.sourceMax);
 
     for(let id = target; id > window.max; id--) {
         newtiles.push(getTile(id));
@@ -1736,7 +1744,7 @@ function addMoreTop(n=100) {
     window.max = target;
     $("#tiles").prepend(newtiles);
     $("#status").html(`Showing sketches up to #${target}`);
-    if(target == window.archiveMax) {
+    if(target == window.sourceMax) {
         $("#loadmoretop").prop("disabled", true);
     }
 
@@ -2857,6 +2865,34 @@ function _gallery_commonDOMOverrides() {
     $("#tiles").after(tilesEnd);
 }
 
+function _gallery_commonNozOverrides() {
+    // Use .customMax instead of noz.rip's .custom_max for the sake of naming consistency.
+    window.customMax = null;
+    const customMax = new URLSearchParams(window.location.search).get("maxid");
+    const cm = parseInt(customMax);
+    if(!Number.isNaN(cm)) {
+        window.customMax = cm;
+    }
+}
+
+function _gallery_commonNozDOMOverrides() {
+    if(window.customMax != null) {
+        const loadmoreTop = createLoadMoreTopButton();
+        const status = createBunkerStatus();
+
+        const preferencesButton = $("button + #holder").prev();
+        preferencesButton.after(status);
+        $("#refresh").after(loadmoreTop);
+        $("#refresh").hide();
+
+        if(window.sourceMax == null) {
+            loadmoreTop.prop("disabled", true);
+        }
+
+        status.html(`Showing sketches up to #${window.max}`);
+    }
+}
+
 
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "garyc.me") {
     _gallery_commonStyles();
@@ -3038,13 +3074,25 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         window.addMore = addMore;
 
         _gallery_commonOverrides();
+        _gallery_commonNozOverrides();
 
-        window.max = null;
-        window.min = null;
-        window.current = null;
-        // turn window.max into a Number;
-        // the window.max fetched via $.ajax() is saved as a string.
-        window.refresh();
+        if(window.customMax != null) {
+            window.max = window.customMax;
+            window.min = 1;
+            window.sourceMax = null;
+            window.current = null;
+            // Poll the refresh endpoint to get window.sourceMax and
+            // enable the #loadmoretop button.
+            window.refresh();
+        }
+        else {
+            window.max = null;
+            window.min = null;
+            window.current = null;
+            // turn window.max into a Number;
+            // the window.max fetched via $.ajax() is saved as a string.
+            window.refresh();
+        }
 
         // use the new show();
         // setupOverlay override cancels the old show() from being used
@@ -3055,6 +3103,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
         }
 
         _gallery_commonDOMOverrides();
+        _gallery_commonNozDOMOverrides();
 
         const stats = $("#stats");
         const statsExists = stats.length >= 1;
@@ -3105,15 +3154,6 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
     _gallery_commonStyles();
     _gallery_commonNozStyles();
 
-    // Use .customMax instead of noz.rip's .custom_max for the sake of naming consistency.
-    // I advise contributors to use this one too for the same reason.
-    window.customMax = null;
-    const customMax = new URLSearchParams(window.location.search).get("maxid");
-    const cm = parseInt(customMax);
-    if(!Number.isNaN(cm)) {
-        window.customMax = cm;
-    }
-
     // Hide <tiles> for this site's addMore() monkeypatch
     const style = document.createElement("style");
     style.innerHTML = (`
@@ -3140,16 +3180,17 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         window.addMore = addMore;
 
         _gallery_commonOverrides();
+        _gallery_commonNozOverrides();
 
         window.min = 1;
         window.max = window.customMax || window.max;
-        window.archiveMax = null;
+        window.sourceMax = null;
         window.current = null;
 
         for(const script of $("#tiles ~ script")) {
             const maxMatch = $(script).html().match(/max=(?<max>\d+)/);
             if(maxMatch) {
-                window.archiveMax = parseInt(maxMatch.groups.max);
+                window.sourceMax = parseInt(maxMatch.groups.max);
                 break;
             }
         }
@@ -3165,24 +3206,13 @@ if(window.location.pathname == "/sketch_bunker/gallery.php" && window.location.h
         // DOM manipulation
 
         _gallery_commonDOMOverrides();
+        _gallery_commonNozDOMOverrides();
 
         // addMore() can't be monkeypatched in time before it gets first fired.
         // Guess we have to do some dirty work "behind-the-scenes".
         $("#tiles").empty();
         style.remove();
         addMore();
-
-        if(window.archiveMax && (window.archiveMax > window.max)) {
-            const loadmoreTop = createLoadMoreTopButton();
-            const status = createBunkerStatus();
-
-            const preferencesButton = $("button + #holder").prev();
-            preferencesButton.after(status);
-            $("#refresh").after(loadmoreTop);
-            $("#refresh").hide();
-
-            status.html(`Showing sketches up to #${window.max}`);
-        }
 
         // remove inline css for the style overrides
         $("#holder").css({
