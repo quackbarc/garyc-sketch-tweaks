@@ -108,7 +108,7 @@ function _getSettings() {
         sketchQuality: "default",
         relativeTimestamps: true,
         showDatecards: true,    // on the UI, these would be called "time cards"
-        saveAsCanvas: false,
+        saveAsCanvas: true,
         sketchSaveResolution: 1,
         showStats: true,
         supportApril2023: true,
