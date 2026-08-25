@@ -691,17 +691,12 @@ function updateDetails(options={}) {
             const menus = [];
 
             const [animationMenu, animationToggle] = createAnimationUI();
-            toggleMenu.append(animationToggle);
-            menus.push(animationMenu);
+            const [booruForm, booruToggle] = createBooruFormUI(window.current);
+            toggleMenu.append(animationToggle, booruToggle);
+            menus.push(animationMenu, booruForm);
 
-            if(client == NOZ_GALLERY_CLIENT) {
-                const [booruForm, booruToggle] = createBooruFormUI(window.current);
-                toggleMenu.append(booruToggle);
-                menus.push(booruForm);
-
-                if(booruForm == null && settings.currentHolderMenu == "booru") {
-                    settings.currentHolderMenu = "main";
-                }
+            if(settings.currentHolderMenu == "booru" && booruForm == null) {
+                settings.currentHolderMenu = "main";
             }
 
             $("#details").empty();
@@ -2336,17 +2331,7 @@ function createPreferencesUI() {
     return [button, preferences];
 }
 
-function applyNozPreferences(preferences) {
-    const toremove = [
-        preferences.find("#thumbquality"),
-        preferences.find("#showdatecards"),
-        preferences.find("#showstats"),
-        preferences.find("#supportapril2023"),
-    ];
-    for(const pref of toremove) {
-        pref.parent().remove();
-    }
-
+function addBooruPreferences(preferences) {
     const preferencesSketches = preferences.find("#preferences-sketches");
     const preferencesBooru = $(`
         <fieldset id="preferences-booru">
@@ -2392,6 +2377,20 @@ function applyNozPreferences(preferences) {
     });
 }
 
+function applyNozPreferences(preferences) {
+    const toremove = [
+        preferences.find("#thumbquality"),
+        preferences.find("#showdatecards"),
+        preferences.find("#showstats"),
+        preferences.find("#supportapril2023"),
+    ];
+    for(const pref of toremove) {
+        pref.parent().remove();
+    }
+
+    addBooruPreferences(preferences);
+}
+
 function applyBunkerPreferences(preferences) {
     const toremove = [
         preferences.find("#thumbquality"),
@@ -2401,6 +2400,8 @@ function applyBunkerPreferences(preferences) {
     for(const pref of toremove) {
         pref.parent().remove();
     }
+
+    addBooruPreferences(preferences);
 }
 
 function createGalleryFooter(footerState=FooterState.NORMAL) {
@@ -2798,6 +2799,91 @@ function _gallery_commonNozStyles() {
             max-width: 200px;
             width: 100%;
         }
+
+        #details form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+
+            gap: 8px;
+        }
+
+        #details #booru-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #details form input[type="text"] {
+            min-width: min-content;
+            width: 100%;
+            max-width: 400px;
+            height: 2em;
+            padding: 0px 5px;
+            box-sizing: border-box;
+        }
+
+        /* tag autocomplete styles */
+
+        #details {
+            overflow: visible;
+        }
+
+        #tag-container {
+            width: 100%;
+            max-width: 400px;
+
+            /* Position #tag-suggestions' parent so #tag-suggestions can be
+            absolutely positioned to it */
+            position: relative;
+        }
+
+        #tag-suggestions {
+            position: absolute;
+            right: calc(100% + 10px);
+            bottom: 0px;
+
+            display: block;
+            user-select: none;
+            z-index: var(--z-index-dropdown);
+            background-color: var(--background-tag-suggestions);
+            box-shadow: 0px 0px 10px #00000077;
+            margin: 0;
+            padding: 10px;
+            width: max-content;
+
+            /* Ditch default border spacing */
+            border-spacing: 0;
+        }
+
+        #tag-suggestions td {
+            /* Alternative to border-spacing in #tag-uggestions where the <tr>
+            background would actually fill in the spacing gaps */
+            padding: 0 5px;
+        }
+
+        #tag-suggestions tr[aria-selected="true"] {
+            background-color: var(--background-tag-suggestions-selected);
+            text-decoration: underline;
+        }
+
+        #tag-suggestions tr.tag-info {
+            text-align: center;
+            font-style: italic;
+        }
+        #tag-suggestions tr.tag-info:not(:only-child) td {
+            padding: 5px;
+        }
+        #tag-suggestions .tag-name {
+            text-align: right;
+        }
+        #tag-suggestions .tag-count {
+            text-align: left;
+            font-style: italic;
+            opacity: 50%;
+        }
     `);
 }
 
@@ -2998,94 +3084,6 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
 if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
     _gallery_commonStyles();
     _gallery_commonNozStyles();
-    GM_addStyle(`
-        /* booru form styles */
-
-        #details form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            text-align: right;
-
-            gap: 8px;
-        }
-
-        #details #booru-buttons {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        #details form input[type="text"] {
-            min-width: min-content;
-            width: 100%;
-            max-width: 400px;
-            height: 2em;
-            padding: 0px 5px;
-            box-sizing: border-box;
-        }
-
-        /* tag autocomplete styles */
-
-        #details {
-            overflow: visible;
-        }
-
-        #tag-container {
-            width: 100%;
-            max-width: 400px;
-
-            /* Position #tag-suggestions' parent so #tag-suggestions can be
-            absolutely positioned to it */
-            position: relative;
-        }
-
-        #tag-suggestions {
-            position: absolute;
-            right: calc(100% + 10px);
-            bottom: 0px;
-
-            display: block;
-            user-select: none;
-            z-index: var(--z-index-dropdown);
-            background-color: var(--background-tag-suggestions);
-            box-shadow: 0px 0px 10px #00000077;
-            margin: 0;
-            padding: 10px;
-            width: max-content;
-
-            /* Ditch default border spacing */
-            border-spacing: 0;
-        }
-
-        #tag-suggestions td {
-            /* Alternative to border-spacing in #tag-uggestions where the <tr>
-            background would actually fill in the spacing gaps */
-            padding: 0 5px;
-        }
-
-        #tag-suggestions tr[aria-selected="true"] {
-            background-color: var(--background-tag-suggestions-selected);
-            text-decoration: underline;
-        }
-
-        #tag-suggestions tr.tag-info {
-            text-align: center;
-            font-style: italic;
-        }
-        #tag-suggestions tr.tag-info:not(:only-child) td {
-            padding: 5px;
-        }
-        #tag-suggestions .tag-name {
-            text-align: right;
-        }
-        #tag-suggestions .tag-count {
-            text-align: left;
-            font-style: italic;
-            opacity: 50%;
-        }
-    `);
 
     // Firing these overrides after the DOM is fully rendered.
     // noz.rip's <script> code happens AFTER the <body> tag,
