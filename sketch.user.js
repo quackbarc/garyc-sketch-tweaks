@@ -340,6 +340,7 @@ let lastAutocompletePromise = null;
 let lastAutocompleteQuery = null;
 let lastTagsValue = null;
 let autocompleteSelected = null;
+let cachedBooruToken = null;
 let cachedCanvasBlob = null;
 let animationMenuRAF = null;
 let datecardDates = new Map();
@@ -523,6 +524,15 @@ function _getNozSVGAsset(type) {
             throw Error(`unknown asset type "${type}"`);
         }
     }
+}
+
+async function getSketchBlob() {
+    window.setData(window.dat);
+
+    await _waitForPIXIFrame();
+    const sketch = window.sketch[0];
+    const blob = await new Promise((res) => sketch.toBlob((blob) => res(blob)));
+    return blob;
 }
 
 function getTile(id) {
@@ -944,21 +954,51 @@ async function scaleCanvas(size) {
 
 // Booru and tag autocomplete methods (for noz.rip/booru)
 
+async function getBooruAuthToken() {
+    if(cachedBooruToken) {
+        return cachedBooruToken;
+    }
+
+    const resp = await fetch("https://noz.rip/booru/upload");
+    if(!resp.ok) {
+        // Cloudflare's challenge firewall, most likely.
+        return null;
+    }
+
+    const respHTML = await resp.text();
+    const respParsed = new DOMParser().parseFromString(respHTML, "text/html");
+    const authField = respParsed.querySelector('input[name="auth_token"]');
+    if(!authField) {
+        return null;
+    }
+
+    const token = authField.value;
+    cachedBooruToken = token;
+
+    return token;
+}
+
 async function selfUploadToBooru(id, form) {
     // Form can only be serialized before it gets disabled.
-    const formSerial = form.serialize();
+    const formElem = form[0];
+    const formData = new FormData(formElem);
 
     saveBooruChanges(id, form);
     const booruState = booruStates[id];
-
     booruState.uploading = true;
     updateDetails();
+
+    const [blob, authToken] = await Promise.all([getSketchBlob(), getBooruAuthToken()]);
+    if(authToken) {
+        formData.append("auth_token", authToken);
+    }
+    formData.append("data[]", blob);
 
     let resp = await fetch(
         "/booru/upload",
         {
             method: "POST",
-            body: new URLSearchParams(formSerial),
+            body: formData,
         }
     );
 
@@ -967,10 +1007,23 @@ async function selfUploadToBooru(id, form) {
     const booruServerError = resp.status >= 500 && resp.status <= 599;
 
     if(loggedOut) {
-        booruState.uploading = false;
-        updateDetails({message: "can't upload; logged out of booru"});
-        return;
+        const text = await resp.text();
+        const isCFError = text.includes("https://challenges.cloudflare.com");
+        if(isCFError) {
+            booruState.uploading = false;
+            updateDetails({message: "cloudflare error! try visiting the booru first"});
+            return;
+        }
+        else {
+            // Booru token is now stale. Replace it on the next fetch
+            cachedBooruToken = null;
+
+            booruState.uploading = false;
+            updateDetails({message: "can't upload; logged out of booru"});
+            return;
+        }
     }
+
     if(booruServerError) {
         booruState.uploading = false;
         updateDetails({message: "booru's having hiccups. try again later?"});
@@ -1095,12 +1148,24 @@ async function updateTagSuggestions() {
 }
 
 async function autocompleteError(response) {
+    let errorText = `(something went wrong: ${response.status})`;
+
+    if(response.statusText) {
+        errorText = `(something went wrong: ${response.status} ${response.statusText})`;
+    }
+
+    if(response.status == 403) {
+        const text = await response.text();
+        const isCFError = text.includes("https://challenges.cloudflare.com");
+        if(isCFError) {
+            errorText = "(cloudflare error! try visiting the booru first)";
+        }
+    }
+
     $("#tag-suggestions").show();
     $("#tag-suggestions").html(`
         <tr role="option" class="tag-info">
-            <td colspan="2">
-                (something went wrong: ${response.status} ${response.statusText})
-            </td>
+            <td colspan="2">${errorText}</td>
         </tr>
     `);
 }
@@ -1808,14 +1873,6 @@ function createAnimationUI() {
 }
 
 function createBooruFormUI(id) {
-    const cookies = document.cookie.split(";");
-    const shimUser = cookies.some((c) => c.trim().startsWith("shm_user="));
-    const shimSess = cookies.some((c) => c.trim().startsWith("shm_session="));
-    const hasBooruCredentials = shimUser && shimSess;
-    if(!hasBooruCredentials) {
-        return [null, null];
-    }
-
     const sketch = cache["#" + id];
     const unavailable = (sketch.data == "wait" || sketch.data == "wait ");  // thanks drawData();
     if(unavailable) {
@@ -1831,6 +1888,11 @@ function createBooruFormUI(id) {
         return [null, warning];
     }
 
+    let sourceURL = currentArchiveURL();
+    if(source == "noz.rip/sketch/") {
+        sourceURL = `https://noz.rip/sketch/gallery.php?maxid=${id}#${id}`;
+    }
+
     const showButton = $("<button>show booru menu</button>");
     const form = $(`
         <form
@@ -1840,8 +1902,7 @@ function createBooruFormUI(id) {
             method="POST"
             enctype="multipart/form-data"
             style="display: none;">
-            <input type="hidden" name="sketchid" value="${id}">
-            <input type="hidden" name="source" value="${currentArchiveURL()}">
+            <input type="hidden" name="source" value="${sourceURL}">
             <span id="post-status"></span>
             <div id="tag-container">
                 <table id="tag-suggestions" role="listbox"></table>
