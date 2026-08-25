@@ -1713,6 +1713,10 @@ function addMoreTop(n=100) {
     if(viewingLatestSketch) {
         updateGalleryButtons();
     }
+
+    const newURL = new URL(window.location);
+    newURL.searchParams.set("maxid", target);
+    window.history.replaceState("", null, newURL);
 }
 
 function createMenuSwitcher() {
