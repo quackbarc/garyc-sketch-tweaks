@@ -284,7 +284,7 @@ function main() {
         :root[theme="dark"] #holder {
             background-color: #191919;
         }
-        :root[theme="dark"] #holder img:not([src^=save]) {
+        :root[theme="dark"] #holder img:not([src*="save.png"]) {
             filter: invert(90%);
         }
         :root[theme="dark"] input[type="submit" i]:disabled button:disabled {
@@ -1532,9 +1532,14 @@ function show(id) {
         ].join("");
     }
 
+    let saveImgURL = "save.png";
+    if([NOZBUNKER_GALLERY_CLIENT, NOZ_GALLERY_CLIENT].includes(client)) {
+        saveImgURL = "/static/save.png";
+    }
+
     saveParts.push(
         saveAnchorStart,
-        `<img src="save.png" style="width: 25px; height: 25px; position: relative;">`,
+        `<img src="${saveImgURL}" style="width: 25px; height: 25px; position: relative;">`,
         `</a>`,
     );
 
@@ -3721,7 +3726,7 @@ function getLatest() {
 function _sketch_commonOverrides() {
     GM_addStyle(`
         /* save button */
-        img[src="save.png"] {
+        img[src*="save.png"] {
             /* shift 5px to the right.
                i don't feel like making this button statically positioned
                because there's whitespace text preceding it, and leaving or
@@ -3738,10 +3743,10 @@ function _sketch_commonOverrides() {
             width: 100%;
             height: 30px;
         }
-        img[src="save.png"] {
+        img[src*="save.png"] {
             opacity: .8;
         }
-        img[src="save.png"]:hover {
+        img[src*="save.png"]:hover {
             opacity: 1;
         }
 
@@ -3796,7 +3801,7 @@ function _sketch_commonOverrides() {
         progressTD.insertAfter(swapTD);
         peekTD.attr("colspan", 2);
 
-        $("img[src='save.png']").css({
+        $("img[src*='save.png']").css({
             left: "",
         });
 
