@@ -2258,6 +2258,8 @@ function createPreferencesUI() {
     preferences.find("#showstats").prop("checked", settings.showStats);
     preferences.find("#supportapril2023").prop("checked", settings.supportApril2023);
 
+    preferences.find("#sketchsaveresolution").prop("disabled", !settings.saveAsCanvas);
+
     preferences.find("#cachesize").change(function(e) {
         settings.cacheSize = e.target.value;
         _saveSettings();
@@ -2310,6 +2312,8 @@ function createPreferencesUI() {
     preferences.find("#saveascanvas").change(function(e) {
         settings.saveAsCanvas = e.target.checked;
         _saveSettings();
+
+        preferences.find("#sketchsaveresolution").prop("disabled", !e.target.checked);
     });
     preferences.find("#sketchsaveresolution").change(function(e) {
         settings.sketchSaveResolution = parseInt(e.target.value);
@@ -2638,6 +2642,11 @@ function _gallery_commonStyles() {
         }
         #preferences .preference {
             padding: 4px;
+        }
+        #preferences .preference:has([disabled]) {
+            opacity: 60%;
+            pointer-events: none;
+            user-select: none;
         }
         #preferences .preference i {
             opacity: 50%;
