@@ -116,6 +116,7 @@ function _getSettings() {
     if(window.location.hostname == "noz.rip") {
         defaultSettings = {
             ...defaultSettings,
+            showBooru: false,
             useArchiveAsBooruSource: true,
             samePageBooru: true,
             showTagSuggestions: true,
@@ -1877,6 +1878,10 @@ function createAnimationUI() {
 }
 
 function createBooruFormUI(id) {
+    if(!settings.showBooru) {
+        return [null, null];
+    }
+
     const sketch = cache["#" + id];
     const unavailable = (sketch.data == "wait" || sketch.data == "wait ");  // thanks drawData();
     if(unavailable) {
@@ -2350,6 +2355,10 @@ function addBooruPreferences(preferences) {
         <fieldset id="preferences-booru">
             <legend>Booru</legend>
             <div class="preference">
+                <label for="showbooru">Enable booru menu:</label>
+                <input type="checkbox" id="showbooru">
+            </div>
+            <div class="preference">
                 <label for="showtagsuggestions">Show tag suggestions:</label>
                 <input type="checkbox" id="showtagsuggestions">
             </div>
@@ -2365,9 +2374,28 @@ function addBooruPreferences(preferences) {
     `);
     preferencesSketches.after(preferencesBooru);
 
+    preferences.find("#showbooru").prop("checked", settings.showBooru);
     preferences.find("#showtagsuggestions").prop("checked", settings.showTagSuggestions);
     preferences.find("#samepagebooru").prop("checked", settings.samePageBooru);
     preferences.find("#archiveassource").prop("checked", settings.useArchiveAsBooruSource);
+
+    preferences.find("#showtagsuggestions").prop("disabled", !settings.showBooru);
+    preferences.find("#samepagebooru").prop("disabled", !settings.showBooru);
+    preferences.find("#archiveassource").prop("disabled", !settings.showBooru);
+
+    preferences.find("#showbooru").change(function(e) {
+        const enabled = e.target.checked;
+        settings.showBooru = enabled;
+        _saveSettings();
+
+        preferences.find("#showtagsuggestions").prop("disabled", !enabled);
+        preferences.find("#samepagebooru").prop("disabled", !enabled);
+        preferences.find("#archiveassource").prop("disabled", !enabled);
+
+        if(window.current != null) {
+            updateDetails();
+        }
+    })
 
     preferences.find("#showtagsuggestions").change(function(e) {
         settings.showTagSuggestions = e.target.checked;
