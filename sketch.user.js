@@ -3510,7 +3510,7 @@ function swap() {
             window.swapID = n;
 
             updateUI(SwapState.PEEKING_FROM_SWAP);
-            attemptSwap();
+            window.attemptSwap();
         },
     });
 }
@@ -3527,35 +3527,55 @@ function noz_swap() {
         localStorage.setItem('lastsketch', arrdat);
     }
 
-    const dat = window.dat;
-    const phrase = $("#phrase")[0].value;
-    const postData = new FormData();
-    postData.append("data", dat);
-    postData.append("phrase", phrase);
+    const captchaPhrase = $("#phrase").val();
+    const postData = {
+        data: window.dat,
+        phrase: captchaPhrase,
+    };
 
     $.ajax({
         url: _getSwapURL(source),
         method: "POST",
         data: postData,
-        processData: false,
-        contentType: false,
-        error: function() {
-            alert("There was an error swapping.");
+        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+        error: function(e) {
+            switch(e.status) {
+                case 400: {
+                    alert("That sketch already exists.");
+                    break;
+                }
+                case 401: {
+                    alert("Your captcha answer was incorrect.");
+                    break;
+                }
+                case 403: {
+                    alert(
+                        "Your sketch data contains non-alphanumeric characters. "
+                        + "(this should never happen)"
+                    );
+                    break;
+                }
+                case 429: {
+                    alert("You're swapping too fast.");
+                    break;
+                }
+                default: {
+                    alert("There was an error swapping.");
+                    break;
+                }
+            }
+
+            const timestamp = new Date().getTime();
+            $("#captcha").attr("src", `captcha?${timestamp}`);
+            $("#phrase").val("");
             resetUI();
         },
         success: function(result) {
             const timestamp = new Date().getTime();
-            $("#captcha")[0].src = `captcha.php?${timestamp}`;
-
-            if(result == "fail") {
-                alert("Captcha was incorrect. Try again.");
-                $("#phrase")[0].value = "";
-                resetUI();
-                return;
-            }
+            $("#captcha").attr("src", `captcha?${timestamp}`);
+            $("#phrase").val("");
 
             n = parseInt(result);
-
             if(Number.isNaN(n)) {
                 alert("There was an error swapping.");
                 resetUI();
@@ -3567,11 +3587,14 @@ function noz_swap() {
                 return;
             }
 
+            if(client == NOZ_ALT_SKETCH_CLIENT) {
+                window.backupdat = {};
+                window.screentoningPoints = {};
+            }
+
             window.swapID = n;
-            window.backupdat = {};
-            window.screentoningPoints = {};
             saveIncomplete(false);
-            attemptSwap();
+            window.attemptSwap();
         },
     });
 }
@@ -3592,11 +3615,33 @@ function attemptSwap() {
                 return;
             }
 
-            if(client == NOZ_ALT_SKETCH_CLIENT) {
-                drawData([result]);
+            drawData(result);
+            getStats();
+            updateUI(SwapState.DONE_FROM_SWAP);
+        }
+    });
+}
+
+function noz_attemptSwap() {
+    $.ajax({
+        url: _getSketchURL(source, swapID, true),
+        method: "GET",
+        error: function(e) {
+            if(e.status == 404) {
+                updateUI(SwapState.WAITING_PEEK);
+                setTimeout(attemptSwap, 2000);
             }
             else {
-                drawData(result);
+                setTimeout(attemptSwap, 2000);
+            }
+        },
+        success: function(result) {
+            const data = result.data;
+            if(client == NOZ_ALT_SKETCH_CLIENT) {
+                drawData([data]);
+            }
+            else {
+                drawData(data);
             }
 
             getStats();
@@ -3742,6 +3787,7 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.ri
 
         window.reset = noz_sketch_reset;
         window.swap = noz_swap;
+        window.attemptSwap = noz_attemptSwap;
     }
 
     _loadOnPageReady(DOMInit);
@@ -3758,6 +3804,7 @@ if(window.location.pathname == "/sketch/alt" && window.location.hostname == "noz
         window.reset = noz_alt_sketch_reset;
         window.setData = noz_alt_sketch_setData;
         window.swap = noz_swap;
+        window.attemptSwap = noz_attemptSwap;
     }
 
     _loadOnPageReady(DOMInit);
