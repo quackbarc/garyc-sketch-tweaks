@@ -35,9 +35,9 @@
 /* / */
 
 const GARYC_GALLERY_CLIENT      = "garyc.me/sketch/gallery.php";
-const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery.php";
+const NOZ_GALLERY_CLIENT        = "noz.rip/sketch/gallery";
 const NOZBUNKER_GALLERY_CLIENT  = "noz.rip/sketch_bunker/";
-const NOZ_ALT_SKETCH_CLIENT     = "noz.rip/sketch/alt.html";
+const NOZ_ALT_SKETCH_CLIENT     = "noz.rip/sketch/alt";
 
 const client = window.location.hostname + window.location.pathname;
 const source = _getGallerySource(client);
@@ -199,11 +199,8 @@ function _getGallerySource(client) {
  * @param {number?} size
  */
 function _getTileImageURL(source, id, size=null) {
-    if(source == "noz.rip/sketch_bunker/") {
+    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
         return `image/${id}th.jpeg`;
-    }
-    if(source == "noz.rip/sketch/") {
-        return `getIMG.php?id=${id}`;
     }
 
     const dbParam = window.db != null ? `&db=${window.db}` : "";
@@ -213,7 +210,7 @@ function _getTileImageURL(source, id, size=null) {
 /** @param {string} source */
 function _getStatsURL(source) {
     if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
-        return "getStats.php?details";
+        return "stats";
     }
     return `getStats.php?details&db=${window.db || ""}`;
 }
@@ -221,7 +218,7 @@ function _getStatsURL(source) {
 /** @param {string} source */
 function _getSwapURL(source) {
     if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
-        return "swap.php";
+        return "swap";
     }
     return `swap.php?db=${window.db || ""}&v=32`;
 }
@@ -232,7 +229,7 @@ function _getSwapURL(source) {
  * @param {boolean} details
  */
 function _getSketchURL(source, id=null, details=false) {
-    if(source == "noz.rip/sketch_bunker/") {
+    if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
         return `data/${id}`;
     }
 
@@ -1305,11 +1302,21 @@ async function refresh() {
         dataType: "json",
         success: function(json) {
             updateStats(json);
-            const newMax = json.maxID;
+
+            let newMax = null;
+            let newMin = null;
+            if(client == NOZ_GALLERY_CLIENT) {
+                newMax = json.max_id;
+                newMin = 1;
+            }
+            else {
+                newMax = json.maxID;
+                newMin = json.minID;
+            }
 
             if(window.customMax != null) {
                 window.sourceMax = newMax;
-                window.min = json.minID;
+                window.min = newMin;
 
                 $("#loadmoretop").prop("disabled", window.max >= newMax);
                 return enableRefresh();
@@ -1321,7 +1328,7 @@ async function refresh() {
             const init = window.max == null || typeof window.max == "string";
             if(init) {
                 window.max = newMax;
-                window.min = json.minID;
+                window.min = newMin;
                 updateGalleryButtons();
                 return enableRefresh();
             }
@@ -1353,7 +1360,7 @@ async function refresh() {
 
             const viewingLatestSketch = window.current == window.max;
             window.max = newMax;
-            window.min = json.minID;
+            window.min = newMin;
 
             if(viewingLatestSketch) {
                 updateGalleryButtons();
@@ -1885,7 +1892,7 @@ function createBooruFormUI(id) {
 
     let sourceURL = currentArchiveURL();
     if(source == "noz.rip/sketch/") {
-        sourceURL = `https://noz.rip/sketch/gallery.php?maxid=${id}#${id}`;
+        sourceURL = `https://noz.rip/sketch/gallery?maxid=${id}#${id}`;
     }
 
     const showButton = $("<button>show booru menu</button>");
@@ -3081,7 +3088,7 @@ if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname
     _loadOnPageReady(DOMInit);
 }
 
-if(window.location.pathname == "/sketch/gallery.php" && window.location.hostname == "noz.rip") {
+if(window.location.pathname == "/sketch/gallery" && window.location.hostname == "noz.rip") {
     _gallery_commonStyles();
     _gallery_commonNozStyles();
 
@@ -3196,7 +3203,7 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
     `);
     document.head.appendChild(style);
 
-    // Like noz.rip/sketch/gallery.php, the <script> code also happens
+    // Like noz.rip/sketch/gallery, the <script> code also happens
     // AFTER the <body> tag. We're also firing this one after
     // DOMContentLoaded. I'm going to throw hands.
 
@@ -3740,7 +3747,7 @@ if(window.location.pathname == "/sketch/" && window.location.hostname == "noz.ri
     _loadOnPageReady(DOMInit);
 }
 
-if(window.location.pathname == "/sketch/alt.html" && window.location.hostname == "noz.rip") {
+if(window.location.pathname == "/sketch/alt" && window.location.hostname == "noz.rip") {
     _sketch_commonOverrides();
 
     function DOMInit() {
