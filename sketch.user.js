@@ -122,6 +122,8 @@ function _getSettings() {
             currentHolderMenu: "main",
             // noz.rip has its own cache with a limited size; gotta be faithful with it.
             cacheSize: 10,
+            // It also doesn't have a stats bar of its own by default.
+            showStats: false,
         };
     }
 
@@ -2152,7 +2154,7 @@ function createBooruFormUI(id) {
 }
 
 function createPreferencesUI() {
-    const button = $("<button>userscript preferences</button>");
+    const button = $('<button id="pref-button">userscript preferences</button>');
     const preferences = $(`<fieldset id="preferences" style="display: none"></fieldset>`);
     preferences.html(`
         <legend>Preferences</legend>
@@ -2388,7 +2390,6 @@ function applyNozPreferences(preferences) {
     const toremove = [
         preferences.find("#thumbquality"),
         preferences.find("#showdatecards"),
-        preferences.find("#showstats"),
         preferences.find("#supportapril2023"),
     ];
     for(const pref of toremove) {
@@ -3006,7 +3007,7 @@ function _gallery_commonNozDOMOverrides() {
         const loadmoreTop = createLoadMoreTopButton();
         const status = createBunkerStatus();
 
-        const preferencesButton = $("button + #holder").prev();
+        const preferencesButton = $("#pref-button");
         preferencesButton.after(status);
         $("#refresh").after(loadmoreTop);
         $("#refresh").hide();
@@ -3139,10 +3140,14 @@ if(window.location.pathname == "/sketch/gallery" && window.location.hostname == 
         const stats = $("#stats");
         const statsExists = stats.length >= 1;
         if(!statsExists) {
-            const preferencesButton = $("button + a").prev();
+            const preferencesButton = $("#pref-button");
             const stats = createStats();
             stats.toggle(settings.showStats);
             preferencesButton.after(stats);
+
+            if(settings.showStats) {
+                window.refresh();
+            }
         }
 
         // remove inline css for the style overrides
