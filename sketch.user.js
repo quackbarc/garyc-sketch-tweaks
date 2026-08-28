@@ -199,15 +199,18 @@ function _getGallerySource(client) {
 /**
  * @param {string} source
  * @param {number} id
- * @param {number?} size
+ * @param {boolean} fullres     This only affects to noz.rip.
  */
-function _getTileImageURL(source, id, size=null) {
+function _getThumbnailURL(source, id, fullres=false) {
     if(source == "noz.rip/sketch/" || source == "noz.rip/sketch_bunker/") {
+        if(fullres) {
+            return `image/${id}.png`;
+        }
         return `image/${id}th.jpeg`;
     }
 
     const dbParam = window.db != null ? `&db=${window.db}` : "";
-    return `getIMG.php?format=png${dbParam}&id=${id}&size=${size}`;
+    return `getIMG.php?format=png${dbParam}&id=${id}`;
 }
 
 /** @param {string} source */
@@ -536,8 +539,7 @@ async function getSketchBlob() {
 }
 
 function getTile(id) {
-    const size = _getThumbSize(settings.thumbQuality);
-    const imgURL = _getTileImageURL(source, id, size);
+    const imgURL = _getThumbnailURL(source, id);
     const tile = $([
         `<a href="#${id}">`,
         `<img src="${imgURL}" loading="lazy" style="`,
@@ -1519,8 +1521,7 @@ function show(id) {
     if(settings.saveAsCanvas) {
         saveAnchorStart = '<a class="save" title="Save (PNG)">'
     } else {
-        const imageSize = settings.sketchSaveResolution * 100;
-        const imageURL = _getTileImageURL(source, id, imageSize);
+        const imageURL = _getThumbnailURL(source, id, true);
         const downloadFn = window.db == null ? `${id}` : `${window.db}#${id}`;
         saveAnchorStart = [
             `<a`,
