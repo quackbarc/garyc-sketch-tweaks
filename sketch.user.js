@@ -2548,8 +2548,9 @@ async function personalKeybinds(e) {
                     return false;
                 }
 
-                let blob = cachedCanvasBlob || await new Promise((resolve) => {
-                    document.querySelector("#sketch").toBlob(blob => resolve(blob))
+                const sketch = window.sketch[0];
+                const blob = cachedCanvasBlob || await new Promise((resolve) => {
+                    window.sketch[0].toBlob(blob => resolve(blob));
                 });
 
                 const animating = [NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)
