@@ -2425,29 +2425,31 @@ function addBooruPreferences(preferences) {
 }
 
 function applyNozPreferences(preferences) {
+    addBooruPreferences(preferences);
+
     const toremove = [
         preferences.find("#thumbquality"),
         preferences.find("#showdatecards"),
         preferences.find("#supportapril2023"),
+        preferences.find("#archiveassource"),
     ];
     for(const pref of toremove) {
         pref.parent().remove();
     }
-
-    addBooruPreferences(preferences);
 }
 
 function applyBunkerPreferences(preferences) {
+    addBooruPreferences(preferences);
+
     const toremove = [
         preferences.find("#thumbquality"),
         preferences.find("#showdatecards"),
         preferences.find("#showstats"),
+        preferences.find("#archiveassource"),
     ];
     for(const pref of toremove) {
         pref.parent().remove();
     }
-
-    addBooruPreferences(preferences);
 }
 
 function createGalleryFooter(footerState=FooterState.NORMAL) {
