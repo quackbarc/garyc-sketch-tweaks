@@ -934,7 +934,15 @@ async function scaleCanvas(size) {
     const width = Math.round(800 * size);
     const height = Math.round(600 * size);
 
-    $("#sketch").attr({
+    let sketch = $("#sketch");
+    switch(client) {
+        case NOZ_GALLERY_CLIENT:
+        case NOZBUNKER_GALLERY_CLIENT: {
+            sketch = $("#canvas");
+        }
+    }
+
+    sketch.attr({
         width: `${width}px`,
         height: `${height}px`
     });
@@ -3203,7 +3211,7 @@ if(window.location.pathname == "/sketch/gallery" && window.location.hostname == 
             backgroundColor: "",
             display: "",
         });
-        $("#sketch").css({
+        $("#canvas").css({
             // remove white background of the canvas
             background: "",
             // remove absolute positioning of the canvas
@@ -3219,7 +3227,7 @@ if(window.location.pathname == "/sketch/gallery" && window.location.hostname == 
             height: "600px",
         });
 
-        $("#sketch").attr({
+        $("#canvas").attr({
             tabindex: "0",
             width: "800px",
             height: "600px",
@@ -3314,7 +3322,7 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
             display: "",
         });
 
-        $("#sketch").css({
+        $("#canvas").css({
             // remove absolute positioning of the canvas
             position: "",
             top: "",
@@ -3328,7 +3336,7 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
             height: "600px",
         });
 
-        $("#sketch").attr({
+        $("#canvas").attr({
             tabindex: "0",
             width: "800px",
             height: "600px",
