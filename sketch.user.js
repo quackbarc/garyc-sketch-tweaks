@@ -116,7 +116,7 @@ function _getSettings() {
     if(window.location.hostname == "noz.rip") {
         defaultSettings = {
             ...defaultSettings,
-            showBooru: false,
+            showBooru: true,
             useArchiveAsBooruSource: true,
             samePageBooru: true,
             showTagSuggestions: true,
