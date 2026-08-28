@@ -1,10 +1,14 @@
 
 <div align="center">
-    <img src="https://github.com/quackbarc/garyc-sketch-tweaks/assets/49148994/c5f410cf-c71b-4b1a-8348-6ccee2899ed6">
+    <img alt="image" src="https://github.com/user-attachments/assets/96cf1810-1713-4414-ad26-73bf33cea7db"/>
     <br>
-    <i>Featured sketch drawn by <a href="https://twitter.com/CheepThePeanut">@CheepThePeanut</a>.</i>
+    <i>Featured sketch drawn by Reshig.</i>
     <br>
     <i>Past featured sketches:
+        <a href="https://github.com/quackbarc/garyc-sketch-tweaks/assets/49148994/c5f410cf-c71b-4b1a-8348-6ccee2899ed6">
+            v1.6.0 by <a href="https://bsky.app/profile/cheepthepeanut.bsky.social">@cheepthepeanut</a>
+        </a>
+        •
         <a href="https://user-images.githubusercontent.com/49148994/225370421-ab5a70c1-729a-4c90-a1af-fe721c639189.png">
             v1.5.0 by archemachine
         </a>
@@ -13,19 +17,18 @@
 
 # ![the unofficial sketch mascot, crunge](/crunge.png)&nbsp;garyc.me sketch tweaks
 
-A personal userscript for garyc.me/sketch.
-Nothing too game-changing, like extra tools on the drawing client.
-Just a handful of visual tweaks and a plethora of bug fixes.
+A personal userscript for [garyc.me/sketch](https://web.archive.org/web/2/https://garyc.me/sketch/)
+and [noz.rip/sketch](https://noz.rip/sketch).
+Adds a bunch of visual tweaks, a plethora of bug fixes, and a handful
+of extra features that might be useful.
 
 ## Main features
 
 * Dark theme, automatically detected or manually set.
-* Drawing client redesigned to imitate the old Flash UI.
-* A slightly better-looking sketch viewer, with extra details like "ink used".
-* Optional auto-skipping and replay of sketch animations in the gallery.
+* Drawing client redesigned to imitate garyc.me's old Flash UI.
 * Optional spiky line style for sketches.
-* Support for [noz.rip/sketch](https://noz.rip/sketch/) and [noz.rip/sketch_bunker](https://noz.rip/sketch_bunker/).
-* Additional tools for noz.rip's booru uploader, like tag autocompletion or /sketch_bunker links as sources.
+* Support for [noz.rip/sketch_bunker](https://noz.rip/sketch_bunker/).
+* Support for uploading sketches directly to [noz.rip/booru](https://noz.rip/booru), with extra QoL features like tag autocompletion.
 
 ## Installation
 
@@ -35,15 +38,10 @@ Just a handful of visual tweaks and a plethora of bug fixes.
 
 Updates on the userscript are automatically installed by the userscript extension whenever there's a version bump.
 
-> **Note for development**:
-> If you ever run into issues with installing the userscript as a file URL on Chrome,
-> check [this gist](https://gist.github.com/quackbarc/2b11ad902eb60f56fb14dadcef8754b2).
-
------
-
-A complete list of changes by the script is listed below.
+---
 
 ## Tweaks and bug fixes
+A complete list of changes by the script is listed below, most of which were originally for garyc.me.
 
 ### Drawing client
 
@@ -79,6 +77,7 @@ A complete list of changes by the script is listed below.
 #### noz.rip
 
 * Added garyc.me's stats bar at the top of the gallery (optional).
+* Added noz.rip's old ability to upload sketches straight to noz.rip/booru (optional).
 * Fixed canvas' box shadow causing a white border around it.
 * The booru form's tags and ratings for a sketch would be kept, even if you switch out of the sketch.
 * The booru form won't be shown on unavailable sketches.
@@ -86,11 +85,13 @@ A complete list of changes by the script is listed below.
 ### Very technical tweaks
 
 * Sketches in the gallery are cached to a configurable limit.
+* Sketches in the gallery are lazily loaded.
 * Sketch animations are now drawn as entire lines than as small segments.
 * Viewer uses CSS grid for better alignment.
 * Viewer gets hidden by `display: none` instead of having its HTML purged.
 * Viewer canvas is tab-focusable.
 * Viewer buttons aren't user-selectable.
+* The close button in the viewer leads to a hashless URL instead of \#0.
 * `show()` casts passed-in IDs into a `Number` first since the fire from page load passes them as strings.
 * `show()` ignores non-numerical IDs.
 * The gallery stats bar is displayed as `inline-block` instead of `inline`.
@@ -129,7 +130,6 @@ A complete list of changes by the script is listed below.
     * `Up`/`Down` for navigating the tag list;
     * `Tab`/`Enter` for selecting/creating a tag; and
     * `Escape` to close the tag list.
-* The booru form can optionally send a noz.rip/sketch_bunker archive link as a source.
 * The booru form can optionally be submitted without having to open a new tab.
     * This feature is still a bit experimental, so do report any bugs or errors you encounter with it!
 
