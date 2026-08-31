@@ -1547,7 +1547,7 @@ function show(id) {
         return;
     }
 
-    if(client == NOZ_GALLERY_CLIENT) {
+    if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
         hideTagSuggestions();
     }
 
@@ -1665,7 +1665,7 @@ function hide() {
         window.history.pushState(window.history.state, "", hashlessURL);
     }
 
-    if(client == NOZ_GALLERY_CLIENT) {
+    if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
         if(animationMenuRAF) {
             window.cancelAnimationFrame(animationMenuRAF);
             animationMenuRAF = null;
