@@ -366,12 +366,12 @@ const FooterState = {
 
 function _getAprilFoolsColor(id) {
     const index = [
-        0x4B0082,  // purple
-        0x0000FF,  // blue
-        0x008000,  // dark green
-        0xFFFF00,  // yellow
-        0xFFA500,  // orange
-        0xFF0000,  // red
+        "#4B0082",  // purple
+        "#0000FF",  // blue
+        "#008000",  // dark green
+        "#FFFF00",  // yellow
+        "#FFA500",  // orange
+        "#FF0000",  // red
     ];
 
     return index[id % 6];
@@ -430,6 +430,20 @@ async function _waitForPIXIFrame() {
     // https://pixijs.download/v4.5.1/docs/PIXI.ticker.Ticker.html#addOnce
     app.ticker.update();
     await new Promise((res) => app.ticker.addOnce(res));
+}
+
+async function _waitForCanvasFrame() {
+    switch(client) {
+        case NOZ_GALLERY_CLIENT:
+        case NOZBUNKER_GALLERY_CLIENT: {
+            await new Promise((res) => window.requestAnimationFrame(res));
+            break;
+        }
+        default: {
+            await _waitForPIXIFrame();
+            break;
+        }
+    }
 }
 
 function _tileAnchorOverride(event) {
@@ -532,7 +546,7 @@ function _getNozSVGAsset(type) {
 async function getSketchBlob() {
     window.setData(window.dat);
 
-    await _waitForPIXIFrame();
+    await _waitForCanvasFrame();
     const sketch = window.sketch[0];
     const blob = await new Promise((res) => sketch.toBlob((blob) => res(blob)));
     return blob;
@@ -950,11 +964,27 @@ async function scaleCanvas(size) {
     // Once the canvas has its width/height properties tampered with,
     // everything about it would be reset.
     // Restore canvas state right after.
-    graphics.setTransform(0, 0, size, size);
-    _updateSketchQuality(settings.sketchQuality);
+    switch(client) {
+        case NOZ_GALLERY_CLIENT:
+        case NOZBUNKER_GALLERY_CLIENT: {
+            _updateSketchQuality(settings.sketchQuality);
+            ctx.lineWidth = 3;
+            ctx.scale(size, size);
 
-    // Give PIXI some time to re-render the whole sketch before we return
-    await _waitForPIXIFrame();
+            gallery_resetCanvas();
+            setData(window.dat);
+            break;
+        }
+
+        default: {
+            graphics.setTransform(0, 0, size, size);
+            _updateSketchQuality(settings.sketchQuality);
+            break;
+        }
+    }
+
+    // Give the canvas some time to re-render the whole sketch before we return
+    await _waitForCanvasFrame();
 }
 
 // Booru and tag autocomplete methods (for noz.rip/booru)
@@ -1393,6 +1423,7 @@ function seekTo(position) {
     let acc = 0;
 
     gallery_resetCanvas();
+    ctx.beginPath();
 
     for(let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -1404,10 +1435,10 @@ function seekTo(position) {
             const x = dec(line.slice(j, j + 2));
             const y = dec(line.slice(j + 2, j + 4));
             if(j == 0) {
-                graphics.moveTo(x, y);
+                ctx.moveTo(x, y);
             }
             else {
-                graphics.lineTo(x, y);
+                ctx.lineTo(x, y);
             }
 
             curpos = [i, j];
@@ -1415,6 +1446,7 @@ function seekTo(position) {
         }
     }
 
+    ctx.stroke();
     window.curpos = curpos;
 }
 
@@ -1451,7 +1483,7 @@ function gallery_drawData(data) {
 }
 
 function gallery_resetCanvas() {
-    let fillColor = 0xFFFFFF;
+    let fillColor = "#FFFFFF";
 
     // April Fools' 2023 color support
     if(settings.supportApril2023 && window.details) {
@@ -1462,14 +1494,26 @@ function gallery_resetCanvas() {
         }
     }
 
-    graphics.clear();
+    switch(client) {
+        case NOZ_GALLERY_CLIENT:
+        case NOZBUNKER_GALLERY_CLIENT: {
+            ctx.fillStyle = fillColor;
+            ctx.fillRect(0, 0, 800, 600);
+            return;
+        }
+        default: {
+            const fillColorInt = parseInt(fillColor.slice(1), 16);
 
-    graphics.beginFill(fillColor);
-    graphics.drawRect(0, 0, 800, 600);
-    graphics.endFill();
+            graphics.clear();
 
-    graphics.lineStyle(3, 0x000000);
-    graphics.moveTo(0,0);
+            graphics.beginFill(fillColorInt);
+            graphics.drawRect(0, 0, 800, 600);
+            graphics.endFill();
+
+            graphics.lineStyle(3, 0x000000);
+            graphics.moveTo(0, 0);
+        }
+    }
 }
 
 function gallery_reset() {
@@ -3230,8 +3274,6 @@ if(window.location.pathname == "/sketch/gallery" && window.location.hostname == 
 
         $("#canvas").attr({
             tabindex: "0",
-            width: "800px",
-            height: "600px",
         });
 
         _updateSketchQuality(settings.sketchQuality);
@@ -3339,8 +3381,6 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
 
         $("#canvas").attr({
             tabindex: "0",
-            width: "800px",
-            height: "600px",
         });
 
         $("#refresh").prop("disabled", !!window.customMax);
