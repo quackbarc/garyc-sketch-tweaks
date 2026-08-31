@@ -1419,17 +1419,17 @@ async function refresh() {
 
 function seekTo(position) {
     const lines = window.dat.split(" ");
-    let curpos = [0, 0];
+    let curpos = 0;
     let acc = 0;
 
     gallery_resetCanvas();
     ctx.beginPath();
 
-    for(let i = 0; i < lines.length; i++) {
+    lineLoop: for(let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        for(let j = 0; j < line.length; j += 4) {
+        for(let j = 0; j <= line.length - 4; j += 4) {
             if(acc > position) {
-                break;
+                break lineLoop;
             }
 
             const x = dec(line.slice(j, j + 2));
@@ -1441,8 +1441,12 @@ function seekTo(position) {
                 ctx.lineTo(x, y);
             }
 
-            curpos = [i, j];
             acc += 4;
+            curpos += 1;
+        }
+
+        if(line.length >= 4) {
+            curpos += 1;
         }
     }
 
@@ -1520,13 +1524,20 @@ function gallery_reset() {
     gallery_resetCanvas();
 
     dat = "";
-    lines = [];
     cachedCanvasBlob = null;
 
     if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
         window.autodraw = false;
+        window.curpos = 0;
     }
     else {
+        // TODO: this might be awful placement for this reset.
+        // we're only putting this here for noz.rip -- its call to drawData()
+        // RESETS `lines` because that func doesn't do the line-building on
+        // there anymore -- it does it on setupOverlay().
+        // may god help us all
+        lines = [];
+
         window.autodrawpos = -1;
     }
 }
@@ -1671,7 +1682,7 @@ function hide() {
             animationMenuRAF = null;
         }
 
-        window.curpos = [0, 0];
+        window.curpos = 0;
         hideTagSuggestions();
     }
 }
@@ -1692,6 +1703,10 @@ async function get(id) {
         window.dat = dat;
         window.details = details;
         updateDetails();
+
+        if([NOZ_GALLERY_CLIENT, NOZBUNKER_GALLERY_CLIENT].includes(client)) {
+            setupLines(dat);
+        }
 
         if(dat == "wait") return;
         if(settings.noAnimation) {
@@ -1922,6 +1937,9 @@ function createAnimationUI() {
         const total = window.dat.replaceAll(" ", "").length;
         const target = Math.floor(val * total / 1000);
 
+        // FIXME: Sync up `target` and noz.rip's `curpos`.
+        // It's what causes the seekbar to jump around when re-playing
+        // starting from a certain point.
         seekTo(target);
     });
 
