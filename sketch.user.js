@@ -1416,17 +1416,25 @@ async function refresh() {
 
 function seekTo(position) {
     const lines = window.dat.split(" ");
-    let curpos = 0;
     let acc = 0;
 
     gallery_resetCanvas();
     ctx.beginPath();
 
-    lineLoop: for(let i = 0; i < lines.length; i++) {
+    main: for(let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        for(let j = 0; j <= line.length - 4; j += 4) {
+        if(line.length < 4) {
+            continue;
+        }
+
+        for(let j = 0; j <= line.length; j += 4) {
+            const point = line.slice(j, j+4);
+            if(point.length < 4) {
+                continue;
+            }
+
             if(acc > position) {
-                break lineLoop;
+                break main;
             }
 
             const x = dec(line.slice(j, j + 2));
@@ -1438,17 +1446,17 @@ function seekTo(position) {
                 ctx.lineTo(x, y);
             }
 
-            acc += 4;
-            curpos += 1;
+            acc++;
         }
 
-        if(line.length >= 4) {
-            curpos += 1;
+        const isLastLine = i >= lines.length - 1;
+        if(!isLastLine) {
+            acc++;
         }
     }
 
     ctx.stroke();
-    window.curpos = curpos;
+    window.curpos = position;
 }
 
 function gallery_drawData(data) {
@@ -1931,12 +1939,9 @@ function createAnimationUI() {
         }
 
         const val = parseInt(progress.val());
-        const total = window.dat.replaceAll(" ", "").length;
+        const total = window.lines.length;
         const target = Math.floor(val * total / 1000);
 
-        // FIXME: Sync up `target` and noz.rip's `curpos`.
-        // It's what causes the seekbar to jump around when re-playing
-        // starting from a certain point.
         seekTo(target);
     });
 
