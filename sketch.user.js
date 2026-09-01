@@ -422,16 +422,6 @@ function normalizeDetails(details) {
 
 // UI and public API methods
 
-async function _waitForPIXIFrame() {
-    // Render everything first, and return on the next PIXI tick.
-    //
-    // This could also be re-written to use PIXI's update priority
-    // feature, in case we ever wanna call update() just once.
-    // https://pixijs.download/v4.5.1/docs/PIXI.ticker.Ticker.html#addOnce
-    app.ticker.update();
-    await new Promise((res) => app.ticker.addOnce(res));
-}
-
 async function _waitForCanvasFrame() {
     switch(client) {
         case NOZ_GALLERY_CLIENT:
@@ -440,7 +430,14 @@ async function _waitForCanvasFrame() {
             break;
         }
         default: {
-            await _waitForPIXIFrame();
+            // For PIXI-based clients, render everything first, and then return
+            // on the next PIXI tick.
+            //
+            // This could also be re-written to use PIXI's update priority
+            // feature, in case we ever wanna call update() just once.
+            // https://pixijs.download/v4.5.1/docs/PIXI.ticker.Ticker.html#addOnce
+            app.ticker.update();
+            await new Promise((res) => app.ticker.addOnce(res));
             break;
         }
     }
