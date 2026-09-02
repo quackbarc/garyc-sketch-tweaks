@@ -2450,7 +2450,7 @@ function createPreferencesUI() {
         _saveSettings();
 
         let size = _getThumbSize(settings.thumbQuality);
-        $("a > img").each(function(ind, img) {
+        $("#tiles a > img").each(function(ind, img) {
             img.src = img.src.replace(
                 /size=[\d.]+/,
                 `size=${size}`
