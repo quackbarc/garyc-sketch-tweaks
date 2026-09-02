@@ -366,15 +366,23 @@ const FooterState = {
 
 function _getAprilFoolsColor(id) {
     const index = [
-        "#4B0082",  // purple
-        "#0000FF",  // blue
-        "#008000",  // dark green
-        "#FFFF00",  // yellow
-        "#FFA500",  // orange
-        "#FF0000",  // red
+        "4B0082",  // purple
+        "0000FF",  // blue
+        "008000",  // dark green
+        "FFFF00",  // yellow
+        "FFA500",  // orange
+        "FF0000",  // red
     ];
 
     return index[id % 6];
+}
+
+function _getAprilFoolsIDLimits(db) {
+    const index = {
+        0: [7270084, 7270714],
+        2: [3722178, 3722184],
+    };
+    return (index[db || 0]) || [];
 }
 
 function _getCurrentTag(tagsBar) {
@@ -550,6 +558,12 @@ async function getSketchBlob() {
 }
 
 function getTile(id) {
+    const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
+    const fromApril = id >= minAprilID && id <= maxAprilID;
+    if(settings.supportApril2023 && fromApril) {
+        return getAprilTile(id);
+    }
+
     const imgURL = _getThumbnailURL(source, id);
     const tile = $([
         `<a href="#${id}">`,
@@ -557,6 +571,24 @@ function getTile(id) {
             `padding: 5px;`,
             `width: 160px;`,
             `height: 120px;`,
+        `"></a>`,
+    ].join(""));
+    tile.click(_tileAnchorOverride);
+
+    return tile;
+}
+
+function getAprilTile(id) {
+    const imgURL = _getThumbnailURL(source, id);
+    const color = _getAprilFoolsColor(id);
+    const tile = $([
+        `<a href="#${id}" style="`,
+            `display: inline-block;`,
+            `padding: 5px;">`,
+            `<img src="${imgURL}" loading="lazy" style="`,
+                `width: 160px;`,
+                `height: 120px;`,
+                `filter: url(#color-${color})`,
         `"></a>`,
     ].join(""));
     tile.click(_tileAnchorOverride);
@@ -750,6 +782,48 @@ async function detailsFullTimestamp() {
     if(alertPromise === lastAlertPromise) {
         updateDetails();
     }
+}
+
+function createAprilFilters() {
+    const index = [
+        "4B0082",  // purple
+        "0000FF",  // blue
+        "008000",  // dark green
+        "FFFF00",  // yellow
+        "FFA500",  // orange
+        "FF0000",  // red
+    ];
+
+    // Using raw HTML instead of JQuery elements because JQuery isn't very good
+    // with namespace-derived element names, e.g. `feFlood` for SVGs.
+    // Doing that would just turn them lowercase, and lowercase doesn't work.
+    const filters = [];
+    for(const color of index) {
+        const filter = `<filter id="color-${color}">
+            <feFlood
+                result="floodFill"
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                flood-color="#${color}"/>
+            <feBlend
+                in="SourceGraphic"
+                in2="floodFill"
+                mode="multiply"/>
+        </filter>`;
+        filters.push(filter);
+    }
+
+    const filterSVG = $(`
+        <svg id="filters" width="0" height="0" xmlns="http://www.w3.org/2000/svg">
+            <defs></defs>
+        </svg>
+    `);
+    const defs = filterSVG.find("defs");
+    defs.html(filters.join(""));
+
+    return filterSVG;
 }
 
 function updateHolderMenu(menutype="main") {
@@ -1492,7 +1566,7 @@ function gallery_drawData(data) {
 }
 
 function gallery_resetCanvas() {
-    let fillColor = "#FFFFFF";
+    let fillColor = "FFFFFF";
 
     // April Fools' 2023 color support
     if(settings.supportApril2023 && window.details) {
@@ -1506,7 +1580,9 @@ function gallery_resetCanvas() {
     switch(client) {
         case NOZ_GALLERY_CLIENT:
         case NOZBUNKER_GALLERY_CLIENT: {
-            ctx.fillStyle = fillColor;
+            const fillColorHash = "#" + fillColor;
+
+            ctx.fillStyle = fillColorHash;
             ctx.fillRect(0, 0, 800, 600);
             return;
         }
@@ -2411,6 +2487,25 @@ function createPreferencesUI() {
     preferences.find("#supportapril2023").change(function(e) {
         settings.supportApril2023 = e.target.checked;
         _saveSettings();
+
+        $("#tiles a > img").each(function(ind, img) {
+            const a = img.parentElement;
+            const id = parseInt(a.getAttribute("href").slice(1));
+
+            const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
+            const fromApril = id >= minAprilID && id <= maxAprilID;
+            if(!fromApril) {
+                return;
+            }
+
+            if(e.target.checked) {
+                const color = _getAprilFoolsColor(id);
+                img.style.filter = `url(#color-${color})`;
+            }
+            else {
+                img.style.filter = null;
+            }
+        });
     });
 
     switch(client) {
@@ -3306,6 +3401,14 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
     _gallery_commonStyles();
     _gallery_commonNozStyles();
     GM_addStyle(`
+        #filters {
+            /* using display: none; would've made the filters unavailable */
+            visibility: hidden;
+            position: fixed;
+        }
+
+        /* header elements */
+
         #jump_value {
             margin-left: 0px;
         }
@@ -3371,6 +3474,9 @@ if(window.location.pathname == "/sketch_bunker/" && window.location.hostname == 
         $("#tiles").empty();
         style.remove();
         addMore();
+
+        const filterSVG = createAprilFilters();
+        $(document.body).append(filterSVG);
 
         const [button, preferences] = createPreferencesUI();
         $("#jump_value").after(button);
