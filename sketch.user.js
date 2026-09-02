@@ -884,16 +884,23 @@ function createGalleryButtons(id) {
         }
     }
 
-    let leftID = Math.max(window.min, id + 1);
-    let rightID = Math.min(window.max, id - 1);
+    const min = window.min;
+    let max = window.max;
+    if(window.customMax != null) {
+        max = window.sourceMax;
+    }
+
+    const leftID = Math.max(min, id + 1);
+    const rightID = Math.min(max, id - 1);
 
     var top = `<a onclick="hide()" class="top">${topAsset}</a>`;
     var leftReg = `<a href="#${leftID}" class="left">${leftAsset}</a>`;
     var leftMax = `<div class="left"></div>`;
     var rightReg = `<a href="#${rightID}" class="right">${rightAsset}</a>`;
     var rightMin = `<div class="right"></div>`;
-    var left = id >= window.max ? leftMax : leftReg;
-    var right = id <= window.min ? rightMin : rightReg;
+
+    const left = id >= max ? leftMax : leftReg;
+    const right = id <= min ? rightMin : rightReg;
 
     return {
         top: top,
@@ -3138,6 +3145,12 @@ function _gallery_commonOverrides() {
             return;
         }
 
+        const min = window.min;
+        let max = window.max;
+        if(window.customMax != null) {
+            max = window.sourceMax;
+        }
+
         switch(e.key) {
             case "Escape": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
@@ -3156,9 +3169,9 @@ function _gallery_commonOverrides() {
             case "ArrowLeft": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
                 if(window.current == null) return;
-                if(window.current >= window.max) return;
-                if(window.current < window.min) {
-                    show(window.min);
+                if(window.current >= max) return;
+                if(window.current < min) {
+                    show(min);
                     return false;
                 }
                 show(window.current + 1);
@@ -3167,11 +3180,11 @@ function _gallery_commonOverrides() {
 
             case "ArrowRight": {
                 if(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
-                if(window.current == null || window.current > window.max) {
-                    show(window.max);
+                if(window.current == null || window.current > max) {
+                    show(max);
                     return false;
                 }
-                if(window.current <= window.min) return;
+                if(window.current <= min) return;
                 show(window.current - 1);
                 return false;
             }
