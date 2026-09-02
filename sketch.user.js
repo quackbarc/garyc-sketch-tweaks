@@ -2288,6 +2288,14 @@ function createBooruFormUI(id) {
         }
     });
 
+    // Submission-related variables
+
+    const submitState = {
+        blob: null,
+        authToken: null,
+        resubmitting: false,
+    };
+
     // Event listeners
 
     const hideButton = form.find("#hide-booru");
@@ -2298,6 +2306,11 @@ function createBooruFormUI(id) {
     ratingSelect.on("change", () => saveBooruChanges(id, form));
 
     form.submit(async function(event) {
+        if(submitState.resubmitting) {
+            submitState.resubmitting = false;
+            return;
+        }
+
         const form = $(this);
         const ratingSelect = form.find("select");
         const rating = ratingSelect.val();
@@ -2323,6 +2336,31 @@ function createBooruFormUI(id) {
 
             selfUploadToBooru(id, form);
         }
+
+        else {
+            // We can't perform async operations on a normal `submit` listener,
+            // so we're gonna have to cancel the submit, wait for those async
+            // operations, and then try re-submitting the form once they're
+            // done.
+            event.preventDefault();
+
+            const proms = [getSketchBlob(), getBooruAuthToken()];
+            const [blob, authToken] = await Promise.all(proms);
+
+            submitState.authToken = authToken;
+            submitState.blob = blob;
+            submitState.resubmitting = true;
+            form.submit();
+        }
+    });
+
+    form.on("formdata", function(event) {
+        const formData = event.originalEvent.formData;
+        const {authToken, blob} = submitState;
+        if(authToken) {
+            formData.append("auth_token", authToken);
+        }
+        formData.append("data[]", blob);
     });
 
     return [form, showButton];
