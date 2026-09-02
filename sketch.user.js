@@ -1568,12 +1568,21 @@ function gallery_drawData(data) {
 function gallery_resetCanvas() {
     let fillColor = "FFFFFF";
 
-    // April Fools' 2023 color support
-    if(settings.supportApril2023 && window.details) {
-        const {id, timestamp} = window.details;
-        const aprilFools2023 = (timestamp >= 1680332400) && (timestamp < 1680418800);
-        if(aprilFools2023) {
-            fillColor = _getAprilFoolsColor(id);
+    if(settings.supportApril2023) {
+        if(window.details) {
+            const {id, timestamp} = window.details;
+            const aprilFools2023 = (timestamp >= 1680332400) && (timestamp < 1680418800);
+            if(aprilFools2023) {
+                fillColor = _getAprilFoolsColor(id);
+            }
+        }
+        else {
+            const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
+            const id = window.current;
+            const aprilFools2023 = id >= minAprilID && id <= maxAprilID;
+            if(aprilFools2023) {
+                fillColor = _getAprilFoolsColor(id);
+            }
         }
     }
 
