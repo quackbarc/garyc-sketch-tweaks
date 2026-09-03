@@ -1670,6 +1670,7 @@ function show(id) {
     }
 
     window.current = id;
+    window.details = null;
 
     // html building
     // TODO: don't rebuild this everytime this function's called
@@ -1726,6 +1727,10 @@ function show(id) {
         switch(client) {
             case NOZBUNKER_GALLERY_CLIENT:
             case NOZ_GALLERY_CLIENT: {
+                if(window.details == null) {
+                    return;
+                }
+
                 const animating = window.autodraw;
                 const finished = $("#progressbar").val() == "1000";
 
