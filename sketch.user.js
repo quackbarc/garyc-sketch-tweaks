@@ -364,6 +364,20 @@ const FooterState = {
 
 // miscellaneous methods
 
+function _isAprilFoolsID(id) {
+    switch(window.db) {
+        case null: {
+            return id >= 7270084 && id <= 7270714;
+        }
+        case 2: {
+            return id >= 3722178 && id <= 3722184;
+        }
+        default: {
+            return false;
+        }
+    }
+}
+
 function _getAprilFoolsColor(id) {
     const index = [
         "4B0082",  // purple
@@ -375,14 +389,6 @@ function _getAprilFoolsColor(id) {
     ];
 
     return index[id % 6];
-}
-
-function _getAprilFoolsIDLimits(db) {
-    const index = {
-        0: [7270084, 7270714],
-        2: [3722178, 3722184],
-    };
-    return (index[db || 0]) || [];
 }
 
 function _getCurrentTag(tagsBar) {
@@ -558,9 +564,7 @@ async function getSketchBlob() {
 }
 
 function getTile(id) {
-    const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
-    const fromApril = id >= minAprilID && id <= maxAprilID;
-    if(settings.supportApril2023 && fromApril) {
+    if(settings.supportApril2023 && _isAprilFoolsID(id)) {
         return getAprilTile(id);
     }
 
@@ -1584,11 +1588,9 @@ function gallery_resetCanvas() {
             }
         }
         else {
-            const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
-            const id = window.current;
-            const aprilFools2023 = id >= minAprilID && id <= maxAprilID;
+            const aprilFools2023 = _isAprilFoolsID(window.current);
             if(aprilFools2023) {
-                fillColor = _getAprilFoolsColor(id);
+                fillColor = _getAprilFoolsColor(window.current);
             }
         }
     }
@@ -2551,9 +2553,7 @@ function createPreferencesUI() {
             const a = img.parentElement;
             const id = parseInt(a.getAttribute("href").slice(1));
 
-            const [minAprilID, maxAprilID] = _getAprilFoolsIDLimits(window.db);
-            const fromApril = id >= minAprilID && id <= maxAprilID;
-            if(!fromApril) {
+            if(!_isAprilFoolsID(id)) {
                 return;
             }
 
