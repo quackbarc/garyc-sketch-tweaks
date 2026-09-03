@@ -33,7 +33,7 @@ of extra features that might be useful.
 ## Installation
 
 1. Install Violentmonkey, Tampermonkey, or any other userscript extension onto your browser.
-2. Open up the [latest version of sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/v1.7.1/sketch.user.js) on the browser.
+2. Open up the [latest version of sketch.user.js](https://github.com/quackbarc/garyc-sketch-tweaks/raw/v1.7.2/sketch.user.js) on the browser.
 3. The extension should automatically prompt to install the userscript.
 
 Updates on the userscript are automatically installed by the userscript extension whenever there's a version bump.
