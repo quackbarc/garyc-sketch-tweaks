@@ -3397,11 +3397,8 @@ if(window.location.pathname == "/sketch/gallery" && window.location.hostname == 
         window.current = null;
 
         if(window.customMax != null) {
+            window.sourceMax = window.max;
             window.max = window.customMax;
-            window.sourceMax = null;
-            // Poll the refresh endpoint to get window.sourceMax and
-            // enable the #loadmoretop button.
-            window.refresh();
         }
 
         // use the new show();
