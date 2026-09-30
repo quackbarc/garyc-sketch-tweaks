@@ -2059,8 +2059,7 @@ function createBooruFormUI(id) {
         return [null, null];
     }
 
-    const sketch = cache["#" + id];
-    const unavailable = (sketch.data == "wait" || sketch.data == "wait ");  // thanks drawData();
+    const unavailable = (window.dat == "wait" || window.dat == "wait ");  // thanks drawData();
     if(unavailable) {
         return [null, null];
     }
